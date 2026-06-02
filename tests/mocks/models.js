@@ -14,6 +14,7 @@ const crearMockModel = (opciones = {}) => {
     update: jest.fn().mockResolvedValue([1]),
     count: jest.fn().mockResolvedValue(0),
     bulkCreate: jest.fn().mockResolvedValue([]),
+    upsert: jest.fn().mockResolvedValue([{}, true]),
     findOrCreate: jest.fn().mockResolvedValue([{}, false]),
     destroy: jest.fn().mockResolvedValue(1),
     sequelize: {
