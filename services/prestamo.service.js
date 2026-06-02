@@ -192,6 +192,81 @@ class PrestamoService {
     });
   }
 
+  async listarSancionesActivas() {
+    const Op = this.Prestamo.sequelize.constructor.Op;
+    const hoy = new Date();
+    return this.Solicitante.findAll({
+      where: {
+        [Op.or]: [
+          { estado: 'Suspendido temporal', fechaFinSuspension: { [Op.gte]: hoy } },
+          { estado: 'Suspendido permanente' }
+        ]
+      },
+      include: [
+        {
+          model: this.Sancion,
+          where: {
+            [Op.or]: [
+              { levantadaManualmente: false },
+              { levantadaManualmente: { [Op.is]: null } }
+            ]
+          },
+          required: false
+        }
+      ],
+      order: [['apellido', 'ASC']]
+    });
+  }
+
+  async levantarSancion(cedula, usuarioId, motivo) {
+    if (!motivo || !motivo.trim()) {
+      throw new Error('El motivo es obligatorio para levantar la suspensión');
+    }
+
+    const solicitante = await this.Solicitante.findByPk(cedula);
+    if (!solicitante) throw new Error('Solicitante no encontrado');
+
+    if (solicitante.estado === 'Activo') {
+      throw new Error('El solicitante no tiene una suspensión activa');
+    }
+
+    const valorAnterior = {
+      estado: solicitante.estado,
+      fechaFinSuspension: solicitante.fechaFinSuspension
+    };
+
+    await solicitante.update({
+      estado: 'Activo',
+      fechaFinSuspension: null
+    });
+
+    await this.Sancion.update(
+      {
+        motivoLevantamiento: motivo,
+        levantadaManualmente: true
+      },
+      {
+        where: {
+          solicitanteCedula: cedula,
+          fechaFin: { [this.Prestamo.sequelize.constructor.Op.gte]: new Date() }
+        }
+      }
+    );
+
+    if (this.auditoria) {
+      await this.auditoria({
+        usuarioId,
+        accion: 'LEVANTAR_SANCION',
+        tablaAfectada: 'solicitante',
+        registroId: cedula,
+        valorAnterior,
+        valorNuevo: { estado: 'Activo', motivo }
+      });
+    }
+
+    return solicitante;
+  }
+
   async obtenerVencidos() {
     const Op = this.Prestamo.sequelize.constructor.Op;
     const prestamosVencidos = await this.Prestamo.findAll({

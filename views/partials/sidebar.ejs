@@ -7,7 +7,10 @@
         'prestamos',
         'historial',
         'sanciones',
-        'usuarios'
+        'usuarios',
+        'backup',
+        'restaurar',
+        'configuracion'
     ];
     function mostrarModulo(id) {
         return modulosHabilitados.includes(id);
@@ -26,7 +29,7 @@
         <% const catalogoOpen = ['materiales','categorias'].includes(page); %>
         <% const prestamosOpen = ['prestamos','historial','sanciones'].includes(page); %>
         <% const reportesOpen = ['informes','inventario'].includes(page); %>
-        <% const sistemaOpen = ['usuarios','backup','configuracion','auditoria'].includes(page); %>
+        <% const sistemaOpen = ['usuarios','backup','restaurar','configuracion','auditoria'].includes(page); %>
 
         <% if (mostrarModulo('dashboard')) { %>
         <a href="/admin/dashboard" class="menu-item <%= page==='dashboard' ? 'active' : '' %>">
@@ -152,6 +155,13 @@
                     <span class="submenu-bullet">•</span>
                     <i class="submenu-icon bi bi-database"></i>
                     <span class="menu-text">Backup</span>
+                </a>
+                <% } %>
+                <% if (mostrarModulo('restaurar')) { %>
+                <a href="/admin/restaurar" class="submenu-item <%= page==='restaurar' ? 'active' : '' %>" data-title="Restaurar">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-arrow-counterclockwise"></i>
+                    <span class="menu-text">Restaurar</span>
                 </a>
                 <% } %>
                 <% if (mostrarModulo('configuracion')) { %>

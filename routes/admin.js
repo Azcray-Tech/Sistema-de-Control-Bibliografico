@@ -8,6 +8,7 @@ const models = require('../models');
 const { registrarAuditoria } = require('../middleware/auditoria');
 const { requiereAuth, requiereRol } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const uploadBackup = require('multer')({ dest: require('os').tmpdir() });
 
 const DashboardService = require('../services/dashboard.service');
 const MaterialService = require('../services/material.service');
@@ -17,6 +18,7 @@ const ParametroService = require('../services/parametro.service');
 const ArticuloService = require('../services/articulo.service');
 const EjemplarService = require('../services/ejemplar.service');
 const UsuarioService = require('../services/usuario.service');
+const BackupService = require('../services/backup.service');
 
 const DashboardController = require('../controllers/dashboardController');
 const MaterialController = require('../controllers/materialController');
@@ -24,8 +26,11 @@ const CategoriaController = require('../controllers/categoriaController');
 const PrestamoController = require('../controllers/prestamoController');
 const EjemplarController = require('../controllers/ejemplarController');
 const UsuarioController = require('../controllers/usuarioController');
+const ParametroController = require('../controllers/parametroController');
+const BackupController = require('../controllers/backupController');
 
-const parametroService = new ParametroService(models);
+const parametroService = new ParametroService(models, registrarAuditoria);
+const backupService = new BackupService(models, registrarAuditoria);
 const dashboardService = new DashboardService(models);
 const categoriaService = new CategoriaService(models, registrarAuditoria);
 const articuloService = new ArticuloService(models, registrarAuditoria);
@@ -40,6 +45,8 @@ const categoriaController = new CategoriaController(categoriaService);
 const prestamoController = new PrestamoController(prestamoService);
 const ejemplarController = new EjemplarController(ejemplarService);
 const usuarioController = new UsuarioController(usuarioService);
+const parametroController = new ParametroController(parametroService);
+const backupController = new BackupController(backupService);
 
 router.get('/dashboard', requiereAuth, dashboardController.mostrarDashboard);
 
@@ -63,6 +70,7 @@ router.post('/prestamos/:id/renovar', requiereAuth, prestamoController.renovar);
 router.post('/prestamos/:id/devolver', requiereAuth, prestamoController.devolver);
 router.get('/prestamos/historial', requiereAuth, prestamoController.historial);
 router.get('/prestamos/sanciones', requiereAuth, prestamoController.sanciones);
+router.post('/prestamos/sanciones/levantar', requiereAuth, requiereRol('Administrador'), prestamoController.levantarSancion);
 
 router.get('/materiales/:materialId/ejemplares/gestion', requiereAuth, ejemplarController.listarPorMaterial);
 router.post('/materiales/:materialId/ejemplares/:ejemplarId/cambiar-estado', requiereAuth, ejemplarController.cambiarEstado);
@@ -72,4 +80,17 @@ router.get('/usuarios/nuevo', requiereAuth, requiereRol('Administrador'), usuari
 router.post('/usuarios', requiereAuth, requiereRol('Administrador'), usuarioController.guardar);
 router.post('/usuarios/:id/desactivar', requiereAuth, requiereRol('Administrador'), usuarioController.desactivar);
 
+router.get('/configuracion', requiereAuth, requiereRol('Administrador'), parametroController.mostrarFormulario);
+router.post('/configuracion', requiereAuth, requiereRol('Administrador'), parametroController.guardar);
+
+router.get('/backup', requiereAuth, requiereRol('Administrador'), backupController.mostrarPanel);
+router.post('/backup/generar', requiereAuth, requiereRol('Administrador'), backupController.generar);
+
+router.get('/restaurar', requiereAuth, requiereRol('Administrador'), backupController.mostrarRestaurar);
+router.post('/restaurar/ejecutar', requiereAuth, requiereRol('Administrador'), uploadBackup.single('archivoBackup'), backupController.restaurar);
+
+router.injectCronService = (cronService) => {
+  if (parametroController) parametroController.setCronService(cronService);
+  if (backupController) backupController.setCronService(cronService);
+};
 module.exports = router;

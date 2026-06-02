@@ -34,7 +34,8 @@ async function migrar() {
     ['renovaciones_permitidas', '1'],
     ['tiempo_inactividad', '15'],
     ['hora_backup_automatico', '09:00'],
-    ['ruta_backup_automatico', '']
+    ['ruta_backup_automatico', ''],
+    ['backup_auto_habilitado', '0']
   ];
 
   await connection.query('USE ceela_biblioteca');

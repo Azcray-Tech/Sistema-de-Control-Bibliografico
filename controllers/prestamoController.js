@@ -79,15 +79,37 @@ class PrestamoController {
   };
 
   /**
-   * @requirement RF-20
-   * @use_case CU-20
+   * @requirement RF-20, RF-18
+   * @use_case CU-20, CU-18
    */
   sanciones = async (req, res, next) => {
     try {
       const prestamosVencidos = await this.prestamoService.obtenerVencidos();
-      res.render('admin/sanciones', { page: 'sanciones', prestamosVencidos });
+      const sancionesActivas = await this.prestamoService.listarSancionesActivas();
+      res.render('admin/sanciones', {
+        page: 'sanciones',
+        prestamosVencidos,
+        sancionesActivas,
+        error: req.query.error || null,
+        success: req.query.success
+      });
     } catch (err) {
       next(err);
+    }
+  };
+
+  /**
+   * @requirement RF-20
+   * @use_case CU-20
+   */
+  levantarSancion = async (req, res, next) => {
+    try {
+      const usuarioId = req.session.usuarioId;
+      const { cedula, motivo } = req.body;
+      await this.prestamoService.levantarSancion(cedula, usuarioId, motivo);
+      res.redirect('/admin/prestamos/sanciones?success=levantado');
+    } catch (err) {
+      res.redirect(`/admin/prestamos/sanciones?error=${encodeURIComponent(err.message)}`);
     }
   };
 }
