@@ -1,0 +1,26 @@
+node_modules/
+/documentacion
+.env
+backup/
+public/images/covers/*
+!public/images/covers/default.jpg
+*.log
+.DS_Store
+coverage/
+app_error.txt
+app_output.txt
+*.txt    
+
+# Logs y archivos temporales
+*.log
+*.txt
+app_*.txt
+npm-debug.log*
+pnpm-debug.log*
+
+# Archivos de build/generados
+dist/
+build/
+
+pruebasCiclo1.md
+pruebasCiclo2.md

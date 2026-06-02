@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Categorías - CEELA</title><%- include('../partials/head') %>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('../partials/sidebar', {page:'categorias'}) %>
+        <div class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h2><i class="bi bi-tags me-2"></i>Gestión de Categorías</h2>
+                    <small class="text-muted">Administrar categorías del catálogo</small>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <h5 class="mb-0 fw-bold">
+                        Categorías Registradas
+                        <span class="badge bg-light text-dark border ms-2"><%= categorias.length %></span>
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group" style="max-width: 240px;">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" id="searchCategorias" placeholder="Buscar...">
+                        </div>
+                        <button class="btn btn-primary-custom" onclick="abrirModalCategoria()">
+                            <i class="bi bi-plus-lg me-1"></i>Nueva Categoría
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle" id="tablaCategorias">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Materiales</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% categorias.forEach(c => {
+                                const totalMateriales = c.totalMateriales || 0;
+                            %>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold"><%= c.nombre %></div>
+                                </td>
+                                <td>
+                                    <div class="text-muted small text-truncate" style="max-width: 250px;"
+                                        title="<%= c.descripcion %>">
+                                        <%= c.descripcion || '-' %>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border px-2">
+                                        <%= totalMateriales %>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            onclick="editarCategoria(<%= c.idCategoria %>, <%= JSON.stringify(c.nombre) %>, <%= JSON.stringify(c.descripcion||'') %>)"
+                                            title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <% if (!c.activa) { %>
+                                        <span class="badge bg-secondary">Inactiva</span>
+                                        <% } else if (totalMateriales === 0) { %>
+                                        <form method="POST" action="/admin/categorias/<%= c.idCategoria %>/desactivar"
+                                            style="display:inline;" id="formDesactivar_<%= c.idCategoria %>">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Desactivar"
+                                                onclick="eliminarCategoria('<%= c.nombre %>', 'formDesactivar_<%= c.idCategoria %>')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        <% } else { %>
+                                        <span class="badge bg-light text-muted border" title="Tiene materiales asignados">
+                                            <i class="bi bi-lock"></i>
+                                        </span>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear/Editar Categoría (Alpine.js) -->
+    <div class="modal fade" id="modalCategoria" tabindex="-1" x-data="{
+        isEditMode: false,
+        categoriaId: '',
+        formNombre: '',
+        formDescripcion: '',
+        modal: null,
+        init() {
+            this.modal = new bootstrap.Modal(document.getElementById('modalCategoria'));
+            window.categoriaAlpine = this;
+            this.$watch('isEditMode', () => {});
+        },
+        abrirModal() {
+            this.isEditMode = false;
+            this.categoriaId = '';
+            this.formNombre = '';
+            this.formDescripcion = '';
+            this.modal.show();
+        },
+        editarCategoria(id, nombre, descripcion) {
+            this.isEditMode = true;
+            this.categoriaId = id;
+            this.formNombre = nombre;
+            this.formDescripcion = descripcion || '';
+            this.modal.show();
+        },
+        guardar() {
+            const form = document.getElementById('formCategoria');
+            const action = this.isEditMode ? '/admin/categorias/' + this.categoriaId : '/admin/categorias';
+            form.action = action;
+            form.submit();
+        }
+    }" x-init="init()">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <span x-text="isEditMode ? 'Editar Categoría' : 'Nueva Categoría'"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formCategoria" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" name="nombre" class="form-control" required
+                                x-model="formNombre" placeholder="ej: Lingüística">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Descripción</label>
+                            <textarea name="descripcion" class="form-control" rows="4"
+                                x-model="formDescripcion" placeholder="Descripción de la categoría..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary-custom" @click="guardar()">
+                            <span x-text="isEditMode ? 'Guardar Cambios' : 'Guardar Categoría'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+        <% if (typeof error !== 'undefined' && error) { %>
+            Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+        <% } else if (success === 'creado') { %>
+            Swal.fire({ icon: 'success', title: 'Categoría creada', text: 'La categoría se ha creado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+        <% } else if (success === 'actualizado') { %>
+            Swal.fire({ icon: 'success', title: 'Categoría actualizada', text: 'La categoría se ha actualizado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+        <% } else if (success === 'desactivado') { %>
+            Swal.fire({ icon: 'success', title: 'Categoría desactivada', text: 'La categoría se ha desactivado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+        <% } %>
+        });
+
+        function abrirModalCategoria() {
+            window.categoriaAlpine.abrirModal();
+        }
+
+        function editarCategoria(id, nombre, descripcion) {
+            window.categoriaAlpine.editarCategoria(id, nombre, descripcion);
+        }
+
+    </script>
+    <script src="/js/categorias.js"></script>
+</body>
+</html>

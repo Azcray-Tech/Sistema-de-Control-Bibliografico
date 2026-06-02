@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Dashboard - CEELA</title><%- include('../partials/head') %>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('../partials/sidebar', {page:'dashboard'}) %>
+        <div class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h2>Panel Administrativo</h2>
+                    <small class="text-muted">
+                        <%= new Date().toLocaleDateString('es-VE', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) %>
+                        &nbsp;·&nbsp; Bienvenido, <%= usuarioSession.nombre %>
+                    </small>
+                </div>
+            </div>
+
+            <div class="stats-grid mb-4">
+                <div class="stat-card-stacked border-primary-left">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-box bg-primary-light me-3"><i class="bi bi-book-fill text-primary"></i></div>
+                        <div>
+                            <div class="stat-label-stacked">Títulos</div>
+                            <div class="stat-value-stacked"><%= totalMateriales %></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card-stacked border-info-left">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-box bg-info-light me-3"><i class="bi bi-arrow-left-right text-info"></i></div>
+                        <div>
+                            <div class="stat-label-stacked">Préstamos Activos</div>
+                            <div class="stat-value-stacked"><%= prestamosActivos %></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card-stacked border-success-left">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-box bg-success-light me-3"><i class="bi bi-check-circle-fill text-success"></i></div>
+                        <div>
+                            <div class="stat-label-stacked">Disponibles</div>
+                            <div class="stat-value-stacked"><%= disponibles %></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card-stacked border-danger-left">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-box bg-danger-light me-3"><i class="bi bi-exclamation-circle-fill text-danger"></i></div>
+                        <div>
+                            <div class="stat-label-stacked">Vencidos</div>
+                            <div class="stat-value-stacked text-danger"><%= vencidos %></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <% if (vencidos > 0) { %>
+            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-4 shadow-sm border-0"
+                role="alert"
+                style="border-radius: 12px; background-color: #fff5f5; border-left: 5px solid #dc3545 !important;">
+                <div class="text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Atención: Hay <strong><%= vencidos %> préstamo(s) vencido(s)</strong>.
+                </div>
+                <a href="/admin/prestamos/sanciones" class="btn btn-sm btn-danger px-3 shadow-sm">Ver Sanciones</a>
+            </div>
+            <% } %>
+
+            <div class="row g-4">
+                <div class="col-lg-8 d-flex flex-column">
+                    <div class="content-card flex-grow-1 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-bar-chart me-2"></i>Préstamos</h5>
+                            <select class="form-select form-select-sm" style="width: auto;" onchange="location = this.value;">
+                                <option value="?periodo=hoy" <%= periodo==='hoy' ? 'selected' : '' %>>Hoy</option>
+                                <option value="?periodo=1semana" <%= periodo==='1semana' ? 'selected' : '' %>>Semana</option>
+                                <option value="?periodo=1mes" <%= periodo==='1mes' ? 'selected' : '' %>>Mes</option>
+                                <option value="?periodo=12meses" <%= periodo==='12meses' ? 'selected' : '' %>>12 Meses</option>
+                            </select>
+                        </div>
+                        <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                            <canvas id="chartPrestamosMes" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 d-flex flex-column">
+                    <div class="content-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>Materiales por Tipo</h5>
+                            <span class="text-muted small"><%= totalMateriales %> títulos</span>
+                        </div>
+                        <div class="d-flex justify-content-center" style="height: 180px;">
+                            <canvas id="chartMaterialesTipo"></canvas>
+                        </div>
+                    </div>
+                    <div class="content-card mt-4 flex-grow-1">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-trophy me-2"></i>Top 7 Materiales más Prestados</h5>
+                        <ol class="dashboard-top-list">
+                            <% topMateriales.forEach((m, i) => { %>
+                            <li class="d-flex justify-content-between align-items-center">
+                                <span class="dashboard-item-title text-truncate"><%= i+1 %>. <%= (m.titulo || 'Sin título').substring(0, 45) %></span>
+                                <span class="badge bg-primary rounded-pill"><%= m.total_prestamos %></span>
+                            </li>
+                            <% }) %>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.DASHBOARD_DATA = {
+            materialesPorTipo: <%- JSON.stringify(typeof materialesPorTipo !== 'undefined' ? materialesPorTipo : []) %>,
+            prestamosPorMes: <%- JSON.stringify(typeof prestamosPorMes !== 'undefined' ? prestamosPorMes : []) %>,
+            periodo: '<%= periodo || "12meses" %>'
+        };
+    </script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

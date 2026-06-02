@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><title><%= material.titulo %> - CEELA</title><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/navbar_public') %>
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-3">
+        <a href="#" onclick="var url=sessionStorage.getItem('lastSearchUrl');window.location.href=url||'/buscar';return false" class="btn-back"><i class="bi bi-arrow-left me-2"></i>Volver a resultados</a>
+    </div>
+    
+    <div class="ficha-container">
+        <div class="row g-3 mb-3">
+            <div class="col-lg-3">
+                <div class="ficha-portada-card" style="margin-left: 0;">
+                    <% if (material.portada) { %>
+                        <img src="/images/covers/<%= material.portada %>" alt="Portada" class="ficha-portada-img" style="margin-left: 0;">
+                    <% } else { %>
+                        <img src="/images/covers/default.jpg" alt="Sin portada" class="ficha-portada-img" style="margin-left: 0; opacity: 0.6;">
+                    <% } %>
+                </div>
+
+                <% if (material.signatura) { %>
+                <div class="ficha-signatura">
+                    <i class="bi bi-geo-alt-fill me-2"></i>
+                    <span><strong>Signatura:</strong> <%= material.signatura %></span>
+                </div>
+                <% } %>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-2">
+                    <h1 class="ficha-titulo mb-0"><%= material.titulo %></h1>
+                    <div class="ficha-disponibilidad-texto <%= material.ejemplaresDisponibles > 0 ? 'disponible' : 'no-disponible' %> flex-shrink-0">
+                        <% if (material.ejemplaresDisponibles > 0) { %>
+                            <i class="bi bi-check-circle-fill me-1"></i> Disponible - <%= material.ejemplaresDisponibles %> ejemplar(es)
+                        <% } else { %>
+                            <i class="bi bi-x-circle-fill me-1"></i> No disponible
+                        <% } %>
+                    </div>
+                </div>
+                
+                <% if (material.autores && material.autores.length > 0) { %>
+                <p class="ficha-autores mb-2"><i class="bi bi-person-fill me-2"></i><%= material.autores.map(a => (a.nombre + ' ' + a.apellido).trim()).join(' / ') %></p>
+                <% } %>
+
+                <div class="ficha-badges">
+                    <span class="badge-tipo"><i class="bi bi-tag-fill me-1"></i><%= material.tipo %></span>
+                    <span class="badge-categoria"><i class="bi bi-bookmark-fill me-1"></i><%= material.Categorium ? material.Categorium.nombre : '-' %></span>
+                </div>
+
+                <% if (material.sinopsis) { %>
+                <div class="ficha-resumen-box mt-3">
+                    <h4 class="ficha-resumen-titulo"><i class="bi bi-file-text me-2"></i>Sinopsis</h4>
+                    <div class="ficha-resumen-texto" id="resumen"><%- material.sinopsis.replace(/\n/g, '<br>') %></div>
+                    <% if (material.sinopsis.length > 300) { %>
+                    <button id="toggleBtn" class="btn-toggle">Ver más</button>
+                    <% } %>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="ficha-seccion">
+            <h4 class="ficha-seccion-titulo"><i class="bi bi-info-circle me-2"></i>Información Bibliográfica</h4>
+            <div class="ficha-info-grid">
+                <% if (material.anioPublicacion) { %>
+                <div class="info-item">
+                    <div class="info-icono"><i class="bi bi-calendar3"></i></div>
+                    <div class="info-datos">
+                        <span class="info-label">Año</span>
+                        <span class="info-valor"><%= material.anioPublicacion %></span>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.libro && material.libro.isbn) { %>
+                <div class="info-item">
+                    <div class="info-icono"><i class="bi bi-upc"></i></div>
+                    <div class="info-datos">
+                        <span class="info-label">ISBN</span>
+                        <span class="info-valor"><%= material.libro.isbn %></span>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.libro && material.libro.editorial) { %>
+                <div class="info-item">
+                    <div class="info-icono"><i class="bi bi-building"></i></div>
+                    <div class="info-datos">
+                        <span class="info-label">Editorial</span>
+                        <span class="info-valor"><%= material.libro.editorial %></span>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.revista && material.revista.issn) { %>
+                <div class="info-item">
+                    <div class="info-icono"><i class="bi bi-upc"></i></div>
+                    <div class="info-datos">
+                        <span class="info-label">ISSN</span>
+                        <span class="info-valor"><%= material.revista.issn %></span>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.tesis && material.tesis.gradoAcademico) { %>
+                <div class="info-item">
+                    <div class="info-icono"><i class="bi bi-mortarboard"></i></div>
+                    <div class="info-datos">
+                        <span class="info-label">Grado</span>
+                        <span class="info-valor"><%= material.tesis.gradoAcademico %></span>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.tesis && material.tesis.tutor) { %>
+                <div class="info-item">
+                    <div class="info-icono"><i class="bi bi-person-badge"></i></div>
+                    <div class="info-datos">
+                        <span class="info-label">Tutor</span>
+                        <span class="info-valor"><%= material.tesis.tutor %></span>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.tesis && material.tesis.institucion) { %>
+                <div class="info-item-full">
+                    <div class="info-item">
+                        <div class="info-icono"><i class="bi bi-bank"></i></div>
+                        <div class="info-datos">
+                            <span class="info-label">Institución</span>
+                            <span class="info-valor"><%= material.tesis.institucion %></span>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+                <% if (material.materialDigital) { %>
+                <div class="info-item-full">
+                    <a href="<%= material.materialDigital %>" target="_blank" rel="noopener noreferrer" class="btn-recurso-digital">
+                        <i class="bi bi-cloud-download me-2"></i>Acceder al recurso en línea
+                        <i class="bi bi-box-arrow-up-right ms-1" style="font-size:0.8em;"></i>
+                    </a>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <% if (material.revista && material.revista.articulos && material.revista.articulos.length > 0) { %>
+        <div class="ficha-seccion">
+            <h4 class="ficha-seccion-titulo"><i class="bi bi-list-ul me-2"></i>Artículos en esta revista</h4>
+            <div class="articulos-lista">
+                <% material.revista.articulos.forEach(function(art) { %>
+                <div class="articulo-item">
+                    <h6 class="articulo-titulo"><%= art.titulo %></h6>
+                    <div class="articulo-metadatos">
+                        <% if (art.autores && art.autores.length > 0) { %>
+                        <span><i class="bi bi-person me-1"></i><%= art.autores.map(function(a){ return (a.nombre+' '+a.apellido).trim(); }).join(', ') %></span>
+                        <% } %>
+                        <% if (art.paginaInicio || art.paginaFin) { %>
+                        <span><i class="bi bi-file-text me-1"></i>Págs. <%= art.paginaInicio || '' %><%= art.paginaFin ? '-' + art.paginaFin : '' %></span>
+                        <% } %>
+                        <% if (art.doi) { %>
+                        <span><i class="bi bi-link-45deg me-1"></i><a href="<%= art.doi %>" target="_blank">DOI</a></span>
+                        <% } %>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+        </div>
+        <% } %>
+    </div>
+</div>
+<style>
+.ficha-resumen-texto { max-height: 180px; overflow: hidden; transition: max-height 0.5s ease; }
+.ficha-resumen-texto.expanded { max-height: 1000px; }
+.btn-toggle { color: var(--color-accent); background: none; border: none; font-weight: 600; cursor: pointer; padding: 0; margin-top: 0.5rem; }
+.btn-toggle:hover { text-decoration: underline; }
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const resumen = document.getElementById("resumen");
+    const btn = document.getElementById("toggleBtn");
+    if (resumen && btn) {
+        btn.addEventListener("click", function() {
+            resumen.classList.toggle("expanded");
+            btn.textContent = resumen.classList.contains("expanded") ? "Ver menos" : "Ver más";
+        });
+    }
+});
+</script>
+</body>
+</html>

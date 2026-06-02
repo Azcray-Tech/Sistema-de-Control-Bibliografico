@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title><%= material ? 'Editar' : 'Agregar' %> Material - CEELA</title>
+    <%- include('../partials/head') %>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('../partials/sidebar', {page: material ? 'materiales' : 'materiales'}) %>
+        <div class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h2><i class="bi bi-<%= material ? 'pencil-square' : 'plus-circle' %> me-2"></i><%= material ? 'Editar' : 'Agregar' %> Material</h2>
+                    <small class="text-muted"><%= material ? 'Modifique la información del material' : 'Complete los campos requeridos' %></small>
+                </div>
+            </div>
+            <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div>
+            <% } %>
+            <%
+            function v(field, materialVal) {
+              if (typeof formData !== 'undefined' && formData !== null && typeof formData[field] !== 'undefined' && formData[field] !== '') return formData[field];
+              return (typeof materialVal !== 'undefined' && materialVal !== null && materialVal !== false) ? materialVal : '';
+            }
+            function s(field, val) {
+              if (typeof formData !== 'undefined' && formData !== null && typeof formData[field] !== 'undefined') return formData[field] == val;
+              return false;
+            }
+            %>
+            <div class="form-container">
+                <form method="POST" action="/admin/materiales<%= material ? '/' + material.idMaterial : '' %>"
+                    enctype="multipart/form-data" x-data="{
+                      tipo: '<%= formData?.tipo ?? (material?.tipo ?? '') %>',
+                      autores: [
+                        <% if (formData && formData.autores) { %>
+                          <% formData.autores.forEach(function(a) { %>
+                            { id: null, nombre: '<%= (a.nombre||'').replace(/'/g, "\\'") %>', apellido: '<%= (a.apellido||'').replace(/'/g, "\\'") %>' },
+                          <% }) %>
+                        <% } else if (material && material.autores) { %>
+                          <% material.autores.forEach(function(a) { %>
+                            { id: <%= a.idAutor || 'null' %>, nombre: '<%= a.nombre.replace(/'/g, "\\'") %>', apellido: '<%= a.apellido.replace(/'/g, "\\'") %>' },
+                          <% }) %>
+                        <% } %>
+                      ],
+                      ejemplaresNuevos: [
+                        <% if (formData && formData.ejemplaresNuevos) { %>
+                          <% if (typeof formData.ejemplaresNuevos === 'string') { %>
+                            '<%= formData.ejemplaresNuevos.replace(/'/g, "\\'") %>',
+                          <% } else { %>
+                            <% formData.ejemplaresNuevos.forEach(function(e) { %>
+                              '<%= (typeof e === 'string' ? e : (e.identificadorUnico || '')).replace(/'/g, "\\'") %>',
+                            <% }) %>
+                          <% } %>
+                        <% } %>
+                      ],
+                      nuevoCodigo: '',
+                      errorCodigo: false,
+                      agregarAutor() { this.autores.push({ id: null, nombre: '', apellido: '' }); },
+                      quitarAutor(idx) { this.autores.splice(idx, 1); },
+                      agregarEjemplar() {
+                          const cod = this.nuevoCodigo.trim();
+                          if(!cod) return;
+                          if(this.ejemplaresNuevos.includes(cod)) {
+                              this.errorCodigo = true;
+                              setTimeout(() => this.errorCodigo = false, 1500);
+                              return;
+                          }
+                          this.ejemplaresNuevos.push(cod);
+                          this.nuevoCodigo = '';
+                      },
+                      quitarEjemplar(idx) { this.ejemplaresNuevos.splice(idx, 1); },
+                      previewUrl: null,
+                      handleFile(e) {
+                          const file = e.target.files[0];
+                          if (file) {
+                              const reader = new FileReader();
+                              reader.onload = e => this.previewUrl = e.target.result;
+                              reader.readAsDataURL(file);
+                          }
+                      }
+                  }">
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <h5 class="form-section-title"><i class="bi bi-info-circle me-2"></i>Información Básica</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Título <span class="text-danger">*</span></label>
+                                <input type="text" name="titulo" class="form-control" required
+                                    value="<%= v('titulo', material?.titulo) %>" placeholder="Ingrese el título completo">
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Tipo de Material <span class="text-danger">*</span></label>
+                                    <select name="tipo" class="form-select" required x-model="tipo" @change="limpiarCampos()">
+                                        <option value="">Seleccione...</option>
+                                        <% ['libro','revista','tesis','anuario'].forEach(t => { %>
+                                        <option value="<%= t %>" <%= s('tipo', t) || (!formData && material?.tipo === t) ? 'selected':'' %>>
+                                            <%= t.charAt(0).toUpperCase()+t.slice(1) %>
+                                        </option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Categoría <span class="text-danger">*</span></label>
+                                    <select name="categoriaId" class="form-select" required>
+                                        <option value="">Seleccione...</option>
+                                        <% categorias.forEach(c => { %>
+                                        <option value="<%= c.idCategoria %>" <%= s('categoriaId', c.idCategoria) || (!formData && material?.categoriaId === c.idCategoria) ? 'selected':'' %>>
+                                            <%= c.nombre %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Año</label>
+                                    <input type="number" name="anioPublicacion" class="form-control" max="2099"
+                                        value="<%= v('anioPublicacion', material?.anioPublicacion) %>" placeholder="ej: 2023">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Signatura / Ubicación Física</label>
+                                <input type="text" name="signatura" class="form-control"
+                                    value="<%= v('signatura', material?.signatura) %>"
+                                    placeholder="ej: Estante 3A - Biblioteca Central">
+                            </div>
+
+                    <!-- Campos específicos por tipo -->
+                    <div x-show="tipo === 'libro'" x-cloak>
+                        <h5 class="form-section-title"><i class="bi bi-book me-2"></i>Datos del Libro</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">ISBN <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" name="isbn" id="isbnInput" class="form-control"
+                                        :required="tipo === 'libro'"
+                                        value="<%= v('isbn', material?.libro?.isbn) %>"
+                                        placeholder="978-3-16-148410-0" @blur="validarISBN($el)">
+                                    <span id="isbnFeedback" class="input-group-text"></span>
+                                </div>
+                                <small id="isbnMensaje" class="form-text"></small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Editorial</label>
+                                <input type="text" name="editorial" class="form-control"
+                                    value="<%= v('editorial', material?.libro?.editorial) %>"
+                                    placeholder="ej: Siglo XXI Editores">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="tipo === 'tesis'" x-cloak>
+                        <h5 class="form-section-title"><i class="bi bi-mortarboard me-2"></i>Datos de la Tesis</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Tutor</label>
+                                <input type="text" name="tutor" class="form-control"
+                                    value="<%= v('tutor', material?.tesis?.tutor) %>"
+                                    placeholder="Nombre del tutor">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Grado</label>
+                                <select name="gradoAcademico" class="form-select">
+                                    <option value="">Seleccione...</option>
+                                    <% ['Licenciatura','Maestría','Doctorado','Especialización'].forEach(g => { %>
+                                    <option value="<%= g %>"
+                                        <%= s('gradoAcademico', g) || (!formData && material?.tesis?.gradoAcademico === g) ? 'selected':'' %>>
+                                        <%= g %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Institución</label>
+                                <input type="text" name="institucion" class="form-control"
+                                    value="<%= v('institucion', material?.tesis?.institucion) %>"
+                                    placeholder="ej: UCV">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="tipo === 'revista'" x-cloak>
+                        <h5 class="form-section-title"><i class="bi bi-journal-text me-2"></i>Datos de la Revista</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">ISSN <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" name="issn" id="issnInput" class="form-control"
+                                        :required="tipo === 'revista'"
+                                        value="<%= v('issn', material?.revista?.issn) %>"
+                                        placeholder="ej: 0251-3420" @blur="validarISSN($el)">
+                                    <span id="issnFeedback" class="input-group-text"></span>
+                                </div>
+                                <small id="issnMensaje" class="form-text"></small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Volumen</label>
+                                <input type="text" name="volumen" class="form-control"
+                                    value="<%= v('volumen', material?.revista?.volumen) %>"
+                                    placeholder="ej: 15">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Número</label>
+                                <input type="text" name="numero" class="form-control"
+                                    value="<%= v('numero', material?.revista?.numero) %>"
+                                    placeholder="ej: 3">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de publicación</label>
+                            <input type="date" name="fechaPublicacion" class="form-control"
+                                value="<%= v('fechaPublicacion', material?.revista?.fechaPublicacion) %>">
+                        </div>
+
+                        <h5 class="form-section-title"><i class="bi bi-file-earmark-text me-2"></i>Artículos</h5>
+                        <div class="mb-4">
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered" id="tablaArticulos"
+                                    style="font-size: 0.85rem;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 30%;">Título</th>
+                                            <th style="width: 25%;">Autores</th>
+                                            <th style="width: 12%;">Pág. Inicio</th>
+                                            <th style="width: 12%;">Pág. Fin</th>
+                                            <th style="width: 5%;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="articulosBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="agregarArticulo()">
+                                <i class="bi bi-plus-lg me-1"></i>Agregar artículo
+                            </button>
+                            <span class="ms-2 text-muted" id="articulosCount" style="font-size: 0.8rem;"></span>
+                        </div>
+                    </div>
+
+<script>
+                var indiceArticulo = 0;
+                var articulosExistentes = <%- JSON.stringify(function() {
+                  if (typeof formData !== 'undefined' && formData !== null && formData.articulos) {
+                    return Array.isArray(formData.articulos) ? formData.articulos.map(function(a) {
+                      return {
+                        id: a.id || '',
+                        titulo: a.titulo || '',
+                        autores_texto: a.autores_texto || '',
+                        paginaInicio: a.paginaInicio || '',
+                        paginaFin: a.paginaFin || ''
+                      };
+                    }) : [];
+                  }
+                  if (material && material.revista && material.revista.articulos) {
+                    return material.revista.articulos.map(function(a) {
+                      return {
+                        id: a.idArticulo || '',
+                        titulo: a.titulo || '',
+                        autores_texto: a.autores ? a.autores.map(function(au) { return (au.nombre||'') + ' ' + (au.apellido||''); }).join(', ') : '',
+                        paginaInicio: a.paginaInicio || '',
+                        paginaFin: a.paginaFin || ''
+                      };
+                    });
+                  }
+                  return [];
+                }()) %>;
+
+                function agregarArticulo(id, titulo, autores, paginaInicio, paginaFin) {
+                            id = id != null ? String(id) : '';
+                            titulo = titulo || '';
+                            autores = autores || '';
+                            paginaInicio = paginaInicio != null ? String(paginaInicio) : '';
+                            paginaFin = paginaFin != null ? String(paginaFin) : '';
+
+                            var tbody = document.getElementById('articulosBody');
+                            var tr = document.createElement('tr');
+
+                            var html = '';
+                            if (id) {
+                                html += '<input type="hidden" name="articulos[' + indiceArticulo + '][id]" value="' + id.replace(/"/g, '&quot;') + '">';
+                            }
+                            html += '<td><input type="text" name="articulos[' + indiceArticulo +
+                                '][titulo]" class="form-control form-control-sm" value="' + titulo.replace(/"/g, '&quot;') + '"></td>' +
+                                '<td><input type="text" name="articulos[' + indiceArticulo +
+                                '][autores_texto]" class="form-control form-control-sm" value="' + autores.replace(/"/g, '&quot;') + '"></td>' +
+                                '<td><input type="number" name="articulos[' + indiceArticulo +
+                                '][paginaInicio]" class="form-control form-control-sm" value="' + paginaInicio.replace(/"/g, '&quot;') + '" min="1"></td>' +
+                                '<td><input type="number" name="articulos[' + indiceArticulo +
+                                '][paginaFin]" class="form-control form-control-sm" value="' + paginaFin.replace(/"/g, '&quot;') + '" min="1"></td>' +
+                                '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'tr\').remove(); actualizarContadorArticulos(); event.preventDefault();"><i class="bi bi-trash"></i></button></td>';
+
+                            tr.innerHTML = html;
+                            tbody.appendChild(tr);
+                            indiceArticulo++;
+                            actualizarContadorArticulos();
+                        }
+
+                        function actualizarContadorArticulos() {
+                            var count = document.querySelectorAll('#articulosBody tr').length;
+                            var countSpan = document.getElementById('articulosCount');
+                            if (count > 0) {
+                                countSpan.textContent = count + ' articulo(s)';
+                            } else {
+                                countSpan.textContent = '';
+                            }
+                        }
+
+                        if (articulosExistentes.length > 0) {
+                            for (var i = 0; i < articulosExistentes.length; i++) {
+                                var art = articulosExistentes[i];
+                                agregarArticulo(art.id, art.titulo || '', art.autores_texto || '', art.paginaInicio || '', art.paginaFin || '');
+                            }
+                        }
+                    </script>
+
+                    <div x-show="tipo === 'anuario'" x-cloak>
+                        <h5 class="form-section-title"><i class="bi bi-calendar3 me-2"></i>Datos del Anuario</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Año de Edición</label>
+                                <input type="number" name="anioEdicion" class="form-control" min="1900" max="2099"
+                                    value="<%= v('anioEdicion', material?.anuario?.anioEdicion) %>"
+                                    placeholder="ej: 2023">
+                            </div>
+                        </div>
+                    </div>
+
+                            <!-- Autores -->
+                            <h5 class="form-section-title"><i class="bi bi-pen me-2"></i>Autores</h5>
+                            <div class="mb-4">
+                                <template x-for="(autor, i) in autores" :key="i">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <input type="text" class="form-control" placeholder="Nombre" style="max-width: 200px;" x-model="autor.nombre" :name="'autores[' + i + '][nombre]'" required>
+                                        <input type="text" class="form-control" placeholder="Apellido" style="max-width: 200px;" x-model="autor.apellido" :name="'autores[' + i + '][apellido]'" required>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @click="quitarAutor(i)"><i class="bi bi-x"></i></button>
+                                    </div>
+                                </template>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="agregarAutor()"><i class="bi bi-plus-lg me-1"></i>Agregar autor</button>
+                            </div>
+                        </div> <!-- Cierra columna izquierda -->
+
+                        <!-- Columna Derecha -->
+                        <div class="col-lg-5 form-right-column">
+
+                    <h5 class="form-section-title"><i class="bi bi-image me-2"></i>Imagen de Portada</h5>
+                    <div class="mb-3">
+                        <template x-if="previewUrl">
+                            <div class="upload-area-compact" onclick="document.getElementById('fileInput').click()">
+                                <img :src="previewUrl" class="preview-img">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <h6>Cambiar imagen</h6>
+                                <small>JPG, PNG - Máx 3MB</small>
+                            </div>
+                        </template>
+                        <template x-if="!previewUrl">
+                            <div>
+                                <% if (material && material.portada) { %>
+                                <div class="upload-area-compact" onclick="document.getElementById('fileInput').click()">
+                                    <img src="/images/covers/<%= material.portada %>" class="preview-img">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    <h6>Cambiar imagen</h6>
+                                    <small>Portada actual</small>
+                                </div>
+                                <% } else { %>
+                                <div class="upload-area-compact" onclick="document.getElementById('fileInput').click()">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    <h6>Subir portada</h6>
+                                    <small>JPG, PNG - Máx 3MB</small>
+                                </div>
+                                <% } %>
+                            </div>
+                        </template>
+                        <input type="file" id="fileInput" name="portada" accept=".jpg,.jpeg,.png,.webp"
+                            style="display:none;"
+                            @change="handleFile($event)">
+                    </div>
+
+                    <h5 class="form-section-title"><i class="bi bi-file-text me-2"></i>Sinopsis</h5>
+                    <div class="mb-4">
+                        <textarea name="sinopsis" id="sinopsisInput" class="form-control" rows="6" maxlength="2000"
+                            placeholder="Pegue aquí la sinopsis o introducción del material..."
+                            oninput="actualizarContadorSinopsis()"><%= v('sinopsis', material?.sinopsis) %></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="form-text mt-1">Puede copiar y pegar el texto desde un PDF o documento de Word</div>
+                            <div class="text-muted small"><span id="contadorSinopsis">0</span> / 2000 caracteres</div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function actualizarContadorSinopsis() {
+                            var texto = document.getElementById('sinopsisInput').value;
+                            var contador = document.getElementById('contadorSinopsis');
+                            var longitud = texto.length;
+                            contador.textContent = longitud;
+                            if (longitud > 1800) {
+                                contador.classList.add('text-warning');
+                            } else {
+                                contador.classList.remove('text-warning');
+                            }
+                            if (longitud >= 2000) {
+                                contador.classList.add('text-danger');
+                            } else {
+                                contador.classList.remove('text-danger');
+                            }
+                        }
+                        document.addEventListener('DOMContentLoaded', function () {
+                            actualizarContadorSinopsis();
+                        });
+                    </script>
+
+                    <h5 class="form-section-title"><i class="bi bi-link-45deg me-2"></i>Material Digital (Opcional)</h5>
+                    <div class="mb-4">
+                            <input type="url" name="materialDigital" class="form-control"
+                                value="<%= v('materialDigital', material?.materialDigital) %>"
+                                placeholder="https://ejemplo.com/recurso-digital">
+                        <div class="form-text">Para revistas virtuales o libros digitalizados. URL completa.</div>
+                    </div>
+
+                    <h5 class="form-section-title"><i class="bi bi-tags me-2"></i>Ejemplares</h5>
+                    <div class="mb-4">
+                        <% if (material && material.ejemplares && material.ejemplares.length > 0) { %>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Identificador único</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% material.ejemplares.forEach(ej => { %>
+                                    <tr>
+                                        <td><code><%= ej.identificadorUnico %></code></td>
+                                        <td>
+                                            <span class="badge <%= ej.estado==='Disponible'?'bg-success':ej.estado==='Prestado'?'bg-warning text-dark':'bg-danger' %>">
+                                                <%= ej.estado %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% } else if (material) { %>
+                        <p class="text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Este material aún no tiene ejemplares registrados.</p>
+                        <% } %>
+
+                        <% if (typeof material === 'undefined' || !material) { %>
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:.9rem;">Agregar ejemplares</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" x-model="nuevoCodigo"
+                                    @keydown.enter.prevent="agregarEjemplar()"
+                                    :class="errorCodigo ? 'is-invalid' : ''"
+                                    placeholder="Identificador único">
+                                <button class="btn btn-outline-success" type="button" @click="agregarEjemplar()">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mt-2">
+                                <template x-for="(cod, index) in ejemplaresNuevos" :key="index">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <input type="hidden" name="ejemplaresNuevos" :value="cod">
+                                        <span class="badge bg-success py-1 px-2" style="font-size:.75rem;" x-text="cod"></span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger px-1 py-0"
+                                            @click="quitarEjemplar(index)" title="Quitar">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="text-muted small mt-1" x-show="ejemplaresNuevos.length > 0"
+                                 x-text="'\u2713 ' + ejemplaresNuevos.length + ' ejemplar(es) nuevo(s)'"></div>
+                        </div>
+                        <% } %>
+                        </div> <!-- Cierra columna derecha -->
+                        </div> <!-- Cierra row g-4 -->
+
+                    <div class="d-flex gap-3 justify-content-end mt-4">
+                        <a href="/admin/materiales" class="btn btn-secondary-custom"><i class="bi bi-x-lg me-2"></i>Cancelar</a>
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="bi bi-save me-2"></i><%= material ? 'Actualizar' : 'Guardar' %>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/material_form.js"></script>
+    <script>
+        function limpiarCampos() {
+            const isbn = document.getElementById('isbnInput');
+            const issn = document.getElementById('issnInput');
+            if (isbn) {
+                isbn.value = '';
+                isbn.setCustomValidity('');
+                isbn.classList.remove('is-valid', 'is-invalid');
+            }
+            if (issn) {
+                issn.value = '';
+                issn.setCustomValidity('');
+                issn.classList.remove('is-valid', 'is-invalid');
+            }
+        }
+
+        function validateISBN(isbn) {
+            if (!isbn) return { valid: false, error: 'ISBN requerido' };
+            var clean = isbn.replace(/[-\s]/g, '');
+            if (clean.length === 10) return validateISBN10(clean);
+            else if (clean.length === 13) return validateISBN13(clean);
+            else return { valid: false, error: 'ISBN debe tener 10 o 13 dígitos' };
+        }
+
+        function validateISBN10(isbn) {
+            if (!/^\d{9}[\dXx]$/.test(isbn)) return { valid: false, error: 'ISBN-10 formato inválido' };
+            var sum = 0;
+            for (var i = 0; i < 9; i++) sum += parseInt(isbn[i]) * (10 - i);
+            var last = isbn[9].toUpperCase();
+            sum += (last === 'X') ? 10 : parseInt(last);
+            if (sum % 11 !== 0) return { valid: false, error: 'ISBN-10 dígito verificador inválido', type: 'ISBN-10' };
+            return { valid: true, type: 'ISBN-10' };
+        }
+
+        function validateISBN13(isbn) {
+            if (!/^\d{13}$/.test(isbn)) return { valid: false, error: 'ISBN-13 formato inválido' };
+            var sum = 0;
+            for (var i = 0; i < 12; i++) sum += parseInt(isbn[i]) * (i % 2 === 0 ? 1 : 3);
+            var check = (10 - (sum % 10)) % 10;
+            if (check !== parseInt(isbn[12])) return { valid: false, error: 'ISBN-13 dígito verificador inválido', type: 'ISBN-13' };
+            return { valid: true, type: 'ISBN-13' };
+        }
+
+        function validateISSN(issn) {
+            if (!issn) return { valid: false, error: 'ISSN requerido' };
+            var clean = issn.replace(/[-\s]/g, '');
+            if (clean.length !== 8) return { valid: false, error: 'ISSN debe tener 8 dígitos' };
+            if (!/^\d{7}[\dXx]$/.test(clean)) return { valid: false, error: 'ISSN formato inválido' };
+            var sum = 0;
+            for (var i = 0; i < 7; i++) sum += parseInt(clean[i]) * (8 - i);
+            var last = clean[7].toUpperCase();
+            var check = (11 - (sum % 11)) % 11;
+            var valDigit = (last === 'X') ? 10 : parseInt(last);
+            if (check !== valDigit) return { valid: false, error: 'ISSN dígito verificador inválido', type: 'ISSN' };
+            return { valid: true, type: 'ISSN' };
+        }
+
+        function validarISBN(input) {
+            var isbn = input.value.trim();
+            var feedback = document.getElementById('isbnFeedback');
+            var mensaje = document.getElementById('isbnMensaje');
+            if (!isbn) {
+                feedback.innerHTML = '';
+                input.classList.remove('is-valid', 'is-invalid');
+                mensaje.textContent = '';
+                return;
+            }
+            var result = validateISBN(isbn);
+            if (result.valid) {
+                feedback.innerHTML = '<i class="bi bi-check text-success"></i>';
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                mensaje.innerHTML = '<span class="text-success">' + result.type + ' válido</span>';
+            } else {
+                feedback.innerHTML = '<i class="bi bi-x text-danger"></i>';
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                mensaje.innerHTML = '<span class="text-danger">' + result.error + '</span>';
+            }
+        }
+
+                function validarISSN(input) {
+            var issn = input.value.trim();
+            var feedback = document.getElementById('issnFeedback');
+            var mensaje = document.getElementById('issnMensaje');
+            if (!issn) {
+                feedback.innerHTML = '';
+                input.classList.remove('is-valid', 'is-invalid');
+                mensaje.textContent = '';
+                return;
+            }
+            var result = validateISSN(issn);
+            if (result.valid) {
+                feedback.innerHTML = '<i class="bi bi-check text-success"></i>';
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                mensaje.innerHTML = '<span class="text-success">ISSN válido</span>';
+            } else {
+                feedback.innerHTML = '<i class="bi bi-x text-danger"></i>';
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                mensaje.innerHTML = '<span class="text-danger">' + result.error + '</span>';
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "sistema-control-bibliografico",
+  "version": "1.0.0",
+  "description": "Sistema de Control Bibliográfico - CEELA",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "lint": "eslint .",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch --passWithNoTests"
+  },
+  "dependencies": {
+    "archiver": "^6.0.1",
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "extract-zip": "^2.0.1",
+    "isbn-validate": "^1.0.3",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.5",
+    "node-cron": "^3.0.3",
+    "pdfkit": "^0.13.0",
+    "sequelize": "^6.35.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^30.4.2",
+    "nodemon": "^3.0.2"
+  }
+}

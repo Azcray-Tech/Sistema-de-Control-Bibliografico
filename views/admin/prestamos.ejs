@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><title>Préstamos - CEELA</title><%- include('../partials/head') %></head>
+<body>
+<% if (success === '1') { %>
+<script>document.addEventListener('DOMContentLoaded', function(){Swal.fire({icon:'success',title:'Préstamo Registrado',text:'El préstamo se ha registrado correctamente.',showConfirmButton:true,confirmButtonColor:'#2c5f4f'});});</script>
+<% } else if (success === '2') { %>
+<script>document.addEventListener('DOMContentLoaded', function(){Swal.fire({icon:'success',title:'Préstamo Renovado',text:'El préstamo se ha renovado correctamente.',showConfirmButton:true,confirmButtonColor:'#2c5f4f'});});</script>
+<% } else if (success === '3') { %>
+<script>document.addEventListener('DOMContentLoaded', function(){Swal.fire({icon:'success',title:'Devolución Registrada',text:'La devolución se ha procesado correctamente.',showConfirmButton:true,confirmButtonColor:'#2c5f4f'});});</script>
+<% } else if (error) { %>
+<script>document.addEventListener('DOMContentLoaded', function(){Swal.fire({icon:'error',title:'Error',text:'<%= error %>',confirmButtonText:'Aceptar',confirmButtonColor:'#2c5f4f',showConfirmButton:true});});</script>
+<% } %>
+<div class="admin-wrapper">
+    <%- include('../partials/sidebar', {page:'prestamos'}) %>
+    <div class="main-content">
+        <div class="top-bar">
+            <div><h2><i class="bi bi-arrow-left-right me-2"></i>Gestión de Préstamos</h2>
+            <small class="text-muted">Gestión de préstamos y devoluciones</small></div>
+        </div>
+
+        <!-- Registrar Nuevo Préstamo -->
+        <div class="content-card mb-4">
+            <h5 class="mb-4 fw-bold"><i class="bi bi-plus-circle me-2"></i>Registrar Nuevo Préstamo</h5>
+
+            <input type="hidden" id="hiddenSolicitanteCedula">
+            <input type="hidden" id="hiddenEjemplarId">
+
+            <!-- Paso 1: Identificar Solicitante -->
+            <div class="mb-4">
+                <label class="form-label fw-bold"><i class="bi bi-person-fill me-1"></i>Paso 1 — Identificar Solicitante</label>
+                <div class="input-group">
+                    <input type="text" id="inputCedula" class="form-control" placeholder="Cédula del solicitante (ej: V-12345678)">
+                    <button class="btn btn-primary-custom" type="button" onclick="buscarSolicitante()">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                </div>
+                <div class="form-text small">Presione Enter o haga clic en Buscar</div>
+            </div>
+
+            <div id="resultadoSolicitante" style="display:none;" class="mb-4"></div>
+
+            <!-- Formulario registro solicitante nuevo -->
+            <div id="formNuevoSolicitante" style="display:none;" class="mb-4 p-3 rounded" style="background:var(--color-bg-light);border:1px solid var(--color-border-tertiary);">
+                <h6 class="mb-3"><i class="bi bi-person-plus me-2"></i>Registrar Nuevo Solicitante</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" id="nuevoNombre" class="form-control" placeholder="Nombre">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Apellido <span class="text-danger">*</span></label>
+                        <input type="text" id="nuevoApellido" class="form-control" placeholder="Apellido">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Teléfono</label>
+                        <input type="text" id="nuevoTelefono" class="form-control" placeholder="+58 424-...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Correo Electrónico</label>
+                        <input type="email" id="nuevoCorreo" class="form-control" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary-custom w-100" onclick="registrarSolicitante()">
+                            <i class="bi bi-save me-1"></i>Guardar y Continuar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 2: Seleccionar Material -->
+            <div id="paso2" style="display:none;">
+                <hr class="my-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="bi bi-book-fill me-1"></i>Paso 2 — Seleccionar Material</label>
+                    <div class="input-group">
+                        <input type="text" id="inputTitulo" class="form-control" placeholder="Buscar por título del material...">
+                        <button class="btn btn-primary-custom" type="button" onclick="buscarEjemplares()">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+                <div id="resultadoEjemplares"></div>
+            </div>
+        </div>
+
+        <!-- Préstamos Activos -->
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-list-ul me-2"></i>Préstamos Activos
+                    <span class="badge bg-light text-dark border ms-2"><%= prestamos.length %></span>
+                </h5>
+                <div class="input-group" style="max-width: 280px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0" id="filtroPrestamos" placeholder="Buscar..." oninput="filtrarPrestamos(this.value)">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom" id="tablaPrestamos">
+                    <thead>
+                        <tr>
+                            <th>Solicitante</th>
+                            <th>Cédula</th>
+                            <th>Material</th>
+                            <th>Ejemplar</th>
+                            <th>F. Préstamo</th>
+                            <th>F. Devolución</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% prestamos.forEach(p => {
+                        const hoy  = new Date();
+                        const dev  = new Date(p.fechaDevolucionPrevista);
+                        const diff = Math.floor((hoy - dev) / 86400000);
+                        const solicitante = p.Solicitante;
+                        const ejemplar = p.Ejemplar;
+                        const material = ejemplar ? ejemplar.Material : null;
+                        %>
+                        <tr>
+                            <td><%= solicitante ? solicitante.nombre + ' ' + solicitante.apellido : '-' %></td>
+                            <td><small class="text-muted"><%= solicitante ? solicitante.cedula : '-' %></small></td>
+                            <td>
+                                <% if (material) { %>
+                                <span title="<%= material.titulo.replace(/"/g, '&quot;') %>">
+                                    <%= material.titulo.substring(0,35) %><%= material.titulo.length>35?'...':'' %>
+                                </span>
+                                <% } else { %>-<% } %>
+                            </td>
+                            <td><code><small><%= ejemplar ? ejemplar.identificadorUnico : '-' %></small></code></td>
+                            <td><small><%= new Date(p.fechaPrestamo).toLocaleDateString('es-VE') %></small></td>
+                            <td><small><%= dev.toLocaleDateString('es-VE') %></small></td>
+                            <td>
+                                <% if (diff > 0) { %>
+                                <span class="badge bg-danger">Vencido <%= diff %>d</span>
+                                <% } else if (diff >= -2) { %>
+                                <span class="badge bg-warning text-dark">Por vencer</span>
+                                <% } else { %>
+                                <span class="badge bg-success">Activo</span>
+                                <% } %>
+                                <% if (p.renovaciones > 0) { %><small class="text-muted ms-1">(<%= p.renovaciones %> ren.)</small><% } %>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/devolver" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Devolver">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    <% if (diff <= 0) { %>
+                                    <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/renovar" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Renovar">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    </form>
+                                    <% } %>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                        <% if (prestamos.length === 0) { %>
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox me-2" style="font-size: 2rem;"></i>
+                                <div>No hay préstamos activos</div>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/prestamos.js"></script>
+</body>
+</html>

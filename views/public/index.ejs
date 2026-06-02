@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><title>Catálogo Bibliográfico - CEELA</title><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/navbar_public') %>
+<div class="hero-search">
+    <div class="container text-center">
+        <h1>Catálogo Bibliográfico</h1>
+        <p>Centro Experimental de Estudios Latinoamericanos</p>
+    </div>
+</div>
+<div class="container">
+    <div class="search-container">
+        <ul class="nav nav-tabs search-tabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#general">
+                    <i class="bi bi-search me-2"></i>Búsqueda General
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#advanced">
+                    <i class="bi bi-funnel me-2"></i>Búsqueda Avanzada
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="general">
+                <form action="/buscar" method="GET">
+                    <div class="row g-3">
+                        <div class="col-md-10">
+                            <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor, ISBN/ISSN o palabra clave..." minlength="3" value="<%= q || '' %>">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-search w-100"><i class="bi bi-search me-2"></i>Buscar</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="quick-categories mt-3">
+                    <span style="font-weight:600;margin-right:0.5rem;">Categorías rápidas:</span>
+                    <% if (categorias && categorias.length > 0) { %>
+                        <% categorias.forEach(c => { %>
+                            <a href="/buscar?categoriaId=<%= c.idCategoria %>" class="category-chip"><%= c.nombre %></a>
+                        <% }) %>
+                    <% } else { %>
+                        <span class="text-muted small">No hay categorías disponibles</span>
+                    <% } %>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="advanced">
+                <form action="/buscar" method="GET" id="advanced-search-form">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6"><label class="form-label">Título</label><input type="text" name="titulo" class="form-control" minlength="3" value="<%= queryTitulo || '' %>"></div>
+                        <div class="col-md-6"><label class="form-label">Autor</label><input type="text" name="autor" class="form-control" minlength="3" value="<%= autor || '' %>"></div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6"><label class="form-label">ISBN/ISSN</label><input type="text" name="isbn" class="form-control" value="<%= q || '' %>"></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Categoría</label>
+                            <select name="categoriaId" class="form-select">
+                                <option value="">Todas</option>
+                                <% if (categorias && categorias.length > 0) { %>
+                                    <% categorias.forEach(c => { %>
+                                        <option value="<%= c.idCategoria %>" <%= String(categoriaId)===String(c.idCategoria)?'selected':'' %>><%= c.nombre %></option>
+                                    <% }) %>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Año</label>
+                            <div class="d-flex gap-2">
+                                <input type="number" name="anioDesde" class="form-control" placeholder="Desde" min="1000" max="9999" value="<%= anioDesde || '' %>">
+                                <input type="number" name="anioHasta" class="form-control" placeholder="Hasta" min="1000" max="9999" value="<%= anioHasta || '' %>">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Tipo de Material</label>
+                            <div class="tipo-checks">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="tipo" value="libro" id="tipo-libro" <%= tipo==='libro'?'checked':'' %>>
+                                    <label class="form-check-label" for="tipo-libro"><i class="bi bi-book me-1"></i>Libro</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="tipo" value="revista" id="tipo-revista" <%= tipo==='revista'?'checked':'' %>>
+                                    <label class="form-check-label" for="tipo-revista"><i class="bi bi-journal-text me-1"></i>Revista</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="tipo" value="tesis" id="tipo-tesis" <%= tipo==='tesis'?'checked':'' %>>
+                                    <label class="form-check-label" for="tipo-tesis"><i class="bi bi-mortarboard me-1"></i>Tesis</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="tipo" value="anuario" id="tipo-anuario" <%= tipo==='anuario'?'checked':'' %>>
+                                    <label class="form-check-label" for="tipo-anuario"><i class="bi bi-calendar3 me-1"></i>Anuario</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="reset" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle me-2"></i>Limpiar filtros</button>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-search w-100"><i class="bi bi-search me-2"></i>Buscar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <% if (destacados && destacados.length > 0) { %>
+    <div class="mt-5 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0"><i class="bi bi-stars me-2"></i>Incorporaciones Recientes</h4>
+            <a href="/buscar" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+        </div>
+        <div class="row g-3">
+            <% destacados.forEach(m => { %>
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="portada-card" onclick="window.location.href='/material/<%= m.idMaterial %>'">
+                    <% if (m.portada) { %>
+                        <img src="/images/covers/<%= m.portada %>" alt="<%= m.titulo %>" class="portada-img">
+                    <% } else { %>
+                        <img src="/images/covers/default.jpg" alt="Sin portada" class="portada-img" style="opacity:0.6;">
+                    <% } %>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+    <% } %>
+
+</div>
+<div style="height:4rem;"></div>
+</body>
+</html>

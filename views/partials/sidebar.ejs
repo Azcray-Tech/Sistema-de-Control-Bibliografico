@@ -1,0 +1,304 @@
+<div class="sidebar" id="sidebar">
+    <%
+    const modulosHabilitados = [
+        'dashboard',
+        'materiales',
+        'categorias',
+        'prestamos',
+        'historial',
+        'sanciones',
+        'usuarios'
+    ];
+    function mostrarModulo(id) {
+        return modulosHabilitados.includes(id);
+    }
+    %>
+    <div class="sidebar-header">
+        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Colapsar sidebar">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <h4><i class="bi bi-book-half me-2"></i><span class="menu-text">Sistema Bibliográfico</span></h4>
+        <div class="user-info">
+            <i class="bi bi-person-circle me-1"></i><span class="menu-text"><%= usuarioSession.nombre %></span>
+        </div>
+    </div>
+    <div class="sidebar-menu">
+        <% const catalogoOpen = ['materiales','categorias'].includes(page); %>
+        <% const prestamosOpen = ['prestamos','historial','sanciones'].includes(page); %>
+        <% const reportesOpen = ['informes','inventario'].includes(page); %>
+        <% const sistemaOpen = ['usuarios','backup','configuracion','auditoria'].includes(page); %>
+
+        <% if (mostrarModulo('dashboard')) { %>
+        <a href="/admin/dashboard" class="menu-item <%= page==='dashboard' ? 'active' : '' %>">
+            <i class="bi bi-speedometer2"></i><span class="menu-text">Dashboard</span>
+        </a>
+        <% } %>
+
+        <% if (mostrarModulo('materiales') || mostrarModulo('categorias')) { %>
+        <div class="menu-parent <%= catalogoOpen ? 'open' : '' %>">
+            <div class="menu-parent-header" onclick="toggleSubmenu(this, event)">
+                <span class="d-flex align-items-center gap-3">
+                    <i class="bi bi-collection"></i>
+                    <span class="menu-text">Catálogo</span>
+                </span>
+                <i class="menu-arrow bi bi-chevron-down"></i>
+            </div>
+            <div class="submenu">
+                <% if (mostrarModulo('materiales')) { %>
+                <a href="/admin/materiales" class="submenu-item <%= page==='materiales' ? 'active' : '' %>" data-title="Biblioteca">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-book"></i>
+                    <span class="menu-text">Biblioteca</span>
+                </a>
+                <% } %>
+                <a href="/admin/materiales/nuevo" class="submenu-item <%= page==='materiales-nuevo' ? 'active' : '' %>" data-title="Agregar Material">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-plus-circle"></i>
+                    <span class="menu-text">Agregar Material</span>
+                </a>
+                <% if (mostrarModulo('categorias')) { %>
+                <a href="/admin/categorias" class="submenu-item <%= page==='categorias' ? 'active' : '' %>" data-title="Categorías">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-tags"></i>
+                    <span class="menu-text">Categorías</span>
+                </a>
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (mostrarModulo('prestamos') || mostrarModulo('historial') || mostrarModulo('sanciones')) { %>
+        <div class="menu-parent <%= prestamosOpen ? 'open' : '' %>">
+            <div class="menu-parent-header" onclick="toggleSubmenu(this, event)">
+                <span class="d-flex align-items-center gap-3">
+                    <i class="bi bi-arrow-left-right"></i>
+                    <span class="menu-text">Préstamos</span>
+                </span>
+                <i class="menu-arrow bi bi-chevron-down"></i>
+            </div>
+            <div class="submenu">
+                <% if (mostrarModulo('prestamos')) { %>
+                <a href="/admin/prestamos" class="submenu-item <%= page==='prestamos' ? 'active' : '' %>" data-title="Gestión de Préstamos">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-arrow-left-right"></i>
+                    <span class="menu-text">Gestión de Préstamos</span>
+                </a>
+                <% } %>
+                <% if (mostrarModulo('historial')) { %>
+                <a href="/admin/prestamos/historial" class="submenu-item <%= page==='historial' ? 'active' : '' %>" data-title="Historial">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-clock-history"></i>
+                    <span class="menu-text">Historial</span>
+                </a>
+                <% } %>
+                <% if (mostrarModulo('sanciones')) { %>
+                <a href="/admin/prestamos/sanciones" class="submenu-item <%= page==='sanciones' ? 'active' : '' %>" data-title="Retrasos y Sanciones">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-exclamation-triangle"></i>
+                    <span class="menu-text">Retrasos y Sanciones</span>
+                </a>
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (mostrarModulo('informes') || mostrarModulo('inventario')) { %>
+        <div class="menu-parent <%= reportesOpen ? 'open' : '' %>">
+            <div class="menu-parent-header" onclick="toggleSubmenu(this, event)">
+                <span class="d-flex align-items-center gap-3">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <span class="menu-text">Reportes</span>
+                </span>
+                <i class="menu-arrow bi bi-chevron-down"></i>
+            </div>
+            <div class="submenu">
+                <% if (mostrarModulo('informes')) { %>
+                <a href="/admin/informes" class="submenu-item <%= page==='informes' ? 'active' : '' %>" data-title="Generar Informes">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-file-earmark-bar-graph"></i>
+                    <span class="menu-text">Generar Informes</span>
+                </a>
+                <% } %>
+                <% if (mostrarModulo('inventario')) { %>
+                <a href="/admin/inventario" class="submenu-item <%= page==='inventario' ? 'active' : '' %>" data-title="Inventario">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-box-seam"></i>
+                    <span class="menu-text">Inventario</span>
+                </a>
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (usuarioSession.rol === 'Administrador' && (mostrarModulo('usuarios') || mostrarModulo('backup') || mostrarModulo('configuracion'))) { %>
+        <div class="menu-parent <%= sistemaOpen ? 'open' : '' %>">
+            <div class="menu-parent-header" onclick="toggleSubmenu(this, event)">
+                <span class="d-flex align-items-center gap-3">
+                    <i class="bi bi-gear"></i>
+                    <span class="menu-text">Sistema</span>
+                </span>
+                <i class="menu-arrow bi bi-chevron-down"></i>
+            </div>
+            <div class="submenu">
+                <% if (mostrarModulo('usuarios')) { %>
+                <a href="/admin/usuarios" class="submenu-item <%= page==='usuarios' ? 'active' : '' %>" data-title="Usuarios">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-people"></i>
+                    <span class="menu-text">Usuarios</span>
+                </a>
+                <% } %>
+                <% if (mostrarModulo('backup')) { %>
+                <a href="/admin/backup" class="submenu-item <%= page==='backup' ? 'active' : '' %>" data-title="Backup">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-database"></i>
+                    <span class="menu-text">Backup</span>
+                </a>
+                <% } %>
+                <% if (mostrarModulo('configuracion')) { %>
+                <a href="/admin/configuracion" class="submenu-item <%= page==='configuracion' ? 'active' : '' %>" data-title="Configuración">
+                    <span class="submenu-bullet">•</span>
+                    <i class="submenu-icon bi bi-gear"></i>
+                    <span class="menu-text">Configuración</span>
+                </a>
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+    </div>
+    <a href="/admin/logout" class="logout-btn">
+        <i class="bi bi-box-arrow-left"></i><span class="menu-text">Cerrar Sesión</span>
+    </a>
+</div>
+
+<script>
+(function() {
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        document.getElementById('sidebar').classList.add('collapsed');
+        document.body.classList.add('sidebar-collapsed');
+        const toggleBtn = document.querySelector('.sidebar-toggle-btn i');
+        if (toggleBtn) {
+            toggleBtn.classList.remove('bi-chevron-left');
+            toggleBtn.classList.add('bi-list');
+        }
+    }
+})();
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const body = document.body;
+    const toggleBtn = document.querySelector('.sidebar-toggle-btn i');
+    sidebar.classList.toggle('collapsed');
+    body.classList.toggle('sidebar-collapsed');
+    if (toggleBtn) {
+        if (sidebar.classList.contains('collapsed')) {
+            toggleBtn.classList.remove('bi-chevron-left');
+            toggleBtn.classList.add('bi-list');
+        } else {
+            toggleBtn.classList.remove('bi-list');
+            toggleBtn.classList.add('bi-chevron-left');
+        }
+    }
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+}
+
+function toggleSubmenu(header, e) {
+    e.stopPropagation();
+    const parent = header.closest('.menu-parent');
+    const sidebar = document.getElementById('sidebar');
+
+    if (sidebar.classList.contains('collapsed')) {
+        const wasOpen = parent.classList.contains('open');
+        document.querySelectorAll('.menu-parent.open').forEach(el => {
+            el.classList.remove('open');
+        });
+        if (!wasOpen) {
+            parent.classList.add('open');
+        }
+        return;
+    }
+
+    parent.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.sidebar')) {
+        document.querySelectorAll('.menu-parent.open').forEach(el => {
+            el.classList.remove('open');
+        });
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.menu-parent.open').forEach(el => {
+            el.classList.remove('open');
+        });
+    }
+});
+</script>
+
+<div class="modal fade" id="commandPaletteModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden; background: #fff;">
+            <div class="modal-header border-0 p-3" style="background: var(--color-bg-light);">
+                <i class="bi bi-search me-3" style="font-size: 1.5rem; color: var(--color-text-muted);"></i>
+                <input type="text" id="commandSearchInput" class="form-control border-0 shadow-none fs-4" 
+                       placeholder="Buscar libros, usuarios o comandos..." 
+                       style="background: transparent; color: var(--color-text-dark);" autocomplete="off">
+            </div>
+            <div class="modal-body p-0" id="commandResults" style="max-height: 400px; overflow-y: auto;">
+                <div class="p-3 text-muted" style="font-size: 0.9rem;">
+                    <div class="mb-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Acciones Rápidas</div>
+                    <a href="/admin/materiales/nuevo" class="d-flex align-items-center text-decoration-none p-2 rounded hover-bg-light text-dark">
+                        <i class="bi bi-plus-circle me-3 text-primary" style="font-size: 1.2rem;"></i>
+                        <span>Agregar Nuevo Material</span>
+                        <small class="ms-auto text-muted">Ir a vista</small>
+                    </a>
+                    <a href="/admin/prestamos" class="d-flex align-items-center text-decoration-none p-2 rounded hover-bg-light text-dark">
+                        <i class="bi bi-arrow-left-right me-3 text-success" style="font-size: 1.2rem;"></i>
+                        <span>Registrar Préstamo</span>
+                        <small class="ms-auto text-muted">Ir a vista</small>
+                    </a>
+                    <a href="/admin/dashboard" class="d-flex align-items-center text-decoration-none p-2 rounded hover-bg-light text-dark">
+                        <i class="bi bi-speedometer2 me-3 text-secondary" style="font-size: 1.2rem;"></i>
+                        <span>Volver al Dashboard</span>
+                        <small class="ms-auto text-muted">Ir a vista</small>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-2" style="background: #f8f9fa; font-size: 0.8rem;">
+                <span class="text-muted"><kbd class="bg-white border text-dark shadow-sm">↑</kbd> <kbd class="bg-white border text-dark shadow-sm">↓</kbd> para navegar</span>
+                <span class="text-muted ms-3"><kbd class="bg-white border text-dark shadow-sm">Enter</kbd> para seleccionar</span>
+                <span class="text-muted ms-3"><kbd class="bg-white border text-dark shadow-sm">Esc</kbd> para cerrar</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-bg-light:hover { background-color: #f1f5f9; }
+</style>
+
+<script>
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('commandPaletteModal'));
+        modal.show();
+    }
+});
+
+document.getElementById('commandPaletteModal').addEventListener('shown.bs.modal', function () {
+    document.getElementById('commandSearchInput').focus();
+});
+
+document.getElementById('commandSearchInput').addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const resultsContainer = document.getElementById('commandResults');
+    const links = resultsContainer.querySelectorAll('a');
+    links.forEach(link => {
+        const text = link.textContent.toLowerCase();
+        link.style.display = text.includes(term) ? 'flex' : 'none';
+    });
+});
+</script>

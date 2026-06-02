@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><title>Resultados - CEELA</title><%- include('../partials/head') %></head>
+<body>
+<%
+const query = {};
+if (typeof q !== 'undefined' && q) query.q = q;
+if (typeof autor !== 'undefined' && autor) query.autor = autor;
+if (typeof categoriaId !== 'undefined' && categoriaId) query.categoriaId = categoriaId;
+if (typeof anioDesde !== 'undefined' && anioDesde) query.anioDesde = anioDesde;
+if (typeof anioHasta !== 'undefined' && anioHasta) query.anioHasta = anioHasta;
+if (typeof tipo !== 'undefined' && tipo) query.tipo = tipo;
+query.page = (typeof pagination !== 'undefined' && pagination) ? pagination.page : 1;
+
+function buildURL(params, overrides) {
+    const merged = { ...params };
+    if (overrides) Object.assign(merged, overrides);
+    const parts = [];
+    for (const [k, v] of Object.entries(merged)) {
+        if (v !== null && v !== undefined && v !== '') {
+            if (Array.isArray(v)) v.forEach(val => parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(val)));
+            else parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+        }
+    }
+    return '/buscar?' + parts.join('&');
+}
+function removeKey(params, key) {
+    const filtered = Object.entries(params).filter(([k]) => k !== key);
+    const parts = [];
+    for (const [k, v] of filtered) {
+        if (v !== null && v !== undefined && v !== '') {
+            if (Array.isArray(v)) v.forEach(val => parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(val)));
+            else parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+        }
+    }
+    return '/buscar?' + parts.join('&');
+}
+%>
+<%- include('../partials/navbar_public') %>
+<div class="hero-search" style="padding:2rem 0;">
+    <div class="container text-center">
+        <h2>Catálogo Bibliográfico</h2>
+    </div>
+</div>
+<div class="container pb-4">
+    <div class="search-container">
+        <form action="/buscar" method="GET">
+            <div class="row g-2">
+                <div class="col-md-10">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor, ISBN/ISSN..." minlength="3" value="<%= q || '' %>">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-search w-100"><i class="bi bi-search me-2"></i>Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-4">
+        <% const tipos = tipo ? (Array.isArray(tipo) ? tipo : [tipo]) : []; %>
+        <% const hasFilters = categoriaId || tipos.length > 0 || anioDesde || anioHasta; %>
+        <% if (hasFilters) { %>
+        <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <span class="text-muted small fw-medium">Filtros:</span>
+            <% if (categoriaId) { %>
+                <% const catNombre = categorias && categorias.find(function(c) { return String(c.idCategoria) === String(categoriaId); }); %>
+                <span class="badge rounded-pill bg-white text-dark border d-inline-flex align-items-center gap-2 px-3 py-1.5 shadow-sm">
+                    <%= catNombre ? catNombre.nombre : categoriaId %>
+                    <a href="<%= removeKey(query, 'categoriaId') %>" class="filter-remove" title="Quitar filtro"><i class="bi bi-x-lg"></i></a>
+                </span>
+            <% } %>
+            <% if (tipos.length === 1) { %>
+                <span class="badge rounded-pill bg-white text-dark border d-inline-flex align-items-center gap-2 px-3 py-1.5 shadow-sm">
+                    <%= tipos[0] %>
+                    <a href="<%= removeKey(query, 'tipo') %>" class="filter-remove" title="Quitar filtro"><i class="bi bi-x-lg"></i></a>
+                </span>
+            <% } else if (tipos.length > 1) { %>
+                <% tipos.forEach(function(t) { %>
+                    <span class="badge rounded-pill bg-white text-dark border d-inline-flex align-items-center gap-2 px-3 py-1.5 shadow-sm">
+                        <%= t %>
+                    </span>
+                <% }) %>
+            <% } %>
+            <% if (anioDesde || anioHasta) { %>
+                <span class="badge rounded-pill bg-white text-dark border d-inline-flex align-items-center gap-2 px-3 py-1.5 shadow-sm">
+                    <%= anioDesde || '...' %>&ndash;<%= anioHasta || '...' %>
+                    <a href="<%= removeKey(removeKey(query, 'anioDesde'), 'anioHasta') %>" class="filter-remove" title="Quitar filtro"><i class="bi bi-x-lg"></i></a>
+                </span>
+            <% } %>
+            <a href="/buscar?q=<%= encodeURIComponent(q || '') %>" class="text-muted small text-decoration-none ms-1">Limpiar filtros</a>
+        </div>
+        <% } %>
+
+        <div class="row">
+            <div class="col-lg-3 col-md-3 d-flex mb-4">
+                <div class="filter-sidebar w-100">
+                    <h6 class="filter-title"><i class="bi bi-bookmark-fill me-2"></i>Categorías</h6>
+                    <% if (categorias && categorias.length > 0) { %>
+                        <% categorias.forEach(function(c) { %>
+                            <a href="<%= buildURL(query, { categoriaId: c.idCategoria, page: '1' }) %>"
+                               class="filter-category-item <%= String(categoriaId) === String(c.idCategoria) ? 'active' : '' %>">
+                                <span class="filter-cat-name"><%= c.nombre %></span>
+                            </a>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="text-muted small mb-0">Sin resultados</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="col-lg-9 col-md-9">
+                <div class="results-header mb-3">
+                    <div>
+                        <h5 class="mb-1">
+                            <% if (q) { %>
+                                Resultados para "<%= q %>"
+                            <% } else { %>
+                                Resultados de búsqueda
+                            <% } %>
+                            <% if (categoriaId) { %>
+                                <% const catNombre2 = categorias && categorias.find(function(c) { return String(c.idCategoria) === String(categoriaId); }); %>
+                                <span class="text-muted fw-normal">en <%= catNombre2 ? catNombre2.nombre : categoriaId %></span>
+                            <% } %>
+                        </h5>
+                        <small class="text-muted">Se encontraron <%= pagination ? pagination.total : 0 %> resultado(s)</small>
+                    </div>
+                </div>
+
+                <% if (!materiales || materiales.length === 0) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-search" style="font-size:3rem;"></i>
+                        <p class="mt-3">No se encontraron resultados para su búsqueda.</p>
+                        <a href="/" class="btn btn-primary-custom mt-2">Nueva búsqueda</a>
+                    </div>
+                <% } %>
+
+                <% materiales.forEach(function(m) { %>
+                    <% const autorStr = m.autores && m.autores.length > 0 ? m.autores.map(function(a) { return (a.nombre + ' ' + a.apellido).trim(); }).join(', ') : ''; %>
+                    <% const disponibles = m.ejemplaresDisponibles || 0; %>
+                <div class="book-item" onclick="window.location.href='/material/<%= m.idMaterial %>'">
+                    <% if (m.portada) { %>
+                        <img src="/images/covers/<%= m.portada %>" alt="Portada" class="book-thumbnail">
+                    <% } else { %>
+                        <img src="/images/covers/default.jpg" alt="Sin portada" class="book-thumbnail" style="opacity:0.6;">
+                    <% } %>
+                    <div class="book-info">
+                        <div class="book-title"><%= m.titulo %></div>
+                        <div class="book-author"><%= autorStr || 'Autor desconocido' %></div>
+                        <div class="book-meta">
+                            <% if (m.libro && m.libro.isbn) { %><span><i class="bi bi-upc-scan me-1"></i>ISBN: <%= m.libro.isbn %></span><% } %>
+                            <% if (m.revista && m.revista.issn) { %><span><i class="bi bi-upc-scan me-1"></i>ISSN: <%= m.revista.issn %></span><% } %>
+                            <% if (m.anioPublicacion) { %><span><i class="bi bi-calendar3 me-1"></i>Año: <%= m.anioPublicacion %></span><% } %>
+                            <% if (m.libro && m.libro.editorial) { %><span><i class="bi bi-building me-1"></i><%= m.libro.editorial %></span><% } %>
+                        </div>
+                        <div class="book-footer">
+                            <span class="badge-category"><%= m.Categorium ? m.Categorium.nombre : '-' %></span>
+                            <span class="badge-tipo">
+                                <% if (m.tipo === 'libro') { %><i class="bi bi-book"></i><% } %>
+                                <% if (m.tipo === 'tesis') { %><i class="bi bi-mortarboard"></i><% } %>
+                                <% if (m.tipo === 'revista') { %><i class="bi bi-journal-text"></i><% } %>
+                                <% if (m.tipo === 'anuario') { %><i class="bi bi-calendar3"></i><% } %>
+                                <%= m.tipo %>
+                            </span>
+                            <span class="badge-availability <%= disponibles > 0 ? 'available' : 'unavailable' %>">
+                                <% if (disponibles > 0) { %>
+                                    <i class="bi bi-check-circle-fill"></i> Disponible (<%= disponibles %>)
+                                <% } else { %>
+                                    <i class="bi bi-x-circle-fill"></i> No disponible
+                                <% } %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+
+                <% if (pagination && pagination.totalPages > 1) { %>
+                <nav class="pagination-custom mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item <%= pagination.page<=1?'disabled':'' %>">
+                            <a class="page-link" href="<%= buildURL(query, { page: pagination.page-1 }) %>"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+                        <% for(var i=1;i<=pagination.totalPages;i++) { %>
+                            <li class="page-item <%= i===pagination.page?'active':'' %>">
+                                <a class="page-link" href="<%= buildURL(query, { page: i }) %>"><%= i %></a>
+                            </li>
+                        <% } %>
+                        <li class="page-item <%= pagination.page>=pagination.totalPages?'disabled':'' %>">
+                            <a class="page-link" href="<%= buildURL(query, { page: pagination.page+1 }) %>"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    sessionStorage.setItem('lastSearchUrl', window.location.href);
+</script>
+</body>
+</html>

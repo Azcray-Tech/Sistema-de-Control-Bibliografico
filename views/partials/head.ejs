@@ -1,0 +1,43 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="sys-message" content="">
+<link href="/css/bootstrap.min.css" rel="stylesheet">
+<link href="/icons/bootstrap-icons.css" rel="stylesheet">
+<link href="/css/fonts.css" rel="stylesheet">
+<link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link href="/css/styles.css" rel="stylesheet">
+
+<style>
+@media print {
+    .sidebar, .top-bar, .btn, .no-print { display: none !important; }
+    body { background: white; }
+    .content-card, .container { box-shadow: none; border: none; }
+    .table { font-size: 12px; }
+    .table th, .table td { border: 1px solid #ddd !important; }
+}
+</style>
+
+
+<script src="/js/jquery.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js" defer></script>
+<script src="/js/jquery.dataTables.min.js" defer></script>
+<script src="/js/dataTables.bootstrap5.min.js" defer></script>
+<script src="/js/chart.min.js" defer></script>
+<script src="/js/alpine.min.js" defer></script>
+<script src="/js/sweetalert2.all.min.js" defer></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+});
+</script>

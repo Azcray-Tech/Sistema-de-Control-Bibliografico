@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Acceso Administrativo - CEELA</title><%- include('partials/head') %>
+</head>
+<body class="login-page">
+    <div class="container">
+        <div class="login-container">
+            <div class="row g-0">
+                <div class="col-md-5 login-left">
+                    <div>
+                        <i class="bi bi-book-half icon-library"></i>
+                        <h2>Sistema de Control Bibliográfico</h2>
+                        <p>Centro Experimental de Estudios Latinoamericanos</p>
+                        <p class="mt-4">Gestión integral de libros, tesis, revistas y anuarios.</p>
+                    </div>
+                </div>
+                <div class="col-md-7 login-right">
+                    <h3 class="mb-4">Acceso Administrativo</h3>
+                    <% if (error) { %>
+                    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div>
+                    <% } %>
+                    <form method="POST" action="/admin/login">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="username" name="username"
+                                placeholder="Ingrese su usuario" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Ingrese su contraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                        </button>
+                        <div class="text-center mt-4">
+                            <a href="/" class="text-decoration-none" style="color:var(--color-primary);">
+                                <i class="bi bi-search me-2"></i>Ir a consulta pública
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

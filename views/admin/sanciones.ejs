@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><title>Retrasos y Sanciones - CEELA</title><%- include('../partials/head') %></head>
+<body>
+<div class="admin-wrapper">
+    <%- include('../partials/sidebar', {page:'sanciones'}) %>
+    <div class="main-content">
+        <div class="top-bar">
+            <div><h2><i class="bi bi-exclamation-triangle me-2"></i>Retrasos y Sanciones</h2>
+            <small class="text-muted">Control de retrasos y sanciones</small></div>
+        </div>
+        <div class="content-card">
+            <h5 class="mb-3">Préstamos vencidos y solicitantes sancionados</h5>
+            <div class="table-responsive">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                            <th>Solicitante</th>
+                            <th>Cédula</th>
+                            <th>Teléfono</th>
+                            <th>Material</th>
+                            <th>Días de retraso</th>
+                            <th>Estado</th>
+                            <th>Suspendido hasta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% prestamosVencidos.forEach(p => {
+                        const sol = p.Solicitante;
+                        const ej = p.Ejemplar;
+                        const mat = ej ? ej.Material : null;
+                        const suspendidoHasta = sol && sol.fechaFinSuspension ? new Date(sol.fechaFinSuspension) : null;
+                        %>
+                        <tr>
+                            <td><%= sol ? sol.nombre + ' ' + sol.apellido : '-' %></td>
+                            <td><%= sol ? sol.cedula : '-' %></td>
+                            <td><%= sol && sol.telefono ? sol.telefono : '-' %></td>
+                            <td><%= mat ? mat.titulo.substring(0,45) : '-' %></td>
+                            <td><span class="badge bg-danger"><%= p.retraso %> días</span></td>
+                            <td>
+                                <% if (p.estado === 'Activo') { %>
+                                <span class="badge bg-warning text-dark">Vencido (aún activo)</span>
+                                <% } else { %>
+                                <span class="badge bg-secondary">Devuelto con retraso</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (suspendidoHasta && suspendidoHasta >= new Date()) { %>
+                                <span class="badge bg-warning"><%= suspendidoHasta.toLocaleDateString('es-VE') %></span>
+                                <% } else { %>-<% } %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                        <% if (prestamosVencidos.length===0) { %>
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4"><i class="bi bi-check-circle me-2"></i>No hay préstamos vencidos</td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

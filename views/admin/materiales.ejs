@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><title>Catálogo - CEELA</title><%- include('../partials/head') %></head>
+<body>
+<% if (success === 'creado' && successId) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+      icon: 'success',
+      title: 'Material agregado',
+      html: 'El material <strong>"<%= successTitulo %>"</strong> ha sido creado correctamente.',
+      showConfirmButton: true,
+      confirmButtonText: '<i class="bi bi-box-arrow-up-right me-1"></i> Ver ficha',
+      showCancelButton: true,
+      cancelButtonText: 'Cerrar',
+      confirmButtonColor: '#2c5f4f',
+      cancelButtonColor: '#6c757d'
+    }).then(result => {
+      if (result.isConfirmed) {
+        window.open('/material/<%= successId %>', '_blank');
+      }
+    });
+  });
+</script>
+<% } else if (success === 'actualizado') { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+      icon: 'success',
+      title: 'Material actualizado',
+      html: 'El material <strong>"<%= successTitulo %>"</strong> ha sido actualizado correctamente.',
+      showConfirmButton: true,
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#2c5f4f'
+    });
+  });
+</script>
+<% } else if (success === 'baja') { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+      icon: 'success',
+      title: 'Material dado de baja',
+      text: 'El material ha sido desactivado del catálogo.',
+      showConfirmButton: true,
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#2c5f4f'
+    });
+  });
+</script>
+<% } else if (error) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+      icon: 'error',
+      title: 'No se pudo eliminar',
+      text: '<%= error %>',
+      showConfirmButton: true,
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#2c5f4f'
+    });
+  });
+</script>
+<% } %>
+<div class="admin-wrapper">
+    <%- include('../partials/sidebar', {page:'materiales'}) %>
+    <div class="main-content">
+        <div class="top-bar">
+            <div><h2><i class="bi bi-book me-2"></i>Biblioteca</h2>
+            <small class="text-muted">Gestión del catálogo de materiales</small></div>
+        </div>
+        <div class="content-card">
+            <select id="filtroTipoDT" class="form-select form-select-sm d-none">
+                <option value="">Todos los tipos</option>
+                <option value="libro">Libro</option>
+                <option value="revista">Revista</option>
+                <option value="tesis">Tesis</option>
+                <option value="anuario">Anuario</option>
+            </select>
+
+            <div class="table-responsive">
+                <table class="table table-custom" id="tablaLibros">
+                    <thead>
+                        <tr>
+                            <th>Portada</th>
+                            <th>Título</th>
+                            <th>Autor(es)</th>
+                            <th>ISBN / ISSN</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Disponibles</th>
+                            <th>Fecha de registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% materiales.forEach(m => {
+                            const autoresArr = (m.autores && m.autores.length) ? m.autores : [];
+                            const autoresStr = autoresArr.map(a => (a.nombre + ' ' + a.apellido).trim()).join(', ') || '-';
+                            const codigoStr  = (m.libro && m.libro.isbn) ? m.libro.isbn
+                                             : (m.revista && m.revista.issn) ? m.revista.issn : '-';
+                            const categoriaNombre = m.Categorium ? m.Categorium.nombre : '-';
+                            const ejemplaresArr = m.ejemplares || [];
+                            const stock = ejemplaresArr.filter(e => e.estado === 'Disponible').length;
+                            const totalEj = ejemplaresArr.length;
+                        %>
+                        <tr data-id="<%= m.idMaterial %>"
+                            data-tipo="<%= m.tipo %>"
+                            data-titulo="<%= m.titulo.replace(/"/g, '&quot;').toLowerCase() %>"
+                            data-autor="<%= autoresStr.replace(/"/g, '&quot;').toLowerCase() %>"
+                            data-isbn="<%= codigoStr.replace(/"/g, '&quot;').toLowerCase() %>"
+                            data-stock="<%= stock %>"
+                            data-total="<%= totalEj %>"
+                            data-categoria="<%= categoriaNombre %>"
+                            data-portada="<%= m.portada ? '/images/covers/' + m.portada : '' %>"
+                            data-fecha="<%= m.updatedAt %>">
+                            <td>
+                                <% if (m.portada) { %>
+                                    <img src="/images/covers/<%= m.portada %>" style="width:40px;height:55px;object-fit:cover;border-radius:4px;">
+                                <% } else { %>
+                                    <img src="/images/covers/default.jpg" style="width:40px;height:55px;object-fit:cover;border-radius:4px;opacity:0.6;">
+                                <% } %>
+                            </td>
+                            <td class="align-middle" style="max-width:250px;"><strong class="text-truncate d-block"><%= m.titulo %></strong></td>
+                            <td class="align-middle"><small><%= autoresStr %></small></td>
+                            <td class="align-middle"><small><%= codigoStr %></small></td>
+                            <td class="align-middle text-center"><span class="badge bg-secondary">
+                                        <% if (m.tipo === 'libro') { %><i class="bi bi-book"></i><% } %>
+                                        <% if (m.tipo === 'tesis') { %><i class="bi bi-mortarboard"></i><% } %>
+                                        <% if (m.tipo === 'revista') { %><i class="bi bi-journal-text"></i><% } %>
+                                        <% if (m.tipo === 'anuario') { %><i class="bi bi-calendar3"></i><% } %>
+                                        <%= m.tipo %>
+                                    </span></td>
+                            <td class="align-middle text-center"><span class="badge" style="background:var(--color-accent);color:white;">
+                                        <%= categoriaNombre %>
+                                    </span></td>
+                            <td class="align-middle text-center">
+                                <span class="badge <%= stock > 0 ? 'bg-success' : 'bg-danger' %>">
+                                    <% if (stock > 0) { %><i class="bi bi-check-circle-fill"></i><% } else { %><i class="bi bi-x-circle-fill"></i><% } %>
+                                    <%= stock %> / <%= totalEj %>
+                                </span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="small">
+                                    <div><i class="bi bi-clock me-1 text-muted"></i><%= new Date(m.createdAt).toLocaleDateString('es-VE') %></div>
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-info btn-view-details" title="Ver detalles rápidos"><i class="bi bi-layout-sidebar-reverse"></i></button>
+                                    <a href="/admin/materiales/<%= m.idMaterial %>/editar" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                                    <a href="/admin/materiales/<%= m.idMaterial %>/ejemplares" class="btn btn-sm btn-outline-success" title="Agregar ejemplares"><i class="bi bi-plus-circle"></i></a>
+                                    <a href="/admin/materiales/<%= m.idMaterial %>/ejemplares/gestion" class="btn btn-sm btn-outline-secondary" title="Gestionar ejemplares"><i class="bi bi-boxes"></i></a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-material"
+                                            data-id="<%= m.idMaterial %>"
+                                            data-titulo="<%= m.titulo.replace(/"/g, '&quot;') %>"
+                                            data-ejemplares="<%= totalEj %>"
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <form id="form-delete-<%= m.idMaterial %>" method="POST" action="/admin/materiales/<%= m.idMaterial %>/eliminar" style="display:none;"></form>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+<script>
+$(document).ready(function() {
+    var table = $('#tablaLibros').DataTable({
+        dom: '<"dt-toolbar"<"dt-toolbar-left"f><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rtip',
+        language: {
+            url: '/js/es-ES.json',
+            "sProcessing":     "Procesando...",
+            "sLengthMenu":     "Mostrar _MENU_ registros",
+            "sZeroRecords":    "No se encontraron resultados",
+            "sEmptyTable":     "Ningún dato disponible en esta tabla",
+            "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
+            "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+            "sInfoPostFix":    "",
+            "sSearch":         "",
+            "sSearchPlaceholder": "Buscar materiales...",
+            "sUrl":            "",
+            "sInfoThousands":  ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst":    "Primero",
+                "sLast":     "Último",
+                "sNext":     "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        },
+        order: [[7, 'desc']],
+        columnDefs: [
+            { orderable: false, targets: [0, 8] }
+        ],
+        initComplete: function() {
+            $('#filtroTipoDT').appendTo('.dt-type-filter').removeClass('d-none');
+
+            var sortSelect = $('<select class="form-select dt-sort-select"><option value="0,asc">Título (A-Z)</option><option value="0,desc">Título (Z-A)</option><option value="1,asc">Autor (A-Z)</option><option value="7,desc">Más recientes</option><option value="7,asc">Más antiguos</option></select>');
+            sortSelect.appendTo('.dt-sort-select');
+            sortSelect.on('change', function() {
+                var vals = $(this).val().split(',');
+                table.order([parseInt(vals[0]), vals[1]]).draw();
+            });
+        }
+    });
+
+    $('#filtroTipoDT').on('change', function() {
+        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+        table.column(4).search(val ? val : '', true, false).draw();
+    });
+
+    $('.btn-delete-material').on('click', function() {
+        var btn = $(this);
+        var id = btn.data('id');
+        var titulo = btn.data('titulo');
+        var ejemplares = btn.data('ejemplares') || 0;
+        var form = $('#form-delete-' + id);
+
+        var mensaje = 'Se eliminará <strong>"' + titulo + '"</strong>';
+        if (ejemplares > 0) {
+            mensaje += ' junto con <strong>' + ejemplares + ' ejemplare' + (ejemplares > 1 ? 's' : '') + '</strong>';
+        }
+        mensaje += ' y todos los datos asociados.';
+
+        Swal.fire({
+            title: '¿Eliminar material?',
+            html: mensaje,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-trash me-2"></i>Eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+
+    $('.btn-view-details').on('click', function() {
+        const row = $(this).closest('tr');
+        const data = row.data();
+        
+        $('#oc-titulo').text(row.find('td:eq(1)').text());
+        $('#oc-autor').text(row.find('td:eq(2)').text());
+        $('#oc-codigo').text(row.find('td:eq(3)').text());
+        $('#oc-categoria').text(data.categoria);
+        $('#oc-tipo').text(data.tipo.toUpperCase());
+        
+        $('#oc-disponibles').text(data.stock);
+        $('#oc-total').text(data.total);
+        
+        if (data.portada) {
+            $('#oc-portada').html(`<img src="${data.portada}" class="img-fluid rounded shadow-sm" alt="Portada">`);
+        } else {
+            $('#oc-portada').html(`<img src="/images/covers/default.jpg" class="img-fluid rounded shadow-sm" style="opacity:0.6;" alt="Sin portada">`);
+        }
+
+        $('#oc-btn-editar').attr('href', `/admin/materiales/${data.id}/editar`);
+        $('#oc-btn-publico').attr('href', `/material/${data.id}`);
+
+        $('#oc-modificado').text('Sistema');
+        $('#oc-fecha-mod').text(new Date(data.fecha).toLocaleDateString('es-VE', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
+
+        const offcanvasElement = document.getElementById('offcanvasMaterial');
+        const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+        offcanvas.show();
+    });
+});
+</script>
+
+<div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasMaterial" aria-labelledby="offcanvasMaterialLabel" style="width: 450px;">
+  <div class="offcanvas-header bg-light border-bottom">
+    <h5 class="offcanvas-title" id="offcanvasMaterialLabel"><i class="bi bi-info-circle me-2 text-primary"></i>Detalles Rápidos</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="row mb-4">
+        <div class="col-5" id="oc-portada"></div>
+        <div class="col-7">
+            <span class="badge bg-primary mb-2" id="oc-tipo"></span>
+            <span class="badge" style="background:var(--color-accent);color:white;" id="oc-categoria"></span>
+            <h4 class="mt-2 mb-1" id="oc-titulo" style="font-family:'Libre Baskerville', serif; color:var(--color-text-dark);"></h4>
+            <p class="text-muted mb-2" id="oc-autor"></p>
+            <div class="small text-muted"><i class="bi bi-upc-scan me-1"></i> <span id="oc-codigo"></span></div>
+        </div>
+    </div>
+    
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body bg-light rounded">
+            <h6 class="text-muted text-uppercase small fw-bold mb-2"><i class="bi bi-pencil-square me-1"></i>Última modificación</h6>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small text-muted">Fecha</div>
+                    <strong id="oc-fecha-mod">-</strong>
+                </div>
+                <div>
+                    <div class="small text-muted">Por</div>
+                    <strong id="oc-modificado">Sistema</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body bg-light rounded text-center">
+            <h6 class="text-muted text-uppercase small fw-bold mb-3">Disponibilidad</h6>
+            <div class="d-flex justify-content-around">
+                <div>
+                    <h3 class="mb-0 text-success" id="oc-disponibles">0</h3>
+                    <small class="text-muted">Disponibles</small>
+                </div>
+                <div class="border-end"></div>
+                <div>
+                    <h3 class="mb-0 text-dark" id="oc-total">0</h3>
+                    <small class="text-muted">Total</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-grid gap-2">
+        <a href="#" id="oc-btn-editar" class="btn btn-primary-custom"><i class="bi bi-pencil me-2"></i>Editar Material y Ejemplares</a>
+        <a href="#" id="oc-btn-publico" class="btn btn-outline-secondary" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Ver Ficha Pública</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
