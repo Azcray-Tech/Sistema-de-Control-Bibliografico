@@ -7,9 +7,33 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { sequelize } = require('./models');
+const models = require('./models');
+const { sequelize } = models;
 const errorHandler = require('./middleware/errorHandler');
 const { cargarUsuarioSession } = require('./middleware/auth');
+const fs = require('fs');
+const os = require('os');
+
+function maintenanceMode(req, res, next) {
+  if (req.path === '/admin/login') return next();
+  const flag = path.join(os.tmpdir(), 'ceela_MAINTENANCE_MODE');
+  if (fs.existsSync(flag)) {
+    return res.status(503).send(`
+      <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+      <title>Sistema en Mantenimiento</title>
+      <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f8f9fa}.card{text-align:center;padding:3rem;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.1)}h1{color:#dc3545}code{background:#f1f1f1;padding:2px 6px;border-radius:4px}</style></head>
+      <body><div class="card"><h1>🔧 Sistema en Mantenimiento</h1>
+      <p>El sistema está en modo mantenimiento debido a un error crítico en una operación de restauración.</p>
+      <p>Contacte al administrador del servidor para resolver el problema.</p>
+      <hr><small class="text-muted">CEELA — Sistema de Control Bibliográfico</small></div></body></html>
+    `);
+  }
+  next();
+}
+const registrarAuditoria = require('./middleware/auditoria');
+const ParametroService = require('./services/parametro.service');
+const BackupService = require('./services/backup.service');
+const CronService = require('./services/cron.service');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,10 +69,22 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Servicios para tareas programadas
+const parametroService = new ParametroService(models, registrarAuditoria);
+const backupService = new BackupService(models, registrarAuditoria);
+const cronService = new CronService(models, registrarAuditoria, backupService, parametroService);
+
+// Middleware de modo mantenimiento
+app.use(maintenanceMode);
+
 // Rutas
+const adminRouter = require('./routes/admin');
+if (typeof adminRouter.injectCronService === 'function') {
+  adminRouter.injectCronService(cronService);
+}
 app.use('/admin', require('./routes/auth'));
 app.use('/', require('./routes/public'));
-app.use('/admin', require('./routes/admin'));
+app.use('/admin', adminRouter);
 app.use('/api', require('./routes/api'));
 
 // Manejo de errores
@@ -60,6 +96,7 @@ async function iniciar() {
     await sequelize.authenticate();
     console.log('Conexión a base de datos establecida correctamente.');
     await sequelize.sync({ alter: false });
+    cronService.iniciar();
     app.listen(PORT, () => {
       console.log(`Servidor iniciado en http://localhost:${PORT}`);
     });
