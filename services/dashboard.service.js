@@ -59,35 +59,65 @@ class DashboardService {
       raw: true
     });
 
-    let fechaInicio;
-    switch (periodo) {
-      case 'hoy':
-        fechaInicio = new Date();
-        fechaInicio.setHours(0, 0, 0, 0);
-        break;
-      case '1semana':
-        fechaInicio = new Date();
-        fechaInicio.setDate(fechaInicio.getDate() - 7);
-        break;
-      case '1mes':
-        fechaInicio = new Date();
-        fechaInicio.setMonth(fechaInicio.getMonth() - 1);
-        break;
-      default:
-        fechaInicio = new Date();
-        fechaInicio.setFullYear(fechaInicio.getFullYear() - 1);
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anioActual = ahora.getFullYear();
+    const nombresMeses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    let dateFormat, fechaInicio;
+    const allPeriods = [];
+
+    if (periodo === 'hoy') {
+      dateFormat = '%Y-%m-%d %H:00';
+      fechaInicio = new Date(anioActual, mesActual, ahora.getDate());
+      for (let h = 0; h < 24; h++) {
+        const sortKey = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(ahora.getDate()).padStart(2,'0')} ${String(h).padStart(2,'0')}:00`;
+        allPeriods.push({ sortKey, label: `${String(h).padStart(2,'0')}:00` });
+      }
+    } else if (periodo === '1semana') {
+      dateFormat = '%Y-%m-%d';
+      fechaInicio = new Date(anioActual, mesActual, ahora.getDate() - 6);
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(anioActual, mesActual, ahora.getDate() - i);
+        const sortKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        allPeriods.push({ sortKey, label: `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}` });
+      }
+    } else if (periodo === '1mes') {
+      dateFormat = '%Y-%m-%d';
+      fechaInicio = new Date(anioActual, mesActual, 1);
+      const diasMes = new Date(anioActual, mesActual + 1, 0).getDate();
+      for (let dia = 1; dia <= diasMes; dia++) {
+        const sortKey = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+        allPeriods.push({ sortKey, label: `${String(dia).padStart(2,'0')}/${String(mesActual+1).padStart(2,'0')}` });
+      }
+    } else {
+      dateFormat = '%Y-%m';
+      fechaInicio = new Date(anioActual, mesActual - 11, 1);
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(anioActual, mesActual - i, 1);
+        const sortKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        allPeriods.push({ sortKey, label: `${nombresMeses[d.getMonth()]} ${d.getFullYear()}` });
+      }
     }
 
-    const prestamosPorMes = await this.Prestamo.findAll({
+    const raw = await this.Prestamo.findAll({
       attributes: [
-        [fn('DATE_FORMAT', col('fecha_prestamo'), '%Y-%m'), 'mes'],
+        [fn('DATE_FORMAT', col('fecha_prestamo'), dateFormat), 'periodo'],
         [fn('COUNT', col('id_prestamo')), 'total']
       ],
       where: { fechaPrestamo: { [Op.gte]: fechaInicio } },
-      group: [literal('mes')],
-      order: [[literal('mes'), 'ASC']],
+      group: ['periodo'],
+      order: [[literal('periodo'), 'ASC']],
       raw: true
     });
+
+    const lookup = {};
+    raw.forEach(r => { lookup[r.periodo] = parseInt(r.total, 10); });
+
+    const prestamosPorMes = allPeriods.map(p => ({
+      mes: p.label,
+      total: lookup[p.sortKey] || 0
+    }));
 
     return {
       totalMateriales, prestamosActivos, disponibles, vencidos,

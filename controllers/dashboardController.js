@@ -14,7 +14,7 @@ class DashboardController {
    */
   mostrarDashboard = async (req, res, next) => {
     try {
-      const periodo = req.query.periodo || '12meses';
+      const periodo = req.query.periodo || '1mes';
       const stats = await this.dashboardService.obtenerEstadisticas(periodo);
 
       res.render('admin/dashboard', {
