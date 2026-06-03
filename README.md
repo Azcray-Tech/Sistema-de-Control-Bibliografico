@@ -49,7 +49,7 @@ Desarrollado para despliegue en red LAN sobre Windows Server, permite a bibliote
 | **OPAC** | Catálogo público sin autenticación con búsqueda simple (título/autor/sinopsis) y avanzada (filtros combinables por tipo, categoría, año, autor). |
 | **Auditoría** | Registro de todas las operaciones críticas (creación, modificación, baja, préstamos, login/logout) con trazabilidad de usuario. |
 | **Parámetros** | Configuración global dinámica: días de préstamo, factor de sanción, tiempo de inactividad, backups, etc. |
-| **Backup/Restore** | Backup manual descargable (.zip con dump SQL + portadas). Restauración desde backup con generación automática de pre-restore. |
+| **Backup/Restore** | Backup manual descargable (.zip con dump SQL + portadas). Restauración desde backup con generación automática de pre-restore. Backup automático programado vía node-cron. |
 | **Autenticación** | Login con sesiones (express-session), cierre automático por inactividad (15 min configurable), roles: Administrador / Bibliotecario. |
 
 ---
@@ -186,6 +186,9 @@ Acceder a `http://localhost:3000/admin/login` e iniciar sesión.
 | `/admin/prestamos` | Registro, renovación y devolución de préstamos |
 | `/admin/prestamos/historial` | Historial de préstamos |
 | `/admin/prestamos/sanciones` | Gestión de sanciones |
+| `/admin/parametros` | Configuración global dinámica (días de préstamo, factor sanción, etc.) |
+| `/admin/backup` | Backup manual descargable (.zip con dump SQL + portadas) |
+| `/admin/restaurar` | Restauración desde backup con pre-restore automático |
 | `/admin/usuarios` | Administración de cuentas de personal (solo Administrador) |
 
 ### Catálogo Público (OPAC)
@@ -204,7 +207,7 @@ Acceder a `http://localhost:3000/` — no requiere autenticación.
 ├── app.js                  # Punto de entrada Express
 ├── config/
 │   └── database.js         # Singleton Sequelize
-├── controllers/            # Controladores MVCS (9 archivos)
+├── controllers/            # Controladores MVCS (11 archivos)
 ├── middleware/
 │   ├── auth.js             # requiereAuth, requiereRol, cargarUsuarioSession
 │   ├── auditoria.js        # Registro de operaciones en log_actividad
@@ -219,11 +222,11 @@ Acceder a `http://localhost:3000/` — no requiere autenticación.
 │   ├── schema.sql          # DDL completo de la base de datos
 │   ├── migrate.js          # Migración inicial + seed
 │   └── clear_data.js       # Limpieza de datos transaccionales
-├── services/               # Servicios MVCS (11 clases)
+├── services/               # Servicios MVCS (13 clases)
 ├── tests/                  # Pruebas unitarias con Jest
 │   └── mocks/models.js     # Fábrica de mocks Sequelize
 └── views/                  # Plantillas EJS
-    ├── admin/              # 12 vistas del panel administrativo
+    ├── admin/              # 14 vistas del panel administrativo
     ├── public/             # 3 vistas del OPAC
     └── partials/           # Fragmentos reutilizables
 ```
