@@ -75,10 +75,17 @@ class MaterialService {
     return /^\d{4}-\d{4}$/.test(issn);
   }
 
-  async listar(pagina = 1, tipo = '') {
+  async listar(pagina = 1, tipo = '', search = '') {
     const Op = this.Material.sequelize.constructor.Op;
     const where = {};
     if (tipo) where.tipo = tipo;
+    if (search) {
+      where[Op.or] = [
+        { titulo: { [Op.like]: `%${search}%` } },
+        { sinopsis: { [Op.like]: `%${search}%` } },
+        { signatura: { [Op.like]: `%${search}%` } }
+      ];
+    }
 
     const page = Math.max(1, parseInt(pagina, 10) || 1);
     const limit = 20;

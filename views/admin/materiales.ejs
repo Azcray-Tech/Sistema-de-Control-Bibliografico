@@ -78,6 +78,16 @@
                 <option value="anuario">Anuario</option>
             </select>
 
+<form method="GET" action="/admin/materiales" class="search-admin-form mb-3" id="searchForm">
+  <div class="search-admin">
+    <i class="bi bi-search"></i>
+    <input type="text" name="q" class="form-control search-admin-input" placeholder="Buscar materiales..." value="<%= q %>">
+    <% if (q) { %>
+    <a href="/admin/materiales" class="btn btn-sm btn-outline-secondary search-clear-btn">Limpiar</a>
+    <% } %>
+  </div>
+</form>
+
             <div class="table-responsive">
                 <table class="table table-custom" id="tablaLibros">
                     <thead>
@@ -168,32 +178,32 @@
             </div>
 
 <% if (totalPaginas > 1) { %>
-<div class="d-flex justify-content-between align-items-center mt-3 px-2">
-  <small class="text-muted">
+<div class="dt-footer mt-3">
+  <div class="dataTables_info">
     Página <%= pagina %> de <%= totalPaginas %> (<%= total %> registros)
-  </small>
-  <nav>
-    <ul class="pagination pagination-sm mb-0">
+  </div>
+  <div class="dataTables_paginate">
+    <ul class="pagination">
       <li class="page-item <%= pagina <= 1 ? 'disabled' : '' %>">
-        <a class="page-link" href="/admin/materiales?page=<%= pagina - 1 %>">&laquo; Anterior</a>
+        <a class="page-link" href="/admin/materiales?page=<%= pagina - 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">&laquo; Anterior</a>
       </li>
       <% for (let i = Math.max(1, pagina - 2); i <= Math.min(totalPaginas, pagina + 2); i++) { %>
       <li class="page-item <%= i === pagina ? 'active' : '' %>">
-        <a class="page-link" href="/admin/materiales?page=<%= i %>"><%= i %></a>
+        <a class="page-link" href="/admin/materiales?page=<%= i %><%= q ? '&q=' + encodeURIComponent(q) : '' %>"><%= i %></a>
       </li>
       <% } %>
       <li class="page-item <%= pagina >= totalPaginas ? 'disabled' : '' %>">
-        <a class="page-link" href="/admin/materiales?page=<%= pagina + 1 %>">Siguiente &raquo;</a>
+        <a class="page-link" href="/admin/materiales?page=<%= pagina + 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">Siguiente &raquo;</a>
       </li>
     </ul>
-  </nav>
+  </div>
 </div>
 <% } %>
 
 <script>
 $(document).ready(function() {
     var table = $('#tablaLibros').DataTable({
-        dom: '<"dt-toolbar"<"dt-toolbar-left"f><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rt',
+        dom: '<"dt-toolbar"<"dt-toolbar-left"><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rt',
         language: {
             url: '/js/es-ES.json',
             "sProcessing":     "Procesando...",
