@@ -18,13 +18,18 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                     <h5 class="mb-0 fw-bold">
                         Categorías Registradas
-                        <span class="badge bg-light text-dark border ms-2"><%= categorias.length %></span>
+                        <span class="badge bg-light text-dark border ms-2"><%= total %></span>
                     </h5>
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="input-group" style="max-width: 240px;">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" class="form-control border-start-0" id="searchCategorias" placeholder="Buscar...">
-                        </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <form method="GET" action="/admin/categorias" class="m-0">
+                            <div class="search-admin" style="width: 260px;">
+                                <i class="bi bi-search"></i>
+                                <input type="text" name="q" class="form-control search-admin-input" placeholder="Buscar categorías..." value="<%= q %>">
+                                <% if (q) { %>
+                                <a href="/admin/categorias" class="btn btn-sm btn-outline-secondary search-clear-btn">Limpiar</a>
+                                <% } %>
+                            </div>
+                        </form>
                         <button class="btn btn-primary-custom" onclick="abrirModalCategoria()">
                             <i class="bi bi-plus-lg me-1"></i>Nueva Categoría
                         </button>
@@ -32,7 +37,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-custom align-middle" id="tablaCategorias">
+                    <table class="table table-custom align-middle">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
@@ -90,6 +95,29 @@
                         </tbody>
                     </table>
                 </div>
+
+<% if (totalPaginas > 1) { %>
+<div class="dt-footer mt-3">
+  <div class="dataTables_info">
+    Página <%= pagina %> de <%= totalPaginas %> (<%= total %> registros)
+  </div>
+  <div class="dataTables_paginate">
+    <ul class="pagination">
+      <li class="page-item <%= pagina <= 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="/admin/categorias?page=<%= pagina - 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">&laquo; Anterior</a>
+      </li>
+      <% for (let i = Math.max(1, pagina - 2); i <= Math.min(totalPaginas, pagina + 2); i++) { %>
+      <li class="page-item <%= i === pagina ? 'active' : '' %>">
+        <a class="page-link" href="/admin/categorias?page=<%= i %><%= q ? '&q=' + encodeURIComponent(q) : '' %>"><%= i %></a>
+      </li>
+      <% } %>
+      <li class="page-item <%= pagina >= totalPaginas ? 'disabled' : '' %>">
+        <a class="page-link" href="/admin/categorias?page=<%= pagina + 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">Siguiente &raquo;</a>
+      </li>
+    </ul>
+  </div>
+</div>
+<% } %>
             </div>
         </div>
     </div>

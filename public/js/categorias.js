@@ -1,5 +1,3 @@
-var tablaCategorias;
-
 function abrirModalCategoria() {
     window.categoriaAlpine.abrirModal();
 }
@@ -35,24 +33,3 @@ function abrirReasignar(id, nombre, total, nombreOrigen) {
     document.getElementById('formReasignar').action = '/admin/categorias/' + id + '/reasignar';
     new bootstrap.Modal(document.getElementById('modalReasignar')).show();
 }
-
-$(document).ready(function () {
-    tablaCategorias = $('#tablaCategorias').DataTable({
-        language: {
-            url: '/js/es-ES.json'
-        },
-        pageLength: 10,
-        dom: 'rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-        order: [
-            [0, 'asc']
-        ],
-        columnDefs: [{
-            orderable: false,
-            targets: [3]
-        }]
-    });
-
-    $('#searchCategorias').on('keyup', function() {
-        tablaCategorias.search(this.value).draw();
-    });
-});

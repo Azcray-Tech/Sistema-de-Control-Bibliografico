@@ -22,6 +22,42 @@ class CategoriaService {
     return categorias.map(c => c.toJSON());
   }
 
+  async listarPaginado(pagina = 1, search = '') {
+    const Op = this.Categoria.sequelize.constructor.Op;
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { nombre: { [Op.like]: `%${search}%` } },
+        { descripcion: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const page = Math.max(1, parseInt(pagina, 10) || 1);
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const total = await this.Categoria.count({ where });
+
+    const categorias = await this.Categoria.findAll({
+      where,
+      include: [{ model: this.Material, attributes: [] }],
+      attributes: {
+        include: [[this.Categoria.sequelize.fn('COUNT', this.Categoria.sequelize.col('Materials.id_material')), 'totalMateriales']]
+      },
+      group: ['Categoria.id_categoria'],
+      order: [['nombre', 'ASC']],
+      limit, offset,
+      subQuery: false
+    });
+
+    return {
+      categorias: categorias.map(c => c.toJSON()),
+      total,
+      pagina: page,
+      totalPaginas: Math.ceil(total / limit)
+    };
+  }
+
   async listarActivas() {
     const categorias = await this.Categoria.findAll({
       where: { activa: true },
