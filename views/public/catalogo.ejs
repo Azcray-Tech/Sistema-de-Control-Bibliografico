@@ -179,7 +179,7 @@ function removeKey(params, key) {
                         <li class="page-item <%= pagination.page<=1?'disabled':'' %>">
                             <a class="page-link" href="<%= buildURL(query, { page: pagination.page-1 }) %>"><i class="bi bi-chevron-left"></i></a>
                         </li>
-                        <% for(var i=1;i<=pagination.totalPages;i++) { %>
+                        <% for(let i=1;i<=pagination.totalPages;i++) { %>
                             <li class="page-item <%= i===pagination.page?'active':'' %>">
                                 <a class="page-link" href="<%= buildURL(query, { page: i }) %>"><%= i %></a>
                             </li>

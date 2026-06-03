@@ -4,8 +4,9 @@
 ```
 npm run dev                         # Dev server (nodemon)
 npm start                           # Production
-npm test                            # Jest (--passWithNoTests)
-npm run lint                        # ESLint (no config found — add .eslintrc* before using)
+npm test                            # Jest (--passWithNoTests — exit 0 si no hay tests)
+npm run test:watch                  # Jest watch mode
+npm run lint                        # ESLint 8 (falla sin .eslintrc*)
 node scripts/migrate.js             # Create DB schema + seed (must run before first start)
 node scripts/clear_data.js          # Wipe transactional data, keep seeds (admin, categories, params)
 npx jest tests/<file>               # Focused test
@@ -18,8 +19,7 @@ npx jest --watch                    # Watch mode
 - `sequelize.sync({ alter: false })` on every startup — no auto-migrations. Schema changes go in `scripts/schema.sql`.
 - Default admin credentials: `admin` / `admin123`.
 - Session TTL: 15 min (`app.js:24`). Relevant for auth testing.
-- File uploads: `public/images/covers/`, max 3MB, JPG/PNG/WebP only (`middleware/upload.js`).
-- No CI workflows found.
+- File uploads: `public/images/covers/`, max 3MB, JPG/PNG/WebP only (`middleware/upload.js`). Directory must exist (gitignored except `default.jpg`).
 
 ## Architecture
 **MVCS**: Models → Controllers → Services, wired in route files.

@@ -55,7 +55,6 @@ router.get('/materiales/nuevo', requiereAuth, materialController.mostrarFormular
 router.get('/materiales/:id/editar', requiereAuth, materialController.mostrarFormulario);
 router.post('/materiales', requiereAuth, upload.single('portada'), materialController.guardar);
 router.post('/materiales/:id', requiereAuth, upload.single('portada'), materialController.guardar);
-router.get('/materiales/:id/ejemplares', requiereAuth, materialController.mostrarFormEjemplares);
 router.post('/materiales/:id/ejemplares', requiereAuth, materialController.agregarEjemplares);
 router.post('/materiales/:id/eliminar', requiereAuth, materialController.eliminar);
 

@@ -36,28 +36,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (prestamosPorMes && document.getElementById('chartPrestamosMes')) {
-        const formatLabel = (mes) => {
-            if (periodo === '12meses') return mes;
-            if (periodo === '1mes' || periodo === '1semana') {
-                const parts = mes.split('-');
-                return parts[2] + '/' + parts[1];
-            }
-            if (periodo === 'hoy') return mes;
-            return mes;
-        };
-
-        const labels = prestamosPorMes.map(p => formatLabel(p.mes));
+        const labels = prestamosPorMes.map(p => p.mes);
         const data = prestamosPorMes.map(p => p.total);
 
-        const xTicks = {};
+        const xTicks = { maxRotation: periodo === '1mes' ? 90 : 45 };
         if (periodo === '1mes') {
-            xTicks.maxRotation = 90;
             xTicks.autoSkip = true;
-            xTicks.maxTicksLimit = 15;
-        } else if (periodo === '1semana' || periodo === 'hoy') {
-            xTicks.maxRotation = 45;
-        } else {
-            xTicks.maxRotation = 45;
+            xTicks.maxTicksLimit = 31;
+        } else if (periodo === 'hoy') {
+            xTicks.autoSkip = true;
+            xTicks.maxTicksLimit = 12;
+        } else if (periodo === '1semana') {
+            xTicks.autoSkip = false;
         }
 
         new Chart(document.getElementById('chartPrestamosMes'), {
@@ -67,7 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Préstamos',
                     data: data,
-                    backgroundColor: 'rgba(44, 95, 79, 0.75)',
+                    backgroundColor: function(ctx) {
+                        const chart = ctx.chart;
+                        const { ctx: c, chartArea } = chart;
+                        if (!chartArea) return 'rgba(44, 95, 79, 0.75)';
+                        const gradient = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(44, 95, 79, 0.25)');
+                        gradient.addColorStop(1, '#2c5f4f');
+                        return gradient;
+                    },
                     borderColor: '#2c5f4f',
                     borderWidth: 1,
                     borderRadius: 4
@@ -76,7 +74,18 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.parsed.y + ' préstamo' + (ctx.parsed.y !== 1 ? 's' : '');
+                            }
+                        }
+                    }
+                },
                 scales: {
                     y: { beginAtZero: true, ticks: { stepSize: 1 } },
                     x: { grid: { display: false }, ticks: xTicks }

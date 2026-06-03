@@ -1567,6 +1567,63 @@ textarea.form-control {
 }
 
 /* ============================================
+   ADMIN SEARCH BAR (server-side search)
+   ============================================ */
+
+.search-admin-form {
+    max-width: 500px;
+}
+
+.search-admin {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-admin .bi-search {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.search-admin-input {
+    padding-left: 2.75rem !important;
+    padding-right: 0.75rem;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: var(--radius-sm) !important;
+    background-color: #f8fafc !important;
+    font-size: 0.95rem;
+    transition: var(--transition-fast);
+    height: 42px;
+}
+
+.search-admin-input:focus {
+    border-color: var(--color-primary) !important;
+    background-color: white !important;
+    box-shadow: 0 0 0 3px rgba(44, 95, 79, 0.15) !important;
+}
+
+.search-clear-btn {
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+    border-color: #e2e8f0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.search-clear-btn:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text-dark);
+    background-color: #f8fafc;
+}
+
+/* ============================================
    DATATABLES TOOLBAR
    ============================================ */
 

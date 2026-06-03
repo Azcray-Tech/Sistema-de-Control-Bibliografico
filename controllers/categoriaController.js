@@ -14,8 +14,13 @@ class CategoriaController {
    */
   listar = async (req, res, next) => {
     try {
-      const categorias = await this.categoriaService.listar();
-      res.render('admin/categorias', { page: 'categorias', categorias, error: null, success: req.query.success });
+      const { page, q } = req.query;
+      const { categorias, total, pagina, totalPaginas } = await this.categoriaService.listarPaginado(page, q);
+      res.render('admin/categorias', {
+        page: 'categorias', categorias, total, pagina, totalPaginas,
+        q: q || '',
+        error: null, success: req.query.success
+      });
     } catch (err) {
       next(err);
     }
@@ -39,8 +44,13 @@ class CategoriaController {
         res.redirect('/admin/categorias?success=creado');
       }
     } catch (err) {
-      const categorias = await this.categoriaService.listar();
-      res.render('admin/categorias', { page: 'categorias', categorias, error: err.message, success: null });
+      const { q } = req.query;
+      const { categorias, total, pagina, totalPaginas } = await this.categoriaService.listarPaginado(1, q || '');
+      res.render('admin/categorias', {
+        page: 'categorias', categorias, total, pagina, totalPaginas,
+        q: q || '',
+        error: err.message, success: null
+      });
     }
   };
 
@@ -54,8 +64,13 @@ class CategoriaController {
       await this.categoriaService.desactivar(req.params.id, usuarioId);
       res.redirect('/admin/categorias?success=desactivado');
     } catch (err) {
-      const categorias = await this.categoriaService.listar();
-      res.render('admin/categorias', { page: 'categorias', categorias, error: err.message, success: null });
+      const { q } = req.query;
+      const { categorias, total, pagina, totalPaginas } = await this.categoriaService.listarPaginado(1, q || '');
+      res.render('admin/categorias', {
+        page: 'categorias', categorias, total, pagina, totalPaginas,
+        q: q || '',
+        error: err.message, success: null
+      });
     }
   };
 }

@@ -70,7 +70,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('[name="contrasena"]').addEventListener('input', function() {
-        var btn = this.closest('.input-group').querySelector('button');
+        let btn = this.closest('.input-group').querySelector('button');
         if (this.value.length > 0 && this.value.length < 8) {
             this.classList.add('is-invalid');
         } else {

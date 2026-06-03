@@ -5,7 +5,7 @@
 <%- include('../partials/navbar_public') %>
 <div class="container py-4">
     <div class="d-flex align-items-center mb-3">
-        <a href="#" onclick="var url=sessionStorage.getItem('lastSearchUrl');window.location.href=url||'/buscar';return false" class="btn-back"><i class="bi bi-arrow-left me-2"></i>Volver a resultados</a>
+        <a href="#" onclick="let url=sessionStorage.getItem('lastSearchUrl');window.location.href=url||'/buscar';return false" class="btn-back"><i class="bi bi-arrow-left me-2"></i>Volver a resultados</a>
     </div>
     
     <div class="ficha-container">

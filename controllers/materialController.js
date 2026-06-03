@@ -15,10 +15,12 @@ class MaterialController {
    */
   listar = async (req, res, next) => {
     try {
-      const { page, tipo } = req.query;
-      const { materiales, total, pagina, totalPaginas } = await this.materialService.listar(page, tipo);
+      const { page, tipo, q, sort, dir } = req.query;
+      const { materiales, total, pagina, totalPaginas } = await this.materialService.listar(page, tipo, q, sort, dir);
       res.render('admin/materiales', {
         page: 'materiales', materiales, total, pagina, totalPaginas,
+        q: q || '', tipo: tipo || '',
+        sort: sort || '', dir: dir || '',
         error: null, success: req.query.success,
         successId: req.query.successId, successTitulo: req.query.successTitulo
       });
@@ -82,20 +84,6 @@ class MaterialController {
    * @requirement RF-06
    * @use_case CU-06
    */
-  mostrarFormEjemplares = async (req, res, next) => {
-    try {
-      const material = await this.materialService.obtener(req.params.id);
-      if (!material) return res.status(404).send('Material no encontrado');
-      res.render('admin/agregar_ejemplares', { page: 'materiales', material, error: null, success: req.query.success });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  /**
-   * @requirement RF-06
-   * @use_case CU-06
-   */
   agregarEjemplares = async (req, res, next) => {
     try {
       const usuarioId = req.session.usuarioId;
@@ -107,10 +95,9 @@ class MaterialController {
 
       const ids = Array.isArray(identificadores) ? identificadores : [identificadores];
       await this.materialService.agregarEjemplares(req.params.id, ids, usuarioId);
-      res.redirect(`/admin/materiales/${req.params.id}/ejemplares?success=1`);
+      res.redirect(`/admin/materiales/${req.params.id}/ejemplares/gestion?success=creado`);
     } catch (err) {
-      const material = await this.materialService.obtener(req.params.id);
-      res.render('admin/agregar_ejemplares', { page: 'materiales', material, error: err.message, success: null });
+      res.redirect(`/admin/materiales/${req.params.id}/ejemplares/gestion?error=${encodeURIComponent(err.message)}`);
     }
   };
 

@@ -115,7 +115,7 @@
         window.DASHBOARD_DATA = {
             materialesPorTipo: <%- JSON.stringify(typeof materialesPorTipo !== 'undefined' ? materialesPorTipo : []) %>,
             prestamosPorMes: <%- JSON.stringify(typeof prestamosPorMes !== 'undefined' ? prestamosPorMes : []) %>,
-            periodo: '<%= periodo || "12meses" %>'
+            periodo: '<%= periodo || "1mes" %>'
         };
     </script>
     <script src="/js/dashboard.js"></script>

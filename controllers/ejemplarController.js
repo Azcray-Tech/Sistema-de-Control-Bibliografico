@@ -12,7 +12,7 @@ class EjemplarController {
     try {
       const { material, ejemplares } = await this.ejemplarService.listarPorMaterial(req.params.materialId);
       if (!material) return res.status(404).send('Material no encontrado');
-      res.render('admin/ejemplares', {
+      res.render('admin/gestion_ejemplares', {
         page: 'materiales', material, ejemplares,
         error: req.query.error || null, success: req.query.success || null
       });
