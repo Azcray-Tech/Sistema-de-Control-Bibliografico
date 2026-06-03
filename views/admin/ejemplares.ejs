@@ -70,7 +70,7 @@
                                         class="d-flex align-items-center gap-2" style="flex-wrap: nowrap;">
                                         <input type="hidden" name="materialId" value="<%= material.idMaterial %>">
                                         <select name="estado" class="form-select form-select-sm" style="width:auto;min-width:130px;">
-                                            <% var estadosPermitidos = ['Disponible', 'En restauración', 'Dañado', 'Perdido']; %>
+                                            <% let estadosPermitidos = ['Disponible', 'En restauración', 'Dañado', 'Perdido']; %>
                                             <% if (usuarioSession.rol === 'Administrador') { estadosPermitidos.push('Disponible'); } %>
                                             <% estadosPermitidos.forEach(function(est) { %>
                                             <option value="<%= est %>" <%= ej.estado === est ? 'selected' : '' %>><%= est %></option>

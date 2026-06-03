@@ -91,12 +91,12 @@
 </div>
 <script>
 $('.btn-desactivar').on('click', function() {
-    var btn = $(this);
-    var id = btn.data('id');
-    var nombre = btn.data('nombre');
-    var usuario = btn.data('usuario');
+    let btn = $(this);
+    let id = btn.data('id');
+    let nombre = btn.data('nombre');
+    let usuario = btn.data('usuario');
     Swal.fire({
-        title: '¿Desactivar usuario?',
+        title: '¿Desactilet usuario?',
         html: 'Se desactivará la cuenta de <strong>"' + nombre + '" (' + usuario + ')</strong>.<br>El usuario no podrá iniciar sesión.',
         icon: 'warning',
         showCancelButton: true,

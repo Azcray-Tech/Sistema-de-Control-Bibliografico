@@ -202,7 +202,7 @@
 
 <script>
 $(document).ready(function() {
-    var table = $('#tablaLibros').DataTable({
+    let table = $('#tablaLibros').DataTable({
         dom: '<"dt-toolbar"<"dt-toolbar-left"><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rt',
         language: {
             url: '/js/es-ES.json',
@@ -226,8 +226,8 @@ $(document).ready(function() {
                 "sPrevious": "Anterior"
             },
             "oAria": {
-                "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                "sSortAscending":  ": Actilet para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Actilet para ordenar la columna de manera descendente"
             }
         },
         order: [[7, 'desc']],
@@ -237,28 +237,28 @@ $(document).ready(function() {
         initComplete: function() {
             $('#filtroTipoDT').appendTo('.dt-type-filter').removeClass('d-none');
 
-            var sortSelect = $('<select class="form-select dt-sort-select"><option value="0,asc">Título (A-Z)</option><option value="0,desc">Título (Z-A)</option><option value="1,asc">Autor (A-Z)</option><option value="7,desc">Más recientes</option><option value="7,asc">Más antiguos</option></select>');
+            let sortSelect = $('<select class="form-select dt-sort-select"><option value="0,asc">Título (A-Z)</option><option value="0,desc">Título (Z-A)</option><option value="1,asc">Autor (A-Z)</option><option value="7,desc">Más recientes</option><option value="7,asc">Más antiguos</option></select>');
             sortSelect.appendTo('.dt-sort-select');
             sortSelect.on('change', function() {
-                var vals = $(this).val().split(',');
+                let vals = $(this).val().split(',');
                 table.order([parseInt(vals[0]), vals[1]]).draw();
             });
         }
     });
 
     $('#filtroTipoDT').on('change', function() {
-        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+        let val = $.fn.dataTable.util.escapeRegex($(this).val());
         table.column(4).search(val ? val : '', true, false).draw();
     });
 
     $('.btn-delete-material').on('click', function() {
-        var btn = $(this);
-        var id = btn.data('id');
-        var titulo = btn.data('titulo');
-        var ejemplares = btn.data('ejemplares') || 0;
-        var form = $('#form-delete-' + id);
+        let btn = $(this);
+        let id = btn.data('id');
+        let titulo = btn.data('titulo');
+        let ejemplares = btn.data('ejemplares') || 0;
+        let form = $('#form-delete-' + id);
 
-        var mensaje = 'Se eliminará <strong>"' + titulo + '"</strong>';
+        let mensaje = 'Se eliminará <strong>"' + titulo + '"</strong>';
         if (ejemplares > 0) {
             mensaje += ' junto con <strong>' + ejemplares + ' ejemplare' + (ejemplares > 1 ? 's' : '') + '</strong>';
         }

@@ -234,8 +234,8 @@
                     </div>
 
 <script>
-                var indiceArticulo = 0;
-                var articulosExistentes = <%- JSON.stringify(function() {
+                let indiceArticulo = 0;
+                let articulosExistentes = <%- JSON.stringify(function() {
                   if (typeof formData !== 'undefined' && formData !== null && formData.articulos) {
                     return Array.isArray(formData.articulos) ? formData.articulos.map(function(a) {
                       return {
@@ -268,10 +268,10 @@
                             paginaInicio = paginaInicio != null ? String(paginaInicio) : '';
                             paginaFin = paginaFin != null ? String(paginaFin) : '';
 
-                            var tbody = document.getElementById('articulosBody');
-                            var tr = document.createElement('tr');
+                            let tbody = document.getElementById('articulosBody');
+                            let tr = document.createElement('tr');
 
-                            var html = '';
+                            let html = '';
                             if (id) {
                                 html += '<input type="hidden" name="articulos[' + indiceArticulo + '][id]" value="' + id.replace(/"/g, '&quot;') + '">';
                             }
@@ -292,8 +292,8 @@
                         }
 
                         function actualizarContadorArticulos() {
-                            var count = document.querySelectorAll('#articulosBody tr').length;
-                            var countSpan = document.getElementById('articulosCount');
+                            let count = document.querySelectorAll('#articulosBody tr').length;
+                            let countSpan = document.getElementById('articulosCount');
                             if (count > 0) {
                                 countSpan.textContent = count + ' articulo(s)';
                             } else {
@@ -302,8 +302,8 @@
                         }
 
                         if (articulosExistentes.length > 0) {
-                            for (var i = 0; i < articulosExistentes.length; i++) {
-                                var art = articulosExistentes[i];
+                            for (let i = 0; i < articulosExistentes.length; i++) {
+                                let art = articulosExistentes[i];
                                 agregarArticulo(art.id, art.titulo || '', art.autores_texto || '', art.paginaInicio || '', art.paginaFin || '');
                             }
                         }
@@ -384,9 +384,9 @@
 
                     <script>
                         function actualizarContadorSinopsis() {
-                            var texto = document.getElementById('sinopsisInput').value;
-                            var contador = document.getElementById('contadorSinopsis');
-                            var longitud = texto.length;
+                            let texto = document.getElementById('sinopsisInput').value;
+                            let contador = document.getElementById('contadorSinopsis');
+                            let longitud = texto.length;
                             contador.textContent = longitud;
                             if (longitud > 1800) {
                                 contador.classList.add('text-warning');
@@ -502,7 +502,7 @@
 
         function validateISBN(isbn) {
             if (!isbn) return { valid: false, error: 'ISBN requerido' };
-            var clean = isbn.replace(/[-\s]/g, '');
+            let clean = isbn.replace(/[-\s]/g, '');
             if (clean.length === 10) return validateISBN10(clean);
             else if (clean.length === 13) return validateISBN13(clean);
             else return { valid: false, error: 'ISBN debe tener 10 o 13 dígitos' };
@@ -510,9 +510,9 @@
 
         function validateISBN10(isbn) {
             if (!/^\d{9}[\dXx]$/.test(isbn)) return { valid: false, error: 'ISBN-10 formato inválido' };
-            var sum = 0;
-            for (var i = 0; i < 9; i++) sum += parseInt(isbn[i]) * (10 - i);
-            var last = isbn[9].toUpperCase();
+            let sum = 0;
+            for (let i = 0; i < 9; i++) sum += parseInt(isbn[i]) * (10 - i);
+            let last = isbn[9].toUpperCase();
             sum += (last === 'X') ? 10 : parseInt(last);
             if (sum % 11 !== 0) return { valid: false, error: 'ISBN-10 dígito verificador inválido', type: 'ISBN-10' };
             return { valid: true, type: 'ISBN-10' };
@@ -520,38 +520,38 @@
 
         function validateISBN13(isbn) {
             if (!/^\d{13}$/.test(isbn)) return { valid: false, error: 'ISBN-13 formato inválido' };
-            var sum = 0;
-            for (var i = 0; i < 12; i++) sum += parseInt(isbn[i]) * (i % 2 === 0 ? 1 : 3);
-            var check = (10 - (sum % 10)) % 10;
+            let sum = 0;
+            for (let i = 0; i < 12; i++) sum += parseInt(isbn[i]) * (i % 2 === 0 ? 1 : 3);
+            let check = (10 - (sum % 10)) % 10;
             if (check !== parseInt(isbn[12])) return { valid: false, error: 'ISBN-13 dígito verificador inválido', type: 'ISBN-13' };
             return { valid: true, type: 'ISBN-13' };
         }
 
         function validateISSN(issn) {
             if (!issn) return { valid: false, error: 'ISSN requerido' };
-            var clean = issn.replace(/[-\s]/g, '');
+            let clean = issn.replace(/[-\s]/g, '');
             if (clean.length !== 8) return { valid: false, error: 'ISSN debe tener 8 dígitos' };
             if (!/^\d{7}[\dXx]$/.test(clean)) return { valid: false, error: 'ISSN formato inválido' };
-            var sum = 0;
-            for (var i = 0; i < 7; i++) sum += parseInt(clean[i]) * (8 - i);
-            var last = clean[7].toUpperCase();
-            var check = (11 - (sum % 11)) % 11;
-            var valDigit = (last === 'X') ? 10 : parseInt(last);
+            let sum = 0;
+            for (let i = 0; i < 7; i++) sum += parseInt(clean[i]) * (8 - i);
+            let last = clean[7].toUpperCase();
+            let check = (11 - (sum % 11)) % 11;
+            let valDigit = (last === 'X') ? 10 : parseInt(last);
             if (check !== valDigit) return { valid: false, error: 'ISSN dígito verificador inválido', type: 'ISSN' };
             return { valid: true, type: 'ISSN' };
         }
 
         function validarISBN(input) {
-            var isbn = input.value.trim();
-            var feedback = document.getElementById('isbnFeedback');
-            var mensaje = document.getElementById('isbnMensaje');
+            let isbn = input.value.trim();
+            let feedback = document.getElementById('isbnFeedback');
+            let mensaje = document.getElementById('isbnMensaje');
             if (!isbn) {
                 feedback.innerHTML = '';
                 input.classList.remove('is-valid', 'is-invalid');
                 mensaje.textContent = '';
                 return;
             }
-            var result = validateISBN(isbn);
+            let result = validateISBN(isbn);
             if (result.valid) {
                 feedback.innerHTML = '<i class="bi bi-check text-success"></i>';
                 input.classList.remove('is-invalid');
@@ -566,16 +566,16 @@
         }
 
                 function validarISSN(input) {
-            var issn = input.value.trim();
-            var feedback = document.getElementById('issnFeedback');
-            var mensaje = document.getElementById('issnMensaje');
+            let issn = input.value.trim();
+            let feedback = document.getElementById('issnFeedback');
+            let mensaje = document.getElementById('issnMensaje');
             if (!issn) {
                 feedback.innerHTML = '';
                 input.classList.remove('is-valid', 'is-invalid');
                 mensaje.textContent = '';
                 return;
             }
-            var result = validateISSN(issn);
+            let result = validateISSN(issn);
             if (result.valid) {
                 feedback.innerHTML = '<i class="bi bi-check text-success"></i>';
                 input.classList.remove('is-invalid');

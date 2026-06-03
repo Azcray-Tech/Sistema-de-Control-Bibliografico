@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    var tablaInventario = $('#tablaInventario').DataTable({
+    let tablaInventario = $('#tablaInventario').DataTable({
         language: {
             url: '/js/es-ES.json'
         },
