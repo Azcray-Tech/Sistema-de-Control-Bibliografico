@@ -15,11 +15,12 @@ class MaterialController {
    */
   listar = async (req, res, next) => {
     try {
-      const { page, tipo, q } = req.query;
-      const { materiales, total, pagina, totalPaginas } = await this.materialService.listar(page, tipo, q);
+      const { page, tipo, q, sort, dir } = req.query;
+      const { materiales, total, pagina, totalPaginas } = await this.materialService.listar(page, tipo, q, sort, dir);
       res.render('admin/materiales', {
         page: 'materiales', materiales, total, pagina, totalPaginas,
-        q: q || '',
+        q: q || '', tipo: tipo || '',
+        sort: sort || '', dir: dir || '',
         error: null, success: req.query.success,
         successId: req.query.successId, successTitulo: req.query.successTitulo
       });

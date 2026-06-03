@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><title>Catálogo - CEELA</title><%- include('../partials/head') %></head>
+<head>
+    <title>Catálogo - CEELA</title>
+    <%- include('../partials/head') %>
+    <style>
+    .sort-header { color: var(--color-text-dark); text-decoration: none; }
+    .sort-header:hover { color: var(--color-primary); }
+    .sort-active { color: var(--color-primary) !important; font-weight: 600; }
+    </style>
+</head>
 <body>
 <% if (success === 'creado' && successId) { %>
 <script>
@@ -70,21 +78,23 @@
             <small class="text-muted">Gestión del catálogo de materiales</small></div>
         </div>
         <div class="content-card">
-            <select id="filtroTipoDT" class="form-select form-select-sm d-none">
-                <option value="">Todos los tipos</option>
-                <option value="libro">Libro</option>
-                <option value="revista">Revista</option>
-                <option value="tesis">Tesis</option>
-                <option value="anuario">Anuario</option>
-            </select>
 
 <form method="GET" action="/admin/materiales" class="search-admin-form mb-3" id="searchForm">
-  <div class="search-admin">
-    <i class="bi bi-search"></i>
-    <input type="text" name="q" class="form-control search-admin-input" placeholder="Buscar materiales..." value="<%= q %>">
-    <% if (q) { %>
-    <a href="/admin/materiales" class="btn btn-sm btn-outline-secondary search-clear-btn">Limpiar</a>
-    <% } %>
+  <div class="d-flex gap-2 align-items-center">
+    <div class="search-admin flex-grow-1">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" class="form-control search-admin-input" placeholder="Buscar materiales..." value="<%= q %>">
+      <% if (q) { %>
+      <a href="/admin/materiales?tipo=<%= encodeURIComponent(tipo) %>" class="btn btn-sm btn-outline-secondary search-clear-btn">Limpiar</a>
+      <% } %>
+    </div>
+    <select name="tipo" class="form-select form-select-sm" style="width:140px;" onchange="this.form.submit()">
+      <option value="">Todos los tipos</option>
+      <option value="libro" <%= tipo==='libro' ? 'selected' : '' %>>Libro</option>
+      <option value="revista" <%= tipo==='revista' ? 'selected' : '' %>>Revista</option>
+      <option value="tesis" <%= tipo==='tesis' ? 'selected' : '' %>>Tesis</option>
+      <option value="anuario" <%= tipo==='anuario' ? 'selected' : '' %>>Anuario</option>
+    </select>
   </div>
 </form>
 
@@ -93,13 +103,19 @@
                     <thead>
                         <tr>
                             <th>Portada</th>
-                            <th>Título</th>
+                            <%
+                            const sortUrl = (col) => {
+                              const newDir = (sort === col && dir === 'asc') ? 'desc' : 'asc';
+                              return '/admin/materiales?sort=' + encodeURIComponent(col) + '&dir=' + newDir + '&q=' + encodeURIComponent(q) + '&tipo=' + encodeURIComponent(tipo) + '&page=1';
+                            };
+                            %>
+                            <th><a href="<%= sortUrl('titulo') %>" class="sort-header<%= sort === 'titulo' ? ' sort-active' : '' %>">Título <% if (sort === 'titulo') { %><i class="bi <%= dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down' %> ms-1"></i><% } %></a></th>
                             <th>Autor(es)</th>
                             <th>ISBN / ISSN</th>
-                            <th>Tipo</th>
+                            <th><a href="<%= sortUrl('tipo') %>" class="sort-header<%= sort === 'tipo' ? ' sort-active' : '' %>">Tipo <% if (sort === 'tipo') { %><i class="bi <%= dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down' %> ms-1"></i><% } %></a></th>
                             <th>Categoría</th>
                             <th>Disponibles</th>
-                            <th>Fecha de registro</th>
+                            <th><a href="<%= sortUrl('fecha') %>" class="sort-header<%= sort === 'fecha' ? ' sort-active' : '' %>">Fecha de registro <% if (sort === 'fecha') { %><i class="bi <%= dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down' %> ms-1"></i><% } %></a></th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -177,6 +193,15 @@
             </div>
 
 <% if (totalPaginas > 1) { %>
+<%
+const pageUrl = (p) => {
+  let url = '/admin/materiales?page=' + p;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  if (tipo) url += '&tipo=' + encodeURIComponent(tipo);
+  if (sort) url += '&sort=' + encodeURIComponent(sort) + '&dir=' + encodeURIComponent(dir);
+  return url;
+};
+%>
 <div class="dt-footer mt-3">
   <div class="dataTables_info">
     Página <%= pagina %> de <%= totalPaginas %> (<%= total %> registros)
@@ -184,15 +209,15 @@
   <div class="dataTables_paginate">
     <ul class="pagination">
       <li class="page-item <%= pagina <= 1 ? 'disabled' : '' %>">
-        <a class="page-link" href="/admin/materiales?page=<%= pagina - 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">&laquo; Anterior</a>
+        <a class="page-link" href="<%= pageUrl(pagina - 1) %>">&laquo; Anterior</a>
       </li>
       <% for (let i = Math.max(1, pagina - 2); i <= Math.min(totalPaginas, pagina + 2); i++) { %>
       <li class="page-item <%= i === pagina ? 'active' : '' %>">
-        <a class="page-link" href="/admin/materiales?page=<%= i %><%= q ? '&q=' + encodeURIComponent(q) : '' %>"><%= i %></a>
+        <a class="page-link" href="<%= pageUrl(i) %>"><%= i %></a>
       </li>
       <% } %>
       <li class="page-item <%= pagina >= totalPaginas ? 'disabled' : '' %>">
-        <a class="page-link" href="/admin/materiales?page=<%= pagina + 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">Siguiente &raquo;</a>
+        <a class="page-link" href="<%= pageUrl(pagina + 1) %>">Siguiente &raquo;</a>
       </li>
     </ul>
   </div>
@@ -201,55 +226,6 @@
 
 <script>
 $(document).ready(function() {
-    let table = $('#tablaLibros').DataTable({
-        dom: '<"dt-toolbar"<"dt-toolbar-left"><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rt',
-        language: {
-            url: '/js/es-ES.json',
-            "sProcessing":     "Procesando...",
-            "sLengthMenu":     "Mostrar _MENU_ registros",
-            "sZeroRecords":    "No se encontraron resultados",
-            "sEmptyTable":     "Ningún dato disponible en esta tabla",
-            "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-            "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
-            "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
-            "sInfoPostFix":    "",
-            "sSearch":         "",
-            "sSearchPlaceholder": "Buscar materiales...",
-            "sUrl":            "",
-            "sInfoThousands":  ",",
-            "sLoadingRecords": "Cargando...",
-            "oPaginate": {
-                "sFirst":    "Primero",
-                "sLast":     "Último",
-                "sNext":     "Siguiente",
-                "sPrevious": "Anterior"
-            },
-            "oAria": {
-                "sSortAscending":  ": Actilet para ordenar la columna de manera ascendente",
-                "sSortDescending": ": Actilet para ordenar la columna de manera descendente"
-            }
-        },
-        order: [[7, 'desc']],
-        columnDefs: [
-            { orderable: false, targets: [0, 8] }
-        ],
-        initComplete: function() {
-            $('#filtroTipoDT').appendTo('.dt-type-filter').removeClass('d-none');
-
-            let sortSelect = $('<select class="form-select dt-sort-select"><option value="0,asc">Título (A-Z)</option><option value="0,desc">Título (Z-A)</option><option value="1,asc">Autor (A-Z)</option><option value="7,desc">Más recientes</option><option value="7,asc">Más antiguos</option></select>');
-            sortSelect.appendTo('.dt-sort-select');
-            sortSelect.on('change', function() {
-                let vals = $(this).val().split(',');
-                table.order([parseInt(vals[0]), vals[1]]).draw();
-            });
-        }
-    });
-
-    $('#filtroTipoDT').on('change', function() {
-        let val = $.fn.dataTable.util.escapeRegex($(this).val());
-        table.column(4).search(val ? val : '', true, false).draw();
-    });
-
     $('.btn-delete-material').on('click', function() {
         let btn = $(this);
         let id = btn.data('id');

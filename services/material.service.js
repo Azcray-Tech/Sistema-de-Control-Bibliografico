@@ -75,7 +75,7 @@ class MaterialService {
     return /^\d{4}-\d{4}$/.test(issn);
   }
 
-  async listar(pagina = 1, tipo = '', search = '') {
+  async listar(pagina = 1, tipo = '', search = '', sort = '', dir = '') {
     const Op = this.Material.sequelize.constructor.Op;
     const where = {};
     if (tipo) where.tipo = tipo;
@@ -91,6 +91,10 @@ class MaterialService {
     const limit = 20;
     const offset = (page - 1) * limit;
 
+    const sortMap = { titulo: 'titulo', tipo: 'tipo', fecha: 'updatedAt' };
+    const sortCol = sortMap[sort] || 'updatedAt';
+    const sortDir = dir === 'asc' ? 'ASC' : 'DESC';
+
     const { rows, count } = await this.Material.findAndCountAll({
       where,
       include: [
@@ -102,7 +106,7 @@ class MaterialService {
         { model: this.Autor, as: 'autores', through: { attributes: [] } },
         { model: this.Ejemplar, as: 'ejemplares' }
       ],
-      order: [['updatedAt', 'DESC']],
+      order: [[sortCol, sortDir]],
       limit, offset, distinct: true
     });
 
