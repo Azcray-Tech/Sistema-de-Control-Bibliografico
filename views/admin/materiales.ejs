@@ -167,10 +167,33 @@
                 </table>
             </div>
 
+<% if (totalPaginas > 1) { %>
+<div class="d-flex justify-content-between align-items-center mt-3 px-2">
+  <small class="text-muted">
+    Página <%= pagina %> de <%= totalPaginas %> (<%= total %> registros)
+  </small>
+  <nav>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item <%= pagina <= 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="/admin/materiales?page=<%= pagina - 1 %>">&laquo; Anterior</a>
+      </li>
+      <% for (let i = Math.max(1, pagina - 2); i <= Math.min(totalPaginas, pagina + 2); i++) { %>
+      <li class="page-item <%= i === pagina ? 'active' : '' %>">
+        <a class="page-link" href="/admin/materiales?page=<%= i %>"><%= i %></a>
+      </li>
+      <% } %>
+      <li class="page-item <%= pagina >= totalPaginas ? 'disabled' : '' %>">
+        <a class="page-link" href="/admin/materiales?page=<%= pagina + 1 %>">Siguiente &raquo;</a>
+      </li>
+    </ul>
+  </nav>
+</div>
+<% } %>
+
 <script>
 $(document).ready(function() {
     var table = $('#tablaLibros').DataTable({
-        dom: '<"dt-toolbar"<"dt-toolbar-left"f><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rtip',
+        dom: '<"dt-toolbar"<"dt-toolbar-left"f><"dt-toolbar-right"l<"dt-type-filter"><"dt-sort-select">>>rt',
         language: {
             url: '/js/es-ES.json',
             "sProcessing":     "Procesando...",
