@@ -159,8 +159,7 @@
                                 <div class="d-flex gap-1">
                                     <button class="btn btn-sm btn-outline-info btn-view-details" title="Ver detalles rápidos"><i class="bi bi-layout-sidebar-reverse"></i></button>
                                     <a href="/admin/materiales/<%= m.idMaterial %>/editar" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
-                                    <a href="/admin/materiales/<%= m.idMaterial %>/ejemplares" class="btn btn-sm btn-outline-success" title="Agregar ejemplares"><i class="bi bi-plus-circle"></i></a>
-                                    <a href="/admin/materiales/<%= m.idMaterial %>/ejemplares/gestion" class="btn btn-sm btn-outline-secondary" title="Gestionar ejemplares"><i class="bi bi-boxes"></i></a>
+                                    <a href="/admin/materiales/<%= m.idMaterial %>/ejemplares/gestion" class="btn btn-sm btn-outline-success" title="Gestionar ejemplares"><i class="bi bi-boxes"></i></a>
                                     <button type="button" class="btn btn-sm btn-outline-danger btn-delete-material"
                                             data-id="<%= m.idMaterial %>"
                                             data-titulo="<%= m.titulo.replace(/"/g, '&quot;') %>"
