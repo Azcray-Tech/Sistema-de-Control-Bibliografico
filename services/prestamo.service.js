@@ -128,7 +128,7 @@ class PrestamoService {
     return prestamo;
   }
 
-  async devolver(id, usuarioId) {
+  async devolver(id, usuarioId, { estadoEjemplar, motivo } = {}) {
     const prestamo = await this.Prestamo.findByPk(id, {
       include: [
         { model: this.Ejemplar },
@@ -143,8 +143,13 @@ class PrestamoService {
     const fechaPrevista = new Date(prestamo.fechaDevolucionPrevista);
     const retraso = Math.max(0, Math.floor((hoy - fechaPrevista) / 86400000));
 
+    const nuevoEstado = estadoEjemplar || 'Disponible';
+    if ((nuevoEstado === 'Dañado' || nuevoEstado === 'En restauración') && !motivo) {
+      throw new Error('Debe especificar el motivo cuando el ejemplar está dañado o en restauración');
+    }
+
     await prestamo.update({ estado: 'Devuelto', fechaDevolucionReal: hoy });
-    await prestamo.Ejemplar.update({ estado: 'Disponible' });
+    await prestamo.Ejemplar.update({ estado: nuevoEstado });
 
     if (retraso > 0) {
       const factorSancion = await this.parametroService.obtener('factor_sancion', 2);

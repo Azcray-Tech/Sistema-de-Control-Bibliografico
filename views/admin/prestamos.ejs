@@ -144,11 +144,10 @@
                             </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/devolver" style="display:inline;">
-                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Devolver">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-success" title="Devolver"
+                                        onclick="devolverPrestamo(<%= p.idPrestamo %>)">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
                                     <% if (diff <= 0) { %>
                                     <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/renovar" style="display:inline;">
                                         <button type="submit" class="btn btn-sm btn-outline-primary" title="Renovar">

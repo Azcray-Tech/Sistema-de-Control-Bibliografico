@@ -58,7 +58,8 @@ class PrestamoController {
   devolver = async (req, res, next) => {
     try {
       const usuarioId = req.session.usuarioId;
-      await this.prestamoService.devolver(req.params.id, usuarioId);
+      const { estadoEjemplar, motivo } = req.body;
+      await this.prestamoService.devolver(req.params.id, usuarioId, { estadoEjemplar, motivo });
       res.redirect('/admin/prestamos?success=3');
     } catch (err) {
       res.redirect(`/admin/prestamos?error=${encodeURIComponent(err.message)}`);

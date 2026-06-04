@@ -235,6 +235,72 @@ function reiniciar() {
   ejemplarSeleccionado = null;
 }
 
+async function devolverPrestamo(prestamoId) {
+  const { isConfirmed: buenEstado } = await Swal.fire({
+    title: '¿El ejemplar se devuelve en buen estado?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, en buen estado',
+    cancelButtonText: 'No, está dañado / en restauración',
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#dc3545',
+    reverseButtons: true
+  });
+
+  let estadoEjemplar = 'Disponible';
+  let motivo = '';
+
+  if (!buenEstado) {
+    const { value: formValues, isConfirmed } = await Swal.fire({
+      title: 'Estado del ejemplar',
+      html: '<label class="form-label text-start d-block">Estado:</label>' +
+        '<select id="swal-estado" class="form-select mb-3">' +
+        '<option value="Dañado">Dañado</option>' +
+        '<option value="En restauración">En restauración</option>' +
+        '</select>' +
+        '<label class="form-label text-start d-block">Motivo (obligatorio):</label>' +
+        '<textarea id="swal-motivo" class="form-control" rows="3" placeholder="Describa el daño o problema..."></textarea>',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Registrar devolución',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#2c5f4f',
+      preConfirm: () => {
+        const estado = document.getElementById('swal-estado').value;
+        const motivoVal = document.getElementById('swal-motivo').value.trim();
+        if (!motivoVal) {
+          Swal.showValidationMessage('El motivo es obligatorio');
+          return false;
+        }
+        return { estadoEjemplar: estado, motivo: motivoVal };
+      }
+    });
+
+    if (!isConfirmed) return;
+    estadoEjemplar = formValues.estadoEjemplar;
+    motivo = formValues.motivo;
+  }
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/admin/prestamos/' + prestamoId + '/devolver';
+
+  const inputEstado = document.createElement('input');
+  inputEstado.type = 'hidden';
+  inputEstado.name = 'estadoEjemplar';
+  inputEstado.value = estadoEjemplar;
+  form.appendChild(inputEstado);
+
+  const inputMotivo = document.createElement('input');
+  inputMotivo.type = 'hidden';
+  inputMotivo.name = 'motivo';
+  inputMotivo.value = motivo;
+  form.appendChild(inputMotivo);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
 function filtrarPrestamos(val) {
   val = val.toLowerCase();
   document.querySelectorAll('#tablaPrestamos tbody tr').forEach(function(row) {
