@@ -27,7 +27,7 @@ class OpacService {
         { model: this.Autor, as: 'autores', attributes: ['nombre', 'apellido'] }
       ],
       order: [['createdAt', 'DESC']],
-      limit: 8
+      limit: 12
     });
   }
 
