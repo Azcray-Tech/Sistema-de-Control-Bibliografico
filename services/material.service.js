@@ -166,7 +166,7 @@ class MaterialService {
           volumen: revista.volumen, numero: revista.numero, fechaPublicacion: revista.fechaPublicacion
         }, { transaction });
         if (datos.articulos && this.articuloService) {
-          await this.articuloService.guardarArticulos(revistaCreada.idRevista, datos.articulos);
+          await this.articuloService.guardarArticulos(revistaCreada.idRevista, datos.articulos, transaction);
         }
       }
       if (tipo === 'tesis' && tesis) {
@@ -274,7 +274,7 @@ class MaterialService {
         const [revistaInst] = await this.Revista.findOrCreate({ where: { materialId: id }, defaults: { materialId: id }, transaction });
         await revistaInst.update({ issn: revista.issn, volumen: revista.volumen, numero: revista.numero, fechaPublicacion: revista.fechaPublicacion }, { transaction });
         if (this.articuloService) {
-          await this.articuloService.guardarArticulos(revistaInst.idRevista, datos.articulos);
+          await this.articuloService.guardarArticulos(revistaInst.idRevista, datos.articulos, transaction);
         }
       }
       if (tipo === 'tesis' && tesis) {

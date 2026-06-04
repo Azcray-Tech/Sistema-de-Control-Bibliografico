@@ -35,7 +35,7 @@ class ArticuloService {
     return { paginaInicio: isNaN(inicio) ? null : inicio, paginaFin: isNaN(fin) ? null : fin };
   }
 
-  async _asociarAutores(articulo, autoresTexto) {
+  async _asociarAutores(articulo, autoresTexto, transaction = null) {
     if (!autoresTexto || !autoresTexto.trim()) return;
 
     const nombres = autoresTexto.split(',').map(s => s.trim()).filter(Boolean);
@@ -48,19 +48,22 @@ class ArticuloService {
       const nombre = parts.join(' ');
 
       const [autor] = await this.Autor.findOrCreate({
-        where: { nombre, apellido }
+        where: { nombre, apellido },
+        transaction
       });
       autores.push(autor);
     }
 
     if (autores.length > 0) {
-      await articulo.setAutores(autores);
+      await articulo.setAutores(autores, { transaction });
     }
   }
 
-  async guardarArticulos(revistaId, articulos) {
+  async guardarArticulos(revistaId, articulos, transaction = null) {
+    const opts = transaction ? { transaction } : {};
+
     if (!articulos || articulos.length === 0) {
-      await this.Articulo.destroy({ where: { revistaId } });
+      await this.Articulo.destroy({ where: { revistaId }, ...opts });
       return;
     }
 
@@ -76,10 +79,11 @@ class ArticuloService {
         where: {
           revistaId,
           idArticulo: { [this.Articulo.sequelize.constructor.Op.notIn]: idsRecibidos }
-        }
+        },
+        ...opts
       });
     } else {
-      await this.Articulo.destroy({ where: { revistaId } });
+      await this.Articulo.destroy({ where: { revistaId }, ...opts });
     }
 
     for (const art of articulosArray) {
@@ -95,18 +99,18 @@ class ArticuloService {
 
       let articulo;
       if (art.id && !isNaN(parseInt(art.id, 10))) {
-        articulo = await this.Articulo.findByPk(parseInt(art.id, 10));
+        articulo = await this.Articulo.findByPk(parseInt(art.id, 10), opts);
         if (articulo) {
-          await articulo.update(datos);
+          await articulo.update(datos, opts);
         } else {
-          articulo = await this.Articulo.create(datos);
+          articulo = await this.Articulo.create(datos, opts);
         }
       } else {
-        articulo = await this.Articulo.create(datos);
+        articulo = await this.Articulo.create(datos, opts);
       }
 
       if (art.autores_texto) {
-        await this._asociarAutores(articulo, art.autores_texto);
+        await this._asociarAutores(articulo, art.autores_texto, transaction);
       }
     }
   }
