@@ -28,6 +28,8 @@ const EjemplarController = require('../controllers/ejemplarController');
 const UsuarioController = require('../controllers/usuarioController');
 const ParametroController = require('../controllers/parametroController');
 const BackupController = require('../controllers/backupController');
+const ReporteService = require('../services/reporte.service');
+const ReporteController = require('../controllers/reporteController');
 
 const parametroService = new ParametroService(models, registrarAuditoria);
 const backupService = new BackupService(models, registrarAuditoria);
@@ -47,6 +49,8 @@ const ejemplarController = new EjemplarController(ejemplarService);
 const usuarioController = new UsuarioController(usuarioService);
 const parametroController = new ParametroController(parametroService);
 const backupController = new BackupController(backupService);
+const reporteService = new ReporteService(models);
+const reporteController = new ReporteController(reporteService);
 
 router.get('/dashboard', requiereAuth, dashboardController.mostrarDashboard);
 
@@ -87,6 +91,15 @@ router.post('/backup/generar', requiereAuth, requiereRol('Administrador'), backu
 
 router.get('/restaurar', requiereAuth, requiereRol('Administrador'), backupController.mostrarRestaurar);
 router.post('/restaurar/ejecutar', requiereAuth, requiereRol('Administrador'), uploadBackup.single('archivoBackup'), backupController.restaurar);
+
+router.get('/reportes', requiereAuth, reporteController.mostrarPanel);
+router.post('/reportes/inventario', requiereAuth, reporteController.generarInventario);
+router.post('/reportes/prestamos-activos', requiereAuth, reporteController.generarPrestamosActivos);
+router.post('/reportes/historial-solicitante', requiereAuth, reporteController.generarHistorialSolicitante);
+router.post('/reportes/ranking', requiereAuth, reporteController.generarRanking);
+router.post('/reportes/vencidos-contacto', requiereAuth, reporteController.generarVencidosContacto);
+router.post('/reportes/estadisticas', requiereAuth, reporteController.generarEstadisticas);
+router.post('/reportes/suspendidos', requiereAuth, reporteController.generarSuspendidos);
 
 router.injectCronService = (cronService) => {
   if (parametroController) parametroController.setCronService(cronService);

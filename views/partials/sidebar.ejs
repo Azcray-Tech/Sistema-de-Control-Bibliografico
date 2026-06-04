@@ -10,7 +10,8 @@
         'usuarios',
         'backup',
         'restaurar',
-        'configuracion'
+        'configuracion',
+        'reportes'
     ];
     function mostrarModulo(id) {
         return modulosHabilitados.includes(id);
@@ -28,7 +29,7 @@
     <div class="sidebar-menu">
         <% const catalogoOpen = ['materiales','categorias'].includes(page); %>
         <% const prestamosOpen = ['prestamos','historial','sanciones'].includes(page); %>
-        <% const reportesOpen = ['informes','inventario'].includes(page); %>
+        <% const reportesOpen = ['reportes','inventario'].includes(page); %>
         <% const sistemaOpen = ['usuarios','backup','restaurar','configuracion','auditoria'].includes(page); %>
 
         <% if (mostrarModulo('dashboard')) { %>
@@ -105,7 +106,7 @@
         </div>
         <% } %>
 
-        <% if (mostrarModulo('informes') || mostrarModulo('inventario')) { %>
+        <% if (mostrarModulo('reportes')) { %>
         <div class="menu-parent <%= reportesOpen ? 'open' : '' %>">
             <div class="menu-parent-header" onclick="toggleSubmenu(this, event)">
                 <span class="d-flex align-items-center gap-3">
@@ -115,20 +116,11 @@
                 <i class="menu-arrow bi bi-chevron-down"></i>
             </div>
             <div class="submenu">
-                <% if (mostrarModulo('informes')) { %>
-                <a href="/admin/informes" class="submenu-item <%= page==='informes' ? 'active' : '' %>" data-title="Generar Informes">
+                <a href="/admin/reportes" class="submenu-item <%= page==='reportes' ? 'active' : '' %>" data-title="Generar Reportes">
                     <span class="submenu-bullet">•</span>
                     <i class="submenu-icon bi bi-file-earmark-bar-graph"></i>
-                    <span class="menu-text">Generar Informes</span>
+                    <span class="menu-text">Generar Reportes</span>
                 </a>
-                <% } %>
-                <% if (mostrarModulo('inventario')) { %>
-                <a href="/admin/inventario" class="submenu-item <%= page==='inventario' ? 'active' : '' %>" data-title="Inventario">
-                    <span class="submenu-bullet">•</span>
-                    <i class="submenu-icon bi bi-box-seam"></i>
-                    <span class="menu-text">Inventario</span>
-                </a>
-                <% } %>
             </div>
         </div>
         <% } %>

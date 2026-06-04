@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Reportes - CEELA</title><%- include('../partials/head') %>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('../partials/sidebar', {page:'reportes'}) %>
+        <div class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h2>Generar Reportes</h2>
+                    <small class="text-muted">
+                        <%= new Date().toLocaleDateString('es-VE', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) %>
+                        &nbsp;·&nbsp; <%= usuarioSession.nombre %>
+                    </small>
+                </div>
+            </div>
+
+            <% if (error) { %>
+            <div class="alert alert-danger alert-dismissible fade show"><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <% } %>
+
+            <div class="row g-4">
+
+                <!-- RF-31: Inventario -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-box-seam me-2"></i>Inventario Completo</h5>
+                        <p class="text-muted small mb-3">Listado de todos los materiales con metadatos, total de ejemplares y disponibles.</p>
+                        <form action="/admin/reportes/inventario" method="POST" class="row g-2">
+                            <div class="col-md-5">
+                                <label class="form-label small">Tipo de material</label>
+                                <select name="tipo" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <option value="libro">Libro</option>
+                                    <option value="revista">Revista</option>
+                                    <option value="tesis">Tesis</option>
+                                    <option value="anuario">Anuario</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small">Categoría</label>
+                                <select name="categoriaId" class="form-select form-select-sm">
+                                    <option value="">Todas</option>
+                                    <% (categorias || []).forEach(c => { %>
+                                    <option value="<%= c.idCategoria %>"><%= c.nombre %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RF-32: Préstamos Activos -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-arrow-left-right me-2"></i>Préstamos Activos</h5>
+                        <p class="text-muted small mb-3">Préstamos actualmente activos con resaltado de vencidos.</p>
+                        <form action="/admin/reportes/prestamos-activos" method="POST" class="row g-2">
+                            <div class="col-md-8">
+                                <label class="form-label small">Filtro</label>
+                                <select name="soloVencidos" class="form-select form-select-sm">
+                                    <option value="">Todos los préstamos activos</option>
+                                    <option value="true">Solo vencidos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RF-33: Historial por Solicitante -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Historial por Solicitante</h5>
+                        <p class="text-muted small mb-3">Todos los préstamos de un solicitante, incluyendo sanciones.</p>
+                        <form action="/admin/reportes/historial-solicitante" method="POST" class="row g-2">
+                            <div class="col-md-8">
+                                <label class="form-label small">Cédula del solicitante *</label>
+                                <input type="text" name="cedula" class="form-control form-control-sm" placeholder="Ingrese la cédula" required>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RF-34: Ranking -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-trophy me-2"></i>Ranking de Materiales</h5>
+                        <p class="text-muted small mb-3">Materiales más prestados por período, ordenados por cantidad de préstamos.</p>
+                        <form action="/admin/reportes/ranking" method="POST" class="row g-2">
+                            <div class="col-md-4">
+                                <label class="form-label small">Período</label>
+                                <select name="periodo" class="form-select form-select-sm">
+                                    <option value="">Todo el historial</option>
+                                    <option value="mes">Último mes</option>
+                                    <option value="anio">Último año</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Top</label>
+                                <select name="topN" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <option value="5">Top 5</option>
+                                    <option value="10" selected>Top 10</option>
+                                    <option value="20">Top 20</option>
+                                    <option value="50">Top 50</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RF-35: Vencidos con Contacto -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-telephone me-2"></i>Préstamos Vencidos con Contacto</h5>
+                        <p class="text-muted small mb-3">Préstamos vencidos con datos de contacto del solicitante (correo, teléfono).</p>
+                        <form action="/admin/reportes/vencidos-contacto" method="POST" class="row g-2">
+                            <div class="col-md-8">
+                                <label class="form-label small">Vencidos hace más de</label>
+                                <select name="diasMinimo" class="form-select form-select-sm">
+                                    <option value="">Todos los vencidos</option>
+                                    <option value="1">1 día</option>
+                                    <option value="5">5 días</option>
+                                    <option value="10">10 días</option>
+                                    <option value="30">30 días</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RF-36: Estadísticas -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Estadísticas por Categoría y Tipo</h5>
+                        <p class="text-muted small mb-3">Cantidad de préstamos agrupados por categoría y tipo de material en un período.</p>
+                        <form action="/admin/reportes/estadisticas" method="POST" class="row g-2">
+                            <div class="col-md-4">
+                                <label class="form-label small">Desde *</label>
+                                <input type="date" name="fechaDesde" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Hasta *</label>
+                                <input type="date" name="fechaHasta" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RF-37: Suspendidos -->
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Solicitantes Suspendidos</h5>
+                        <p class="text-muted small mb-3">Listado de solicitantes con suspensión activa, tipo de suspensión y motivo.</p>
+                        <form action="/admin/reportes/suspendidos" method="POST" class="row g-2">
+                            <div class="col-md-8">
+                                <label class="form-label small">Tipo de suspensión</label>
+                                <select name="tipoSuspension" class="form-select form-select-sm">
+                                    <option value="">Todos los suspendidos</option>
+                                    <option value="temporal">Suspensión temporal</option>
+                                    <option value="permanente">Suspensión permanente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-1">
+                                <button type="submit" name="formato" value="pdf" class="btn btn-sm btn-danger flex-fill" title="PDF"><i class="bi bi-filetype-pdf"></i></button>
+                                <button type="submit" name="formato" value="excel" class="btn btn-sm btn-success flex-fill" title="Excel"><i class="bi bi-file-earmark-excel"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
