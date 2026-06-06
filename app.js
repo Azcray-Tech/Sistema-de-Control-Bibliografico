@@ -96,16 +96,13 @@ async function iniciar() {
     await sequelize.authenticate();
     console.log('Conexión a base de datos establecida correctamente.');
     await sequelize.sync({ alter: false });
-    cronService.iniciar();
-    app.listen(PORT, () => {
-      console.log(`Servidor iniciado en http://localhost:${PORT}`);
-    });
+    if (process.env.NODE_ENV !== 'test') {
+      cronService.iniciar();
+    }
   } catch (err) {
     console.error('Error al iniciar el servidor:', err);
     process.exit(1);
   }
 }
 
-iniciar();
-
-module.exports = app;
+module.exports = { app, iniciar };
