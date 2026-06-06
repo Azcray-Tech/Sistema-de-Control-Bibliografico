@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      rampTo: 30
+      name: "Rampa de 5 a 30 usuarios/s durante 30s"
+    - duration: 30
+      arrivalRate: 30
+      name: "Mantener 30 usuarios/s durante 30s"
+  defaults:
+    headers:
+      Accept: "text/html"
+      User-Agent: "Artillery-Stress-Test"
+scenarios:
+  - name: "Navegación OPAC"
+    flow:
+      - get:
+          url: "/"
+      - think: 1
+      - get:
+          url: "/buscar?q=programacion"
+      - think: 2
+      - get:
+          url: "/buscar"
+      - think: 1
+      - get:
+          url: "/buscar?q=historia"

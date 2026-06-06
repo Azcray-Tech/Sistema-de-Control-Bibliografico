@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch --passWithNoTests",
-    "test:e2e": "node scripts/create_test_db.js && jest --config jest.e2e.config.js --runInBand --forceExit"
+    "test:e2e": "node scripts/create_test_db.js && jest --config jest.e2e.config.js --runInBand --forceExit",
+    "test:integration": "node scripts/create_test_db.js && jest --config jest.integration.config.js --runInBand --forceExit",
+    "test:stress": "echo 'Usar: npx artillery run tests/stress/stress-opac.yml'"
   },
   "dependencies": {
     "archiver": "^6.0.1",
@@ -30,6 +32,7 @@
     "sharp": "^0.33.0"
   },
   "devDependencies": {
+    "artillery": "^2.0.0",
     "eslint": "^8.56.0",
     "jest": "^30.4.2",
     "nodemon": "^3.0.2",

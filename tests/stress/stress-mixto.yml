@@ -1,0 +1,48 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      name: "Carga mixta realista: 10→50 usuarios/s durante 60s"
+  cookie: {}
+  defaults:
+    headers:
+      Accept: "text/html"
+      User-Agent: "Artillery-Stress-Test"
+scenarios:
+  - name: "OPAC (80% del tráfico)"
+    weight: 8
+    flow:
+      - get:
+          url: "/"
+      - think: 2
+      - get:
+          url: "/buscar?q=lenguaje"
+      - think: 1
+      - get:
+          url: "/material/1"
+
+  - name: "Login (10% del tráfico)"
+    weight: 1
+    flow:
+      - post:
+          url: "/admin/login"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          body: "username=admin&password=admin123"
+
+  - name: "Admin (10% del tráfico)"
+    weight: 1
+    flow:
+      - post:
+          url: "/admin/login"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          body: "username=admin&password=admin123"
+      - think: 1
+      - get:
+          url: "/admin/dashboard"
+      - think: 2
+      - get:
+          url: "/admin/prestamos"

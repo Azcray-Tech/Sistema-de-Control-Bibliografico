@@ -3,5 +3,5 @@ module.exports = {
   testEnvironment: 'node',
   verbose: true,
   transform: {},
-  testPathIgnorePatterns: ['/node_modules/', '/tests/e2e/'],
+  testPathIgnorePatterns: ['/node_modules/', '/tests/e2e/', '/tests/integration/'],
 };
