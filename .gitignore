@@ -11,6 +11,7 @@ app_error.txt
 app_output.txt
 *.txt    
 .opencode/
+tests/stress/report-*.json
 
 # Logs y archivos temporales
 *.log
