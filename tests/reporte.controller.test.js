@@ -64,6 +64,15 @@ describe('ReporteController', () => {
     });
   });
 
+  describe('mostrarPanel error', () => {
+    it('debe llamar a next si Categoria.findAll falla', async () => {
+      const next = jest.fn();
+      mockService.Categoria.findAll.mockRejectedValue(new Error('DB error'));
+      await controller.mostrarPanel(req, res, next);
+      expect(next).toHaveBeenCalledWith(new Error('DB error'));
+    });
+  });
+
   describe('generarInventario', () => {
     it('debe llamar al servicio y enviar archivo', async () => {
       req.body = { tipo: 'libro', formato: 'pdf' };
@@ -92,6 +101,12 @@ describe('ReporteController', () => {
       );
       expect(res.attachment).toHaveBeenCalled();
     });
+
+    it('debe redirigir con error si falla', async () => {
+      mockService.generarPrestamosActivos.mockRejectedValue(new Error('Error'));
+      await controller.generarPrestamosActivos(req, res);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
+    });
   });
 
   describe('generarHistorialSolicitante', () => {
@@ -99,6 +114,12 @@ describe('ReporteController', () => {
       req.body = { cedula: '123', formato: 'pdf' };
       await controller.generarHistorialSolicitante(req, res);
       expect(mockService.generarHistorialSolicitante).toHaveBeenCalledWith('123', 'pdf');
+    });
+
+    it('debe redirigir con error si falla', async () => {
+      mockService.generarHistorialSolicitante.mockRejectedValue(new Error('Error'));
+      await controller.generarHistorialSolicitante(req, res);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
     });
   });
 
@@ -110,6 +131,12 @@ describe('ReporteController', () => {
         { periodo: 'mes', topN: '10' }, 'excel'
       );
     });
+
+    it('debe redirigir con error si falla', async () => {
+      mockService.generarRanking.mockRejectedValue(new Error('Error'));
+      await controller.generarRanking(req, res);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
+    });
   });
 
   describe('generarVencidosContacto', () => {
@@ -119,6 +146,12 @@ describe('ReporteController', () => {
       expect(mockService.generarVencidosContacto).toHaveBeenCalledWith(
         { diasMinimo: '5' }, 'pdf'
       );
+    });
+
+    it('debe redirigir con error si falla', async () => {
+      mockService.generarVencidosContacto.mockRejectedValue(new Error('Error'));
+      await controller.generarVencidosContacto(req, res);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
     });
   });
 
@@ -130,6 +163,12 @@ describe('ReporteController', () => {
         { fechaDesde: '2026-01-01', fechaHasta: '2026-12-31' }, 'excel'
       );
     });
+
+    it('debe redirigir con error si falla', async () => {
+      mockService.generarEstadisticas.mockRejectedValue(new Error('Error'));
+      await controller.generarEstadisticas(req, res);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
+    });
   });
 
   describe('generarSuspendidos', () => {
@@ -139,6 +178,12 @@ describe('ReporteController', () => {
       expect(mockService.generarSuspendidos).toHaveBeenCalledWith(
         { tipoSuspension: 'permanente' }, 'pdf'
       );
+    });
+
+    it('debe redirigir con error si falla', async () => {
+      mockService.generarSuspendidos.mockRejectedValue(new Error('Error'));
+      await controller.generarSuspendidos(req, res);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
     });
   });
 });

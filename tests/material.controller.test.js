@@ -19,7 +19,8 @@ describe('MaterialController', () => {
       obtener: jest.fn(),
       crear: jest.fn(),
       actualizar: jest.fn(),
-      eliminar: jest.fn()
+      eliminar: jest.fn(),
+      agregarEjemplares: jest.fn()
     };
 
     mockCategoriaService = {
@@ -99,6 +100,15 @@ describe('MaterialController', () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
     });
+
+    it('debe llamar a next si listarActivas falla', async () => {
+      const error = new Error('DB error');
+      mockCategoriaService.listarActivas.mockRejectedValue(error);
+
+      await controller.mostrarFormulario(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+    });
   });
 
   describe('guardar', () => {
@@ -121,6 +131,69 @@ describe('MaterialController', () => {
 
       expect(mockMaterialService.actualizar).toHaveBeenCalledWith('1', expect.any(Object), 1);
       expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('/admin/materiales?success=actualizado'));
+    });
+
+    it('debe redirigir con error si actualizar falla', async () => {
+      req.params.id = '1';
+      req.body = { titulo: 'Fallo' };
+      mockMaterialService.actualizar.mockRejectedValue(new Error('Error al actualizar'));
+
+      await controller.guardar(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
+    });
+
+    it('debe renderizar formulario con error si crear falla', async () => {
+      req.body = { titulo: 'Fallo', tipo: 'libro' };
+      mockMaterialService.crear.mockRejectedValue(new Error('Datos inválidos'));
+
+      await controller.guardar(req, res, next);
+
+      expect(res.render).toHaveBeenCalledWith('admin/material_form', expect.objectContaining({
+        error: 'Datos inválidos',
+        formData: req.body
+      }));
+    });
+  });
+
+  describe('agregarEjemplares', () => {
+    it('debe agregar ejemplares y redirigir', async () => {
+      req.params.id = '1';
+      req.body.identificadores = ['EJ-001', 'EJ-002'];
+      mockMaterialService.agregarEjemplares.mockResolvedValue(undefined);
+
+      await controller.agregarEjemplares(req, res, next);
+
+      expect(mockMaterialService.agregarEjemplares).toHaveBeenCalledWith('1', ['EJ-001', 'EJ-002'], 1);
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('/admin/materiales/1/ejemplares/gestion?success=creado'));
+    });
+
+    it('debe redirigir con error si identificadores está vacío', async () => {
+      req.params.id = '1';
+      req.body.identificadores = [];
+
+      await controller.agregarEjemplares(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
+    });
+
+    it('debe redirigir con error si identificadores es string vacío', async () => {
+      req.params.id = '1';
+      req.body.identificadores = '';
+
+      await controller.agregarEjemplares(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error='));
+    });
+
+    it('debe redirigir con error si el servicio falla', async () => {
+      req.params.id = '1';
+      req.body.identificadores = ['ID'];
+      mockMaterialService.agregarEjemplares.mockRejectedValue(new Error('Error al agregar'));
+
+      await controller.agregarEjemplares(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('Error%20al%20agregar'));
     });
   });
 

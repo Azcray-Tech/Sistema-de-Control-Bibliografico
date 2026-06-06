@@ -10,6 +10,7 @@ coverage/
 app_error.txt
 app_output.txt
 *.txt    
+.opencode/
 
 # Logs y archivos temporales
 *.log

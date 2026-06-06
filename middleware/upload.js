@@ -14,17 +14,21 @@ const storage = multer.diskStorage({
   }
 });
 
+function fileFilter(req, file, cb) {
+  const allowed = /\.(jpg|jpeg|png|webp)$/i;
+  if (allowed.test(path.extname(file.originalname))) {
+    cb(null, true);
+  } else {
+    cb(new Error('Solo se permiten imágenes JPG, PNG o WebP'));
+  }
+}
+
 const upload = multer({
   storage,
   limits: { fileSize: 3 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|webp)$/i;
-    if (allowed.test(path.extname(file.originalname))) {
-      cb(null, true);
-    } else {
-      cb(new Error('Solo se permiten imágenes JPG, PNG o WebP'));
-    }
-  }
+  fileFilter
 });
 
 module.exports = upload;
+module.exports.fileFilter = fileFilter;
+module.exports.storage = storage;

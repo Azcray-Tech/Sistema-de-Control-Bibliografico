@@ -132,6 +132,14 @@ describe('BackupController', () => {
         success: undefined
       });
     });
+
+    it('debe llamar a next si render falla', async () => {
+      const renderError = new Error('Render error');
+      res.render.mockImplementation(() => { throw renderError; });
+      await controller.mostrarRestaurar(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(renderError);
+    });
   });
 
   describe('restaurar', () => {
