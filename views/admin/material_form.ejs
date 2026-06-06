@@ -73,6 +73,11 @@
                       handleFile(e) {
                           const file = e.target.files[0];
                           if (file) {
+                              if (file.size > 4 * 1024 * 1024) {
+                                  alert('El archivo excede el límite de 4 MB');
+                                  e.target.value = '';
+                                  return;
+                              }
                               const reader = new FileReader();
                               reader.onload = e => this.previewUrl = e.target.result;
                               reader.readAsDataURL(file);
@@ -345,7 +350,7 @@
                                 <img :src="previewUrl" class="preview-img">
                                 <i class="bi bi-arrow-repeat"></i>
                                 <h6>Cambiar imagen</h6>
-                                <small>JPG, PNG - Máx 3MB</small>
+                                <small>JPG, PNG - Máx 4MB</small>
                             </div>
                         </template>
                         <template x-if="!previewUrl">
@@ -361,7 +366,7 @@
                                 <div class="upload-area-compact" onclick="document.getElementById('fileInput').click()">
                                     <i class="bi bi-cloud-upload"></i>
                                     <h6>Subir portada</h6>
-                                    <small>JPG, PNG - Máx 3MB</small>
+                                    <small>JPG, PNG - Máx 4MB</small>
                                 </div>
                                 <% } %>
                             </div>
