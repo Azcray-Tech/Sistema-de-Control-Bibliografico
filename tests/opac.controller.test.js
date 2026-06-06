@@ -17,7 +17,7 @@ describe('OpacController', () => {
       obtenerCategorias: jest.fn().mockResolvedValue([]),
       obtenerDestacados: jest.fn().mockResolvedValue([]),
       buscar: jest.fn().mockResolvedValue({
-        materiales: [], total: 0, pagina: 1, totalPaginas: 1
+        materiales: [], total: 0, page: 1, totalPaginas: 1
       }),
       obtenerFicha: jest.fn().mockResolvedValue(null)
     };
@@ -68,15 +68,15 @@ describe('OpacController', () => {
       mockService.obtenerCategorias.mockResolvedValue([{ idCategoria: 1, nombre: 'Ciencia' }]);
       mockService.buscar.mockResolvedValue({
         materiales: [{ idMaterial: 1, titulo: 'Resultado' }],
-        total: 1, pagina: 1, totalPaginas: 1
+        total: 1, page: 1, totalPaginas: 1
       });
-      req.query = { q: 'test', pagina: '1' };
+      req.query = { q: 'test', page: '1' };
 
       await controller.buscar(req, res, next);
 
       expect(mockService.buscar).toHaveBeenCalledWith({
         q: 'test', autor: undefined, categoriaId: undefined,
-        anioDesde: undefined, anioHasta: undefined, tipo: undefined, pagina: '1'
+        anioDesde: undefined, anioHasta: undefined, tipo: undefined, page: '1'
       });
       expect(res.render).toHaveBeenCalledWith('public/catalogo', expect.objectContaining({
         titulo: 'Resultados de búsqueda', materiales: expect.any(Array)
@@ -95,7 +95,7 @@ describe('OpacController', () => {
     it('debe manejar valores vacíos en query params', async () => {
       mockService.obtenerCategorias.mockResolvedValue([]);
       mockService.buscar.mockResolvedValue({
-        materiales: [], total: 0, pagina: 1, totalPaginas: 1
+        materiales: [], total: 0, page: 1, totalPaginas: 1
       });
       req.query = {};
 

@@ -36,11 +36,11 @@ class OpacController {
    */
   buscar = async (req, res, next) => {
     try {
-      const { q, autor, categoriaId, anioDesde, anioHasta, tipo, pagina } = req.query;
+      const { q, autor, categoriaId, anioDesde, anioHasta, tipo, page } = req.query;
       const categorias = await this.opacService.obtenerCategorias();
 
       const result = await this.opacService.buscar({
-        q, autor, categoriaId, anioDesde, anioHasta, tipo, pagina
+        q, autor, categoriaId, anioDesde, anioHasta, tipo, page
       });
 
       res.render('public/catalogo', {
@@ -49,7 +49,7 @@ class OpacController {
         materiales: result.materiales,
         pagination: {
           total: result.total,
-          page: result.pagina,
+          page: result.page,
           totalPages: result.totalPaginas
         },
         q: q || '', autor: autor || '', categoriaId: categoriaId || '',

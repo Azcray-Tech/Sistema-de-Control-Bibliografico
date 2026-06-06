@@ -67,7 +67,7 @@ describe('OpacService', () => {
       const mockMaterial = crearMaterialMock(1, { ejemplares: [{ estado: 'Disponible' }, { estado: 'Prestado' }] });
       mocks.Material.findAndCountAll.mockResolvedValue({ rows: [mockMaterial], count: 1 });
 
-      const resultado = await opacService.buscar({ q: 'test', pagina: 1 });
+      const resultado = await opacService.buscar({ q: 'test', page: 1 });
 
       expect(resultado.materiales).toHaveLength(1);
       expect(resultado.total).toBe(1);
