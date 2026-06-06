@@ -74,6 +74,10 @@ class BackupController {
       if (!req.file) {
         return res.redirect('/admin/restaurar?error=Debe seleccionar un archivo de backup');
       }
+      if (!req.body.confirmarRestauracion) {
+        try { if (req.file) fs.unlinkSync(req.file.path); } catch { }
+        return res.redirect('/admin/restaurar?error=Debe confirmar que entiende que los datos serán reemplazados');
+      }
 
       const usuarioId = req.session.usuarioId;
       const resultado = await this.backupService.restaurarBackup(req.file.path, usuarioId);
