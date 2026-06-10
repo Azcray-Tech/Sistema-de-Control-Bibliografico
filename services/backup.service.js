@@ -225,11 +225,17 @@ class BackupService {
   }
 
   async _ejecutarSqlScript(sqlPath) {
-    const sql = fs.readFileSync(sqlPath, 'utf8');
+    const sql = fs.readFileSync(sqlPath, 'utf8').replace(/\r\n/g, '\n');
     const connection = await this._getConnection();
     try {
       await this._borrarDatosExistentes();
-      await connection.query(sql);
+      const statements = sql
+        .split(';\n')
+        .map(s => s.replace(/^--.*$/gm, '').trim())
+        .filter(s => s);
+      for (const stmt of statements) {
+        await connection.query(stmt + ';');
+      }
     } finally {
       await connection.end();
     }
