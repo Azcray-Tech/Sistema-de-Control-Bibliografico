@@ -1,6 +1,7 @@
 node_modules/
 /documentacion
 .env
+.env - copia.example
 backup/
 public/images/covers/*
 !public/images/covers/default.jpg
@@ -10,7 +11,7 @@ coverage/
 app_error.txt
 app_output.txt
 *.txt    
-
+reports/
 # Logs y archivos temporales
 *.log
 *.txt

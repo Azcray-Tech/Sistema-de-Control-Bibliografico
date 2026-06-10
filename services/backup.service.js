@@ -42,7 +42,7 @@ class BackupService {
 
     for (const table of tables) {
       const [rows] = await connection.query(`SELECT * FROM \`${table}\``);
-      if (rows.length === 0) continue;
+      if (rows.length === 0) {continue;}
 
       const columns = Object.keys(rows[0]);
       const colNames = columns.map(c => `\`${c}\``).join(', ');
@@ -50,9 +50,9 @@ class BackupService {
       for (const row of rows) {
         const values = columns.map(c => {
           const v = row[c];
-          if (v === null || v === undefined) return 'NULL';
-          if (typeof v === 'number') return v;
-          if (v instanceof Date) return `'${v.toISOString().split('T')[0]}'`;
+          if (v === null || v === undefined) {return 'NULL';}
+          if (typeof v === 'number') {return v;}
+          if (v instanceof Date) {return `'${v.toISOString().split('T')[0]}'`;}
           return `'${String(v).replace(/'/g, "\\'")}'`;
         }).join(', ');
         sql += `INSERT INTO \`${table}\` (${colNames}) VALUES (${values});\n`;
@@ -114,13 +114,15 @@ class BackupService {
 
   async limpiarBackup(ruta) {
     try {
-      if (fs.existsSync(ruta)) fs.unlinkSync(ruta);
-    } catch { /* ignore */ }
+      if (fs.existsSync(ruta)) {fs.unlinkSync(ruta);}
+    } catch (err) {
+      /* Se ignora el fallo si el archivo ya fue eliminado o no existe */
+    }
   }
 
   _getPreRestoreDir() {
     const dir = path.join(os.tmpdir(), 'ceela_pre_restore');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(dir)) {fs.mkdirSync(dir, { recursive: true });}
     return dir;
   }
 
@@ -145,7 +147,11 @@ class BackupService {
   }
 
   _desactivarModoMantenimiento() {
-    try { if (fs.existsSync(this._rutaMantenimiento())) fs.unlinkSync(this._rutaMantenimiento()); } catch { }
+    try { 
+      if (fs.existsSync(this._rutaMantenimiento())) {fs.unlinkSync(this._rutaMantenimiento());} 
+    } catch (err) {
+      /* Se ignora si el archivo de mantenimiento no existe */
+    }
   }
 
   async _getConnection() {
@@ -209,9 +215,101 @@ class BackupService {
 
     const destino = path.join(this._getPreRestoreDir(), nombre);
     fs.copyFileSync(rutaTemp, destino);
-    try { fs.unlinkSync(rutaTemp); } catch { }
+    try { 
+      fs.unlinkSync(rutaTemp); 
+    } catch (err) {
+      /* Se ignora si falló la limpieza del archivo temporal intermedio */
+    }
 
     return destino;
+  }
+
+  async _ejecutarSqlScript(sqlPath) {
+    const sql = fs.readFileSync(sqlPath, 'utf8');
+    const connection = await this._getConnection();
+    try {
+      await this._borrarDatosExistentes();
+      await connection.query(sql);
+    } finally {
+      await connection.end();
+    }
+  }
+
+  async _copiarPortadas(origen) {
+    if (!fs.existsSync(origen)) {return;}
+    const archivos = fs.readdirSync(origen);
+    for (const archivo of archivos) {
+      fs.copyFileSync(path.join(origen, archivo), path.join(this.coversPath, archivo));
+    }
+  }
+
+  async _resetAutoIncrement() {
+    const conn = await this._getConnection();
+    try {
+      const [tables] = await conn.query(
+        "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND AUTO_INCREMENT IS NOT NULL",
+        [process.env.DB_NAME || 'ceela_biblioteca']
+      );
+      for (const t of tables) {
+        await conn.query(`ALTER TABLE \`${t.TABLE_NAME}\` AUTO_INCREMENT = 0`);
+      }
+    } finally {
+      await conn.end();
+    }
+  }
+
+  _eliminarDirectorio(dir) {
+    if (!fs.existsSync(dir)) {return;}
+    fs.readdirSync(dir).forEach(e => {
+      const full = path.join(dir, e);
+      if (fs.statSync(full).isDirectory()) {this._eliminarDirectorio(full);}
+      else {fs.unlinkSync(full);}
+    });
+    fs.rmdirSync(dir);
+  }
+
+  async _manejarFalloRestore(errorOriginal, preRestorePath, usuarioId) {
+    if (preRestorePath && fs.existsSync(preRestorePath)) {
+      try {
+        const tempRollback = path.join(os.tmpdir(), `rollback_${Date.now()}`);
+        fs.mkdirSync(tempRollback, { recursive: true });
+        await extract(preRestorePath, { dir: tempRollback });
+
+        await this._ejecutarSqlScript(path.join(tempRollback, 'backup.sql'));
+
+        const prePortadas = path.join(tempRollback, 'portadas');
+        await this._copiarPortadas(prePortadas);
+
+        this._eliminarDirectorio(tempRollback);
+        this._activarModoMantenimiento();
+
+        const errorMsg = `Falló la restauración y se realizó rollback automático. Error original: ${errorOriginal}`;
+        if (this.auditoria) {
+          await this.auditoria({
+            usuarioId,
+            accion: 'RESTORE_FALLIDO_CON_ROLLBACK',
+            tablaAfectada: 'sistema',
+            valorNuevo: { error: errorOriginal, preRestoreUsado: path.basename(preRestorePath) }
+          });
+        }
+        throw new Error(errorMsg);
+      } catch (rollbackErr) {
+        this._activarModoMantenimiento();
+        const critico = `FALLO CRÍTICO: Restauración y rollback fallaron. Error original: ${errorOriginal}. Error rollback: ${rollbackErr.message}. Sistema en modo mantenimiento.`;
+        console.error(critico);
+        if (this.auditoria) {
+          await this.auditoria({
+            usuarioId,
+            accion: 'RESTORE_FALLIDO_SIN_ROLLBACK',
+            tablaAfectada: 'sistema',
+            valorNuevo: { error: errorOriginal, errorRollback: rollbackErr.message }
+          });
+        }
+        throw new Error(critico);
+      }
+    }
+    this._activarModoMantenimiento();
+    throw new Error(errorOriginal);
   }
 
   async restaurarBackup(archivoZip, usuarioId) {
@@ -220,7 +318,6 @@ class BackupService {
     let preRestorePath = null;
 
     try {
-      // Extraer zip subido
       await extract(archivoZip, { dir: tempDir });
 
       const sqlPath = path.join(tempDir, 'backup.sql');
@@ -228,44 +325,14 @@ class BackupService {
         throw new Error('El archivo de backup no contiene backup.sql');
       }
 
-      // 1. Generar backup pre-restore
       preRestorePath = await this._generarPreRestore();
 
-      // 2. Ejecutar restore
-      const sql = fs.readFileSync(sqlPath, 'utf8');
-      const connection = await this._getConnection();
-      try {
-        await this._borrarDatosExistentes();
-        await connection.query(sql);
-      } finally {
-        await connection.end();
-      }
+      await this._ejecutarSqlScript(sqlPath);
 
-      // 3. Restaurar portadas
-      if (fs.existsSync(dirPortadas)) {
-        const archivos = fs.readdirSync(dirPortadas);
-        for (const archivo of archivos) {
-          const src = path.join(dirPortadas, archivo);
-          const dst = path.join(this.coversPath, archivo);
-          fs.copyFileSync(src, dst);
-        }
-      }
+      await this._copiarPortadas(dirPortadas);
 
-      // 4. Resetear secuencias auto-incrementales
-      const connection2 = await this._getConnection();
-      try {
-        const [tables] = await connection2.query(
-          "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND AUTO_INCREMENT IS NOT NULL",
-          [process.env.DB_NAME || 'ceela_biblioteca']
-        );
-        for (const t of tables) {
-          await connection2.query(`ALTER TABLE \`${t.TABLE_NAME}\` AUTO_INCREMENT = 0`);
-        }
-      } finally {
-        await connection2.end();
-      }
+      await this._resetAutoIncrement();
 
-      // 5. Éxito — limpiar modo mantenimiento y auditar
       this._desactivarModoMantenimiento();
 
       if (this.auditoria) {
@@ -279,100 +346,13 @@ class BackupService {
 
       return { success: true, preRestore: preRestorePath };
     } catch (err) {
-      // 6. Falló — intentar restaurar desde pre-restore
-      const errorOriginal = err.message;
-
-      if (preRestorePath && fs.existsSync(preRestorePath)) {
-        try {
-          const tempRollback = path.join(os.tmpdir(), `rollback_${Date.now()}`);
-          fs.mkdirSync(tempRollback, { recursive: true });
-          await extract(preRestorePath, { dir: tempRollback });
-
-          const rollbackSql = fs.readFileSync(path.join(tempRollback, 'backup.sql'), 'utf8');
-          const conn = await this._getConnection();
-          try {
-            await this._borrarDatosExistentes();
-            await conn.query(rollbackSql);
-          } finally {
-            await conn.end();
-          }
-
-          // Restaurar portadas del pre-restore
-          const prePortadas = path.join(tempRollback, 'portadas');
-          if (fs.existsSync(prePortadas)) {
-            fs.readdirSync(prePortadas).forEach(f => {
-              fs.copyFileSync(path.join(prePortadas, f), path.join(this.coversPath, f));
-            });
-          }
-
-          // Limpiar temp rollback
-          const eliminar = (dir) => {
-            if (fs.existsSync(dir)) {
-              fs.readdirSync(dir).forEach(e => {
-                const full = path.join(dir, e);
-                if (fs.statSync(full).isDirectory()) eliminar(full);
-                else fs.unlinkSync(full);
-              });
-              fs.rmdirSync(dir);
-            }
-          };
-          eliminar(tempRollback);
-
-          this._activarModoMantenimiento();
-
-          const errorMsg = `Falló la restauración y se realizó rollback automático. Error original: ${errorOriginal}`;
-          if (this.auditoria) {
-            await this.auditoria({
-              usuarioId,
-              accion: 'RESTORE_FALLIDO_CON_ROLLBACK',
-              tablaAfectada: 'sistema',
-              valorNuevo: { error: errorOriginal, preRestoreUsado: path.basename(preRestorePath) }
-            });
-          }
-          throw new Error(errorMsg);
-        } catch (rollbackErr) {
-          // Incluso el rollback falló — modo mantenimiento extremo
-          this._activarModoMantenimiento();
-          const critico = `FALLO CRÍTICO: Restauración y rollback fallaron. Error original: ${errorOriginal}. Error rollback: ${rollbackErr.message}. Sistema en modo mantenimiento.`;
-          console.error(critico);
-          if (this.auditoria) {
-            await this.auditoria({
-              usuarioId,
-              accion: 'RESTORE_FALLIDO_SIN_ROLLBACK',
-              tablaAfectada: 'sistema',
-              valorNuevo: { error: errorOriginal, errorRollback: rollbackErr.message }
-            });
-          }
-          throw new Error(critico);
-        }
-      }
-
-      // No había pre-restore disponible
-      this._activarModoMantenimiento();
-      throw err;
+      await this._manejarFalloRestore(err.message, preRestorePath, usuarioId);
     } finally {
-      // Limpiar directorio temporal
-      if (fs.existsSync(tempDir)) {
-        const eliminar = (dir) => {
-          if (fs.existsSync(dir)) {
-            fs.readdirSync(dir).forEach(entry => {
-              const full = path.join(dir, entry);
-              if (fs.statSync(full).isDirectory()) eliminar(full);
-              else fs.unlinkSync(full);
-            });
-            fs.rmdirSync(dir);
-          }
-        };
-        eliminar(tempDir);
-      }
+      this._eliminarDirectorio(tempDir);
     }
   }
-
-  async limpiarBackup(ruta) {
-    try {
-      if (fs.existsSync(ruta)) fs.unlinkSync(ruta);
-    } catch { /* ignore */ }
-  }
+  
+  // SE ELIMINÓ EL SEGUNDO MÉTODO 'limpiarBackup' QUE CAUSABA EL ERROR DUPLICATE
 }
 
 module.exports = BackupService;

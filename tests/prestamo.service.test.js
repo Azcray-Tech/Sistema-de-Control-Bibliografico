@@ -89,8 +89,8 @@ describe('PrestamoService', () => {
 
     it('debe calcular días de sanción con factor y tope máximo', async () => {
       mockParametroService.obtener.mockImplementation(async (clave, defecto) => {
-        if (clave === 'factor_sancion') return 10;
-        if (clave === 'suspension_maxima') return 30;
+        if (clave === 'factor_sancion') {return 10;}
+        if (clave === 'suspension_maxima') {return 30;}
         return defecto;
       });
 

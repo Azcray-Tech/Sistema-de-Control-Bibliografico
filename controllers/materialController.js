@@ -40,7 +40,7 @@ class MaterialController {
 
       if (req.params.id) {
         material = await this.materialService.obtener(req.params.id);
-        if (!material) return res.status(404).send('Material no encontrado');
+        if (!material) {return res.status(404).send('Material no encontrado');}
       }
 
       res.render('admin/material_form', { page: 'materiales-nuevo', material, categorias, error: req.query.error || null, formData: null });
@@ -53,12 +53,12 @@ class MaterialController {
    * @requirement RF-01, RF-02, RF-03
    * @use_case CU-01, CU-02, CU-03
    */
-  guardar = async (req, res, next) => {
+  guardar = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;
       const { id } = req.params;
       const datos = { ...req.body };
-      if (req.file) datos.portada = req.file.filename;
+      if (req.file) {datos.portada = req.file.filename;}
 
       if (id) {
         await this.materialService.actualizar(id, datos, usuarioId);
@@ -84,7 +84,7 @@ class MaterialController {
    * @requirement RF-06
    * @use_case CU-06
    */
-  agregarEjemplares = async (req, res, next) => {
+  agregarEjemplares = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;
       const identificadores = req.body.identificadores;
@@ -105,7 +105,7 @@ class MaterialController {
    * @requirement RF-08
    * @use_case CU-08
    */
-  eliminar = async (req, res, next) => {
+  eliminar = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;
       await this.materialService.eliminar(req.params.id, usuarioId);

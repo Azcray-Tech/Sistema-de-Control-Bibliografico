@@ -13,13 +13,13 @@ class SolicitanteService {
   }
 
   async buscar(cedula) {
-    if (!cedula) return null;
+    if (!cedula) {return null;}
     return this.Solicitante.findByPk(cedula);
   }
 
   async buscarResponse(cedula) {
     const s = await this.buscar(cedula);
-    if (!s) return { existe: false };
+    if (!s) {return { existe: false };}
     return {
       existe: true,
       solicitante: {
@@ -35,7 +35,7 @@ class SolicitanteService {
   }
 
   async buscarConPrestamos(cedula) {
-    if (!cedula) return null;
+    if (!cedula) {return null;}
 
     const solicitante = await this.Solicitante.findByPk(cedula, {
       include: [
@@ -55,7 +55,7 @@ class SolicitanteService {
       ]
     });
 
-    if (!solicitante) return null;
+    if (!solicitante) {return null;}
 
     const prestamosActivos = solicitante.Prestamos || [];
     const sancionesActivas = solicitante.Sancions || [];
@@ -98,7 +98,7 @@ class SolicitanteService {
     });
   }
 
-  async suspender(solicitanteCedula, fechaFin, motivo) {
+  async suspender(solicitanteCedula, fechaFin, _motivo) {
     return this.Solicitante.update(
       { estado: 'Suspendido temporal', fechaFinSuspension: fechaFin },
       { where: { cedula: solicitanteCedula } }

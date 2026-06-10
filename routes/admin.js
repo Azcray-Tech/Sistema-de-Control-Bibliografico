@@ -102,7 +102,7 @@ router.post('/reportes/estadisticas', requiereAuth, reporteController.generarEst
 router.post('/reportes/suspendidos', requiereAuth, reporteController.generarSuspendidos);
 
 router.injectCronService = (cronService) => {
-  if (parametroController) parametroController.setCronService(cronService);
-  if (backupController) backupController.setCronService(cronService);
+  if (parametroController) {parametroController.setCronService(cronService);}
+  if (backupController) {backupController.setCronService(cronService);}
 };
 module.exports = router;

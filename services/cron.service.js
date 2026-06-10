@@ -37,8 +37,8 @@ class CronService {
 
     for (const prestamo of vencidos) {
       const solicitante = prestamo.Solicitante;
-      if (!solicitante) continue;
-      if (solicitante.estado === 'Suspendido permanente') continue;
+      if (!solicitante) {continue;}
+      if (solicitante.estado === 'Suspendido permanente') {continue;}
 
       const retraso = Math.floor((hoy - new Date(prestamo.fechaDevolucionPrevista)) / 86400000);
       const factorSancion = await this.parametroService.obtener('factor_sancion', 2);
@@ -85,7 +85,7 @@ class CronService {
 
     for (const solicitante of suspendidosVencidos) {
       const tienePrestamoActivo = (solicitante.Prestamos || []).length > 0;
-      if (!tienePrestamoActivo) continue;
+      if (!tienePrestamoActivo) {continue;}
 
       await solicitante.update({
         estado: 'Suspendido permanente',
@@ -104,7 +104,7 @@ class CronService {
   }
 
   _existeBackupDelDia(ruta) {
-    if (!fs.existsSync(ruta)) return false;
+    if (!fs.existsSync(ruta)) {return false;}
     const hoy = new Date();
     const y = hoy.getFullYear();
     const M = String(hoy.getMonth() + 1).padStart(2, '0');
@@ -114,11 +114,11 @@ class CronService {
   }
 
   async ejecutarBackupAutomatico() {
-    if (!this.backupService) return;
+    if (!this.backupService) {return;}
 
     try {
       const habilitado = await this.parametroService.obtener('backup_auto_habilitado', '0');
-      if (habilitado !== '1') return;
+      if (habilitado !== '1') {return;}
 
       const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
       if (!ruta) {
@@ -182,10 +182,10 @@ class CronService {
   async _verificarBackupPendienteAlIniciar() {
     try {
       const habilitado = await this.parametroService.obtener('backup_auto_habilitado', '0');
-      if (habilitado !== '1') return;
+      if (habilitado !== '1') {return;}
 
       const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
-      if (!ruta || !fs.existsSync(ruta)) return;
+      if (!ruta || !fs.existsSync(ruta)) {return;}
 
       if (!this._existeBackupDelDia(ruta)) {
         console.log('[Cron] Inicio: no hay backup del día actual, ejecutando...');
@@ -198,7 +198,7 @@ class CronService {
 
   async verificarRutaBackup() {
     const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
-    if (!ruta) return { configurada: false, accesible: false, mensaje: 'Ruta no configurada' };
+    if (!ruta) {return { configurada: false, accesible: false, mensaje: 'Ruta no configurada' };}
     const accesible = fs.existsSync(ruta);
     const tieneBackupHoy = accesible ? this._existeBackupDelDia(ruta) : false;
     return { configurada: true, accesible, tieneBackupHoy, mensaje: accesible ? null : 'La ruta configurada no es accesible' };

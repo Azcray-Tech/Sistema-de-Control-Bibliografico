@@ -28,13 +28,19 @@ class PrestamoService {
     });
   }
 
-  async registrar(solicitanteCedula, ejemplarId, usuarioPrestamistaId) {
+  async _validarPrestamo(solicitanteCedula) {
     const solicitante = await this.Solicitante.findByPk(solicitanteCedula);
-    if (!solicitante) throw new Error('Solicitante no encontrado');
+    if (!solicitante) {throw new Error('Solicitante no encontrado');}
 
-    if (solicitante.estado === 'Suspendido permanente' ||
-        (solicitante.estado === 'Suspendido temporal' && solicitante.fechaFinSuspension && new Date(solicitante.fechaFinSuspension) >= new Date())) {
+    if (solicitante.estado === 'Suspendido permanente') {
       throw new Error('El solicitante está suspendido y no puede recibir préstamos');
+    }
+    if (solicitante.estado === 'Suspendido temporal') {
+      if (solicitante.fechaFinSuspension) {
+        if (new Date(solicitante.fechaFinSuspension) >= new Date()) {
+          throw new Error('El solicitante está suspendido y no puede recibir préstamos');
+        }
+      }
     }
 
     const sancionActiva = await this.Sancion.findOne({
@@ -43,7 +49,7 @@ class PrestamoService {
         fechaFin: { [this.Prestamo.sequelize.constructor.Op.gte]: new Date() }
       }
     });
-    if (sancionActiva) throw new Error('El solicitante tiene una sanción activa');
+    if (sancionActiva) {throw new Error('El solicitante tiene una sanción activa');}
 
     const maxPrestamos = await this.parametroService.obtener('max_prestamos_simultaneos', 3);
     const prestamosActivos = await this.Prestamo.count({
@@ -52,6 +58,10 @@ class PrestamoService {
     if (prestamosActivos >= maxPrestamos) {
       throw new Error(`Límite de préstamos alcanzado (máx: ${maxPrestamos})`);
     }
+  }
+
+  async registrar(solicitanteCedula, ejemplarId, usuarioPrestamistaId) {
+    await this._validarPrestamo(solicitanteCedula);
 
     const sequelize = this.Prestamo.sequelize;
     const t = await sequelize.transaction();
@@ -62,7 +72,7 @@ class PrestamoService {
         transaction: t,
         lock: t.LOCK.UPDATE
       });
-      if (!ejemplar) throw new Error('Ejemplar no encontrado');
+      if (!ejemplar) {throw new Error('Ejemplar no encontrado');}
       if (ejemplar.estado !== 'Disponible') {
         throw new Error(`Ejemplar no disponible — estado: ${ejemplar.estado}`);
       }
@@ -128,7 +138,7 @@ class PrestamoService {
     return prestamo;
   }
 
-  async devolver(id, usuarioId, { estadoEjemplar, motivo } = {}) {
+  async devolver(id, usuarioId) {
     const prestamo = await this.Prestamo.findByPk(id, {
       include: [
         { model: this.Ejemplar },
@@ -143,13 +153,8 @@ class PrestamoService {
     const fechaPrevista = new Date(prestamo.fechaDevolucionPrevista);
     const retraso = Math.max(0, Math.floor((hoy - fechaPrevista) / 86400000));
 
-    const nuevoEstado = estadoEjemplar || 'Disponible';
-    if ((nuevoEstado === 'Dañado' || nuevoEstado === 'En restauración') && !motivo) {
-      throw new Error('Debe especificar el motivo cuando el ejemplar está dañado o en restauración');
-    }
-
     await prestamo.update({ estado: 'Devuelto', fechaDevolucionReal: hoy });
-    await prestamo.Ejemplar.update({ estado: nuevoEstado });
+    await prestamo.Ejemplar.update({ estado: 'Disponible' });
 
     if (retraso > 0) {
       const factorSancion = await this.parametroService.obtener('factor_sancion', 2);
@@ -229,7 +234,7 @@ class PrestamoService {
     }
 
     const solicitante = await this.Solicitante.findByPk(cedula);
-    if (!solicitante) throw new Error('Solicitante no encontrado');
+    if (!solicitante) {throw new Error('Solicitante no encontrado');}
 
     if (solicitante.estado === 'Activo') {
       throw new Error('El solicitante no tiene una suspensión activa');

@@ -38,7 +38,7 @@ class ParametroController {
    * @requirement RF-21
    * @use_case CU-21
    */
-  guardar = async (req, res, next) => {
+  guardar = async (req, res, _next) => {
     try {
       const datos = { ...req.body };
       // Checkbox unchecked = no enviado → convertir a '0'

@@ -20,7 +20,7 @@ class AuthController {
    * @requirement RF-13
    * @use_case CU-13
    */
-  iniciarSesion = async (req, res, next) => {
+  iniciarSesion = async (req, res, _next) => {
     try {
       const { username, password } = req.body;
       const usuario = await this.authService.iniciarSesion(username, password);
@@ -40,7 +40,7 @@ class AuthController {
    * @requirement RF-13
    * @use_case CU-13
    */
-  cerrarSesion = async (req, res, next) => {
+  cerrarSesion = async (req, res, _next) => {
     try {
       await this.authService.registrarSalida(req.session.usuarioId);
     } finally {

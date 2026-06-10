@@ -25,7 +25,7 @@ class PrestamoController {
    * @requirement RF-15
    * @use_case CU-15
    */
-  registrar = async (req, res, next) => {
+  registrar = async (req, res, _next) => {
     try {
       const { solicitanteCedula, ejemplarId } = req.body;
       const usuarioPrestamistaId = req.session.usuarioId;
@@ -42,7 +42,7 @@ class PrestamoController {
    * @requirement RF-17
    * @use_case CU-17
    */
-  renovar = async (req, res, next) => {
+  renovar = async (req, res, _next) => {
     try {
       await this.prestamoService.renovar(req.params.id);
       res.redirect('/admin/prestamos?success=2');
@@ -55,11 +55,10 @@ class PrestamoController {
    * @requirement RF-18
    * @use_case CU-18
    */
-  devolver = async (req, res, next) => {
+  devolver = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;
-      const { estadoEjemplar, motivo } = req.body;
-      await this.prestamoService.devolver(req.params.id, usuarioId, { estadoEjemplar, motivo });
+      await this.prestamoService.devolver(req.params.id, usuarioId);
       res.redirect('/admin/prestamos?success=3');
     } catch (err) {
       res.redirect(`/admin/prestamos?error=${encodeURIComponent(err.message)}`);
@@ -103,7 +102,7 @@ class PrestamoController {
    * @requirement RF-20
    * @use_case CU-20
    */
-  levantarSancion = async (req, res, next) => {
+  levantarSancion = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;
       const { cedula, motivo } = req.body;

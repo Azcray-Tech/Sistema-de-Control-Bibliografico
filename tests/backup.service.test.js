@@ -4,7 +4,6 @@
  * @description Pruebas unitarias del servicio de backup y restauración del sistema.
  */
 const fs = require('fs');
-const path = require('path');
 const os = require('os');
 
 jest.mock('archiver');
@@ -21,19 +20,15 @@ const { crearMocksModelos, mockAuditoria } = require('./mocks/models');
 describe('BackupService', () => {
   let backupService;
   let mocks;
-  let archiveFinalizeCb;
 
   beforeEach(() => {
     mocks = crearMocksModelos();
     backupService = new BackupService(mocks, mockAuditoria);
     mockAuditoria.mockClear();
 
-    archiveFinalizeCb = null;
-
     const mockArchive = {
       pipe: jest.fn().mockReturnThis(),
-      on: jest.fn().mockImplementation((event, cb) => {
-        if (event === 'error') archiveFinalizeCb = cb;
+      on: jest.fn().mockImplementation((_event, _cb) => {
         return mockArchive;
       }),
       append: jest.fn().mockReturnThis(),
@@ -41,7 +36,7 @@ describe('BackupService', () => {
       finalize: jest.fn().mockImplementation(() => {
         // Trigger the 'close' on the output stream
         const closeCb = outputCloseCb;
-        if (closeCb) setTimeout(closeCb, 0);
+        if (closeCb) {setTimeout(closeCb, 0);}
         return mockArchive;
       })
     };
@@ -49,7 +44,7 @@ describe('BackupService', () => {
     let outputCloseCb = null;
     const mockOutput = {
       on: jest.fn().mockImplementation((event, cb) => {
-        if (event === 'close') outputCloseCb = cb;
+        if (event === 'close') {outputCloseCb = cb;}
         return mockOutput;
       })
     };
@@ -98,7 +93,7 @@ describe('BackupService', () => {
 
     it('debe omitir portadas si no existe la carpeta', async () => {
       fs.existsSync = jest.fn().mockImplementation((p) => {
-        if (p.toString().includes('covers')) return false;
+        if (p.toString().includes('covers')) {return false;}
         return true;
       });
 
@@ -126,8 +121,8 @@ describe('BackupService', () => {
       extract.mockResolvedValue(undefined);
       fs.existsSync = jest.fn().mockImplementation((p) => {
         const str = p.toString();
-        if (str.includes('backup.sql')) return true;
-        if (str.includes('restore_')) return true;
+        if (str.includes('backup.sql')) {return true;}
+        if (str.includes('restore_')) {return true;}
         if (str.includes('rollback_')) {
           fs.readdirSync = jest.fn().mockReturnValue(['backup.sql']);
           return true;
@@ -159,7 +154,7 @@ describe('BackupService', () => {
 
     it('debe lanzar error si el zip no contiene backup.sql', async () => {
       fs.existsSync = jest.fn().mockImplementation((p) => {
-        if (p.toString().includes('backup.sql')) return false;
+        if (p.toString().includes('backup.sql')) {return false;}
         return true;
       });
 

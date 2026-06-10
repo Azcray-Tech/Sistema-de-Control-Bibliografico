@@ -13,7 +13,7 @@ class ApiController {
    * @requirement RF-14
    * @use_case CU-14
    */
-  buscarSolicitante = async (req, res, next) => {
+  buscarSolicitante = async (req, res, _next) => {
     try {
       const resultado = await this.solicitanteService.buscarResponse(req.query.cedula);
       res.json(resultado);
@@ -27,7 +27,7 @@ class ApiController {
    * @requirement RF-14
    * @use_case CU-14
    */
-  crearSolicitante = async (req, res, next) => {
+  crearSolicitante = async (req, res, _next) => {
     try {
       const { cedula, nombre, apellido, correoElectronico, telefono } = req.body;
       const solicitante = await this.solicitanteService.crear({ cedula, nombre, apellido, correoElectronico, telefono });
@@ -42,7 +42,7 @@ class ApiController {
    * @requirement RF-06
    * @use_case CU-06
    */
-  buscarEjemplar = async (req, res, next) => {
+  buscarEjemplar = async (req, res, _next) => {
     try {
       const { identificador, materialId } = req.query;
       const ejemplares = await this.materialService.buscarEjemplares({ identificador, materialId });
@@ -57,10 +57,10 @@ class ApiController {
    * @requirement RF-14
    * @use_case CU-14
    */
-  buscarSolicitantePrestamo = async (req, res, next) => {
+  buscarSolicitantePrestamo = async (req, res, _next) => {
     try {
       const data = await this.solicitanteService.buscarConPrestamos(req.query.cedula);
-      if (!data) return res.json({ encontrado: false });
+      if (!data) {return res.json({ encontrado: false });}
       res.json({ encontrado: true, solicitante: data });
     } catch (err) {
       console.error('Error al buscar solicitante para préstamo:', err);
@@ -72,7 +72,7 @@ class ApiController {
    * @requirement RF-06
    * @use_case CU-06
    */
-  buscarEjemplaresDisponibles = async (req, res, next) => {
+  buscarEjemplaresDisponibles = async (req, res, _next) => {
     try {
       const resultado = await this.materialService.buscarDisponibles(req.query.titulo);
       res.json(resultado);

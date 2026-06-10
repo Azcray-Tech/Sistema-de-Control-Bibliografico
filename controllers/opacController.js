@@ -12,7 +12,7 @@ class OpacController {
    * @requirement RF-22
    * @use_case CU-22
    */
-  index = async (req, res, next) => {
+  index = async (req, res, _next) => {
     try {
       const [categorias, destacados] = await Promise.all([
         this.opacService.obtenerCategorias(),
@@ -34,7 +34,7 @@ class OpacController {
    * @requirement RF-23, RF-24
    * @use_case CU-23, CU-24
    */
-  buscar = async (req, res, next) => {
+  buscar = async (req, res, _next) => {
     try {
       const { q, autor, categoriaId, anioDesde, anioHasta, tipo, pagina } = req.query;
       const categorias = await this.opacService.obtenerCategorias();
@@ -66,12 +66,12 @@ class OpacController {
    * @requirement RF-26
    * @use_case CU-26
    */
-  ficha = async (req, res, next) => {
+  ficha = async (req, res, _next) => {
     try {
       const { id } = req.params;
       const material = await this.opacService.obtenerFicha(id);
 
-      if (!material) return res.status(404).send('Material no encontrado');
+      if (!material) {return res.status(404).send('Material no encontrado');}
 
       res.render('public/ficha_material', { material });
     } catch (err) {

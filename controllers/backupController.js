@@ -3,9 +3,7 @@
  * @use_case CU-27 (Generar backup manual completo), CU-28 (Restaurar sistema)
  * @description Controlador para generación, descarga y restauración de backups del sistema.
  */
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const fs = require('fs').promises; // Usamos la API de promesas para evitar bloquear el hilo principal
 
 class BackupController {
   constructor(backupService) {
@@ -42,11 +40,12 @@ class BackupController {
       const usuarioId = req.session.usuarioId;
       const backup = await this.backupService.generarBackup(usuarioId);
 
-      res.download(backup.ruta, backup.nombre, (err) => {
+      res.download(backup.ruta, backup.nombre, async (err) => {
         if (err) {
           next(err);
         }
-        this.backupService.limpiarBackup(backup.ruta);
+        // Limpieza del backup generado después de la descarga
+        await this.backupService.limpiarBackup(backup.ruta);
       });
     } catch (err) {
       res.redirect(`/admin/backup?error=${encodeURIComponent(err.message)}`);
@@ -69,18 +68,31 @@ class BackupController {
    * @requirement RF-28
    * @use_case CU-28
    */
-  restaurar = async (req, res, next) => {
+  restaurar = async (req, res, _next) => {
+    // 1. Validación temprana: Si no hay archivo, detenemos la ejecución inmediatamente
+    if (!req.file) {
+      return res.redirect('/admin/restaurar?error=Debe seleccionar un archivo de backup');
+    }
+
     try {
-      if (!req.file) {
-        return res.redirect('/admin/restaurar?error=Debe seleccionar un archivo de backup');
-      }
-
       const usuarioId = req.session.usuarioId;
-      const resultado = await this.backupService.restaurarBackup(req.file.path, usuarioId);
+      
+      // 2. Procesar la restauración
+      await this.backupService.restaurarBackup(req.file.path, usuarioId);
 
-      try { fs.unlinkSync(req.file.path); } catch { }
+      // 3. Limpieza asíncrona exitosa del archivo subido
+      await fs.unlink(req.file.path);
+      
       res.redirect('/admin/restaurar?success=Backup restaurado exitosamente');
     } catch (err) {
+      // 4. Respaldo de seguridad: Si la restauración falla, intentamos borrar el archivo temporal
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkErr) {
+        // ESLint no-empty solucionado con un comentario explicativo
+        /* El archivo pudo no existir o ya haber sido borrado; ignoramos para no solapar el error principal */
+      }
+
       res.redirect(`/admin/restaurar?error=${encodeURIComponent(err.message)}`);
     }
   };

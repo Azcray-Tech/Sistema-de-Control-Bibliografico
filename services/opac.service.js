@@ -27,11 +27,11 @@ class OpacService {
         { model: this.Autor, as: 'autores', attributes: ['nombre', 'apellido'] }
       ],
       order: [['createdAt', 'DESC']],
-      limit: 12
+      limit: 8
     });
   }
 
-  async buscar({ q, autor, categoriaId, anioDesde, anioHasta, tipo, pagina = 1 }) {
+  async buscar({ q, _autor, categoriaId, anioDesde, anioHasta, tipo, pagina = 1 }) {
     const Op = this.Material.sequelize.constructor.Op;
     const where = {};
 
@@ -41,12 +41,12 @@ class OpacService {
         { sinopsis: { [Op.like]: `%${q}%` } }
       ];
     }
-    if (tipo) where.tipo = tipo;
-    if (categoriaId) where.categoriaId = parseInt(categoriaId, 10);
+    if (tipo) {where.tipo = tipo;}
+    if (categoriaId) {where.categoriaId = parseInt(categoriaId, 10);}
     if (anioDesde || anioHasta) {
       where.anioPublicacion = {};
-      if (anioDesde) where.anioPublicacion[Op.gte] = parseInt(anioDesde, 10);
-      if (anioHasta) where.anioPublicacion[Op.lte] = parseInt(anioHasta, 10);
+      if (anioDesde) {where.anioPublicacion[Op.gte] = parseInt(anioDesde, 10);}
+      if (anioHasta) {where.anioPublicacion[Op.lte] = parseInt(anioHasta, 10);}
     }
 
     const page = Math.max(1, parseInt(pagina, 10) || 1);

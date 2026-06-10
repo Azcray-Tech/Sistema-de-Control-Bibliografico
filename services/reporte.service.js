@@ -33,7 +33,7 @@ class ReporteService {
     headerRow.alignment = { horizontal: 'center' };
     headerRow.height = 24;
 
-    data.forEach((row, ri) => {
+    data.forEach((row, _ri) => {
       const r = ws.addRow(row);
       if (highlightFn && highlightFn(row)) {
         r.eachCell(c => {
@@ -150,7 +150,7 @@ class ReporteService {
           doc.fillColor(rowBg).fill();
           doc.rect(xPos, yPos, widths[i], rowH).lineWidth(0.5).strokeColor(borderColor).stroke();
           doc.clip();
-          const val = c.formatter ? c.formatter(row[c.key]) : (row[c.key] != null ? String(row[c.key]) : '');
+          const val = c.formatter ? c.formatter(row[c.key]) : (row[c.key] !== null && row[c.key] !== undefined ? String(row[c.key]) : '');
           doc.fillColor(rowFg).fontSize(7).font('Helvetica').text(
             val, xPos + rowPadding, yPos + 3,
             { width: widths[i] - rowPadding * 2, height: rowH - 3, align: 'left', ellipsis: true }
@@ -167,11 +167,10 @@ class ReporteService {
   }
 
   async generarInventario({ tipo, categoriaId } = {}, formato = 'pdf') {
-    const Op = this.Prestamo.sequelize.constructor.Op;
     const where = {};
 
-    if (tipo) where.tipo = tipo;
-    if (categoriaId) where.categoriaId = parseInt(categoriaId, 10);
+    if (tipo) {where.tipo = tipo;}
+    if (categoriaId) {where.categoriaId = parseInt(categoriaId, 10);}
 
     const materiales = await this.Material.findAll({
       where,
@@ -217,7 +216,6 @@ class ReporteService {
   }
 
   async generarPrestamosActivos({ soloVencidos } = {}, formato = 'pdf') {
-    const Op = this.Prestamo.sequelize.constructor.Op;
     const where = { estado: 'Activo' };
 
     const prestamos = await this.Prestamo.findAll({
@@ -270,10 +268,10 @@ class ReporteService {
   }
 
   async generarHistorialSolicitante(cedula, formato = 'pdf') {
-    if (!cedula) throw new Error('La cédula del solicitante es obligatoria');
+    if (!cedula) {throw new Error('La cédula del solicitante es obligatoria');}
 
     const solicitante = await this.Solicitante.findByPk(cedula);
-    if (!solicitante) throw new Error('No se encontró un solicitante con esa cédula');
+    if (!solicitante) {throw new Error('No se encontró un solicitante con esa cédula');}
 
     const prestamos = await this.Prestamo.findAll({
       where: { solicitanteCedula: cedula },
@@ -285,11 +283,6 @@ class ReporteService {
         }
       ],
       order: [['fechaPrestamo', 'DESC']]
-    });
-
-    const sanciones = await this.Sancion.findAll({
-      where: { solicitanteCedula: cedula },
-      order: [['fechaInicio', 'DESC']]
     });
 
     const hoy = new Date();
@@ -304,7 +297,7 @@ class ReporteService {
         fechaVencimiento: p.fechaDevolucionPrevista,
         fechaDevolucion: p.fechaDevolucionReal || 'Pendiente',
         estado: p.estado,
-        diasRetraso: diasRetraso != null ? diasRetraso : '-'
+        diasRetraso: diasRetraso !== null && diasRetraso !== undefined ? diasRetraso : '-'
       };
     });
 
@@ -334,7 +327,7 @@ class ReporteService {
   }
 
   async generarRanking({ periodo, topN } = {}, formato = 'pdf') {
-    if (!periodo) throw new Error('El período (mes, anio o fecha personalizada) es obligatorio');
+    if (!periodo) {throw new Error('El período (mes, anio o fecha personalizada) es obligatorio');}
 
     const Op = this.Prestamo.sequelize.constructor.Op;
     const fn = this.sequelize.fn;
@@ -353,7 +346,7 @@ class ReporteService {
       fechaInicio = new Date(periodo);
     }
 
-    let limit = topN ? parseInt(topN, 10) : null;
+    const limit = topN ? parseInt(topN, 10) : null;
 
     const raw = await this.Prestamo.findAll({
       attributes: [
@@ -459,7 +452,7 @@ class ReporteService {
   }
 
   async generarEstadisticas({ fechaDesde, fechaHasta } = {}, formato = 'pdf') {
-    if (!fechaDesde || !fechaHasta) throw new Error('El período (fecha_desde y fecha_hasta) es obligatorio');
+    if (!fechaDesde || !fechaHasta) {throw new Error('El período (fecha_desde y fecha_hasta) es obligatorio');}
 
     const Op = this.Prestamo.sequelize.constructor.Op;
     const fn = this.sequelize.fn;
@@ -495,7 +488,7 @@ class ReporteService {
     }
 
     const grupos = Object.values(mapTipo);
-    const catIds = [...new Set(grupos.map(g => g.categoriaId).filter(id => id != null))];
+    const catIds = [...new Set(grupos.map(g => g.categoriaId).filter(id => id !== null && id !== undefined))];
     const categorias = catIds.length > 0
       ? await this.Categoria.findAll({ where: { idCategoria: catIds } })
       : [];

@@ -72,7 +72,7 @@ class CategoriaService {
   }
 
   async guardar(id, { nombre, descripcion }, usuarioId) {
-    if (!nombre || !nombre.trim()) throw new Error('El nombre de la categoría es obligatorio');
+    if (!nombre || !nombre.trim()) {throw new Error('El nombre de la categoría es obligatorio');}
 
     const duplicado = await this.Categoria.findOne({
       where: { nombre: nombre.trim() }
@@ -80,7 +80,7 @@ class CategoriaService {
 
     if (id) {
       const categoria = await this.Categoria.findByPk(id);
-      if (!categoria) throw new Error('Categoría no encontrada');
+      if (!categoria) {throw new Error('Categoría no encontrada');}
       if (duplicado && duplicado.idCategoria !== parseInt(id, 10)) {
         throw new Error('Ya existe una categoría con ese nombre');
       }
@@ -91,7 +91,7 @@ class CategoriaService {
       return categoria;
     }
 
-    if (duplicado) throw new Error('Ya existe una categoría con ese nombre');
+    if (duplicado) {throw new Error('Ya existe una categoría con ese nombre');}
 
     const categoria = await this.Categoria.create({ nombre: nombre.trim(), descripcion, activa: true });
     if (this.auditoria) {
@@ -104,7 +104,7 @@ class CategoriaService {
     const categoria = await this.Categoria.findByPk(id, {
       include: [{ model: this.Material, required: false }]
     });
-    if (!categoria) throw new Error('Categoría no encontrada');
+    if (!categoria) {throw new Error('Categoría no encontrada');}
 
     if (categoria.Materials && categoria.Materials.length > 0) {
       throw new Error('No se puede desactivar la categoría porque tiene materiales asociados');

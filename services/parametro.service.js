@@ -23,6 +23,20 @@ class ParametroService {
     return this.Parametro.findAll({ order: [['clave', 'ASC']] });
   }
 
+  _validarParametro(clave, valor) {
+    if (['hora_backup_automatico', 'ruta_backup_automatico', 'backup_auto_habilitado'].includes(clave)) {
+      if (clave === 'hora_backup_automatico' && !/^\d{2}:\d{2}$/.test(valor)) {
+        throw new Error('Formato de hora inválido. Use HH:MM');
+      }
+      return;
+    }
+    const num = parseInt(valor, 10);
+    const min = clave === 'renovaciones_permitidas' ? 0 : 1;
+    if (isNaN(num) || num < min) {
+      throw new Error(`El parámetro "${clave}" debe ser un entero >= ${min}`);
+    }
+  }
+
   async actualizar(datos, usuarioId) {
     const PARAMETROS_VALIDOS = [
       'dias_prestamo', 'max_prestamos_simultaneos', 'factor_sancion',
@@ -31,19 +45,9 @@ class ParametroService {
     ];
 
     for (const [clave, valor] of Object.entries(datos)) {
-      if (!PARAMETROS_VALIDOS.includes(clave)) continue;
+      if (!PARAMETROS_VALIDOS.includes(clave)) {continue;}
 
-      if (clave !== 'hora_backup_automatico' && clave !== 'ruta_backup_automatico' && clave !== 'backup_auto_habilitado') {
-        const num = parseInt(valor, 10);
-        const min = clave === 'renovaciones_permitidas' ? 0 : 1;
-        if (isNaN(num) || num < min) {
-          throw new Error(`El parámetro "${clave}" debe ser un entero >= ${min}`);
-        }
-      }
-
-      if (clave === 'hora_backup_automatico' && !/^\d{2}:\d{2}$/.test(valor)) {
-        throw new Error('Formato de hora inválido. Use HH:MM');
-      }
+      this._validarParametro(clave, valor);
 
       const anterior = await this.Parametro.findByPk(clave);
 

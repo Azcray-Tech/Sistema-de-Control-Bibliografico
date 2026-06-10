@@ -15,7 +15,7 @@ const fs = require('fs');
 const os = require('os');
 
 function maintenanceMode(req, res, next) {
-  if (req.path === '/admin/login') return next();
+  if (req.path === '/admin/login') {return next();}
   const flag = path.join(os.tmpdir(), 'ceela_MAINTENANCE_MODE');
   if (fs.existsSync(flag)) {
     return res.status(503).send(`

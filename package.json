@@ -7,12 +7,23 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "lint": "eslint .",
-    "test": "jest --passWithNoTests",
-    "test:watch": "jest --watch --passWithNoTests"
+    "test": "jest --passWithNoTests --no-cache",
+    "test:coverage": "jest --passWithNoTests --coverage --coverageDirectory=reports/coverage --no-cache",
+    "test:watch": "jest --watch --passWithNoTests",
+    "metrics": "node scripts/metrics.js",
+    "metrics:coverage": "jest --passWithNoTests --coverage --coverageDirectory=reports/coverage --no-cache",
+    "metrics:lint": "eslint . -f html -o reports/lint.html",
+    "metrics:dup": "npx jscpd . --output reports/duplication --min-lines 5 --min-tokens 50 --reporters console,json --format javascript,json,sql --ignore-pattern \"node_modules/**,reports/**,public/js/**,tests/**,package-lock.json\"",
+    "metrics:ccn": "node scripts/complexity.js",
+    "metrics:all": "node scripts/metrics.js"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   },
   "dependencies": {
     "archiver": "^6.0.1",
     "bcryptjs": "^2.4.3",
+    "code-health-meter": "^4.1.2",
     "connect-flash": "^0.1.1",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
@@ -23,14 +34,22 @@
     "isbn-validate": "^1.0.3",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.5",
-    "node-cron": "^3.0.3",
+    "node-cron": "^4.2.1",
     "pdfkit": "^0.13.0",
     "sequelize": "^6.35.0",
     "sharp": "^0.33.0"
   },
+  "jest": {
+    "transform": {},
+    "setupFiles": [
+      "./tests/setup.js"
+    ]
+  },
   "devDependencies": {
     "eslint": "^8.56.0",
+    "eslint-plugin-sonarjs": "^4.0.3",
     "jest": "^30.4.2",
+    "jscpd": "^5.0.5",
     "nodemon": "^3.0.2"
   }
 }

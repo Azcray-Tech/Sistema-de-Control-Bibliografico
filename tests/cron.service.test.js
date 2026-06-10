@@ -4,15 +4,12 @@
  * @description Pruebas unitarias del servicio de tareas programadas (cron).
  */
 const fs = require('fs');
-const path = require('path');
-
 jest.mock('node-cron');
 
 const cron = require('node-cron');
 
 const CronService = require('../services/cron.service');
 const { crearMocksModelos, mockAuditoria } = require('./mocks/models');
-const BackupService = require('../services/backup.service');
 
 const crearParametroServiceMock = () => ({
   obtener: jest.fn().mockImplementation(async (clave, defecto) => {
@@ -103,8 +100,8 @@ describe('CronService', () => {
 
     it('debe calcular sanción con factor y tope', async () => {
       mockParametroService.obtener.mockImplementation(async (clave, defecto) => {
-        if (clave === 'factor_sancion') return 5;
-        if (clave === 'suspension_maxima') return 20;
+        if (clave === 'factor_sancion') {return 5;}
+        if (clave === 'suspension_maxima') {return 20;}
         return defecto;
       });
 

@@ -30,7 +30,7 @@ class UsuarioController {
     }
   };
 
-  guardar = async (req, res, next) => {
+  guardar = async (req, res, _next) => {
     try {
       const datos = { ...req.body, usuarioSessionId: req.session.usuarioId };
       await this.usuarioService.crear(datos);
@@ -40,7 +40,7 @@ class UsuarioController {
     }
   };
 
-  desactivar = async (req, res, next) => {
+  desactivar = async (req, res, _next) => {
     try {
       await this.usuarioService.desactivar(req.params.id, req.session.usuarioId);
       res.redirect('/admin/usuarios?success=desactivado');

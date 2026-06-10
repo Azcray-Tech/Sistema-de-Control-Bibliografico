@@ -9,6 +9,7 @@ npm run test:watch                  # Jest watch mode
 npm run lint                        # ESLint 8 (falla sin .eslintrc*)
 node scripts/migrate.js             # Create DB schema + seed (must run before first start)
 node scripts/clear_data.js          # Wipe transactional data, keep seeds (admin, categories, params)
+node scripts/complexity.js          # CCN analysis via typhonjs-escomplex (reports/complexity/)
 npx jest tests/<file>               # Focused test
 npx jest --watch                    # Watch mode
 ```

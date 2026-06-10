@@ -34,7 +34,7 @@ class ReporteController {
     res.send(resultado.buffer);
   };
 
-  generarInventario = async (req, res, next) => {
+  generarInventario = async (req, res, _next) => {
     try {
       const { tipo, categoriaId, formato } = req.body;
       const resultado = await this.reporteService.generarInventario({ tipo, categoriaId }, formato);
@@ -44,7 +44,7 @@ class ReporteController {
     }
   };
 
-  generarPrestamosActivos = async (req, res, next) => {
+  generarPrestamosActivos = async (req, res, _next) => {
     try {
       const { soloVencidos, formato } = req.body;
       const resultado = await this.reporteService.generarPrestamosActivos({ soloVencidos }, formato);
@@ -54,7 +54,7 @@ class ReporteController {
     }
   };
 
-  generarHistorialSolicitante = async (req, res, next) => {
+  generarHistorialSolicitante = async (req, res, _next) => {
     try {
       const { cedula, formato } = req.body;
       const resultado = await this.reporteService.generarHistorialSolicitante(cedula, formato);
@@ -64,7 +64,7 @@ class ReporteController {
     }
   };
 
-  generarRanking = async (req, res, next) => {
+  generarRanking = async (req, res, _next) => {
     try {
       const { periodo, topN, formato } = req.body;
       const resultado = await this.reporteService.generarRanking({ periodo, topN }, formato);
@@ -74,7 +74,7 @@ class ReporteController {
     }
   };
 
-  generarVencidosContacto = async (req, res, next) => {
+  generarVencidosContacto = async (req, res, _next) => {
     try {
       const { diasMinimo, formato } = req.body;
       const resultado = await this.reporteService.generarVencidosContacto({ diasMinimo }, formato);
@@ -84,7 +84,7 @@ class ReporteController {
     }
   };
 
-  generarEstadisticas = async (req, res, next) => {
+  generarEstadisticas = async (req, res, _next) => {
     try {
       const { fechaDesde, fechaHasta, formato } = req.body;
       const resultado = await this.reporteService.generarEstadisticas({ fechaDesde, fechaHasta }, formato);
@@ -94,7 +94,7 @@ class ReporteController {
     }
   };
 
-  generarSuspendidos = async (req, res, next) => {
+  generarSuspendidos = async (req, res, _next) => {
     try {
       const { tipoSuspension, formato } = req.body;
       const resultado = await this.reporteService.generarSuspendidos({ tipoSuspension }, formato);

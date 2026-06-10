@@ -30,7 +30,7 @@ class CategoriaController {
    * @requirement RF-09
    * @use_case CU-09
    */
-  guardar = async (req, res, next) => {
+  guardar = async (req, res, _next) => {
     try {
       const { nombre, descripcion } = req.body;
       const usuarioId = req.session.usuarioId;
@@ -58,7 +58,7 @@ class CategoriaController {
    * @requirement RF-09
    * @use_case CU-09
    */
-  desactivar = async (req, res, next) => {
+  desactivar = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;
       await this.categoriaService.desactivar(req.params.id, usuarioId);
