@@ -11,16 +11,19 @@
     "test:watch": "jest --watch --passWithNoTests",
     "test:e2e": "node scripts/create_test_db.js && jest --config jest.e2e.config.js --runInBand --forceExit",
     "test:integration": "node scripts/create_test_db.js && jest --config jest.integration.config.js --runInBand --forceExit",
-    "test:stress": "echo 'Usar: npx artillery run tests/stress/stress-opac.yml'"
+    "test:stress": "echo 'Usar: npx artillery run tests/stress/ceela-<escenario>.yml'",
+    "benchmark:session": "node tests/benchmark-session.js"
   },
   "dependencies": {
     "archiver": "^6.0.1",
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
+    "connect-session-sequelize": "^7.1.7",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "exceljs": "^4.4.0",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.5.2",
     "express-session": "^1.17.3",
     "extract-zip": "^2.0.1",
     "isbn-validate": "^1.0.3",

@@ -11,6 +11,8 @@ node scripts/migrate.js             # Create DB schema + seed (must run before f
 node scripts/clear_data.js          # Wipe transactional data, keep seeds (admin, categories, params)
 npx jest tests/<file>               # Focused test
 npx jest --watch                    # Watch mode
+node tests/benchmark-session.js     # Benchmark MemoryStore vs SequelizeStore
+npx artillery run tests/stress/ceela-<escenario>.yml   # Stress test individual
 ```
 
 ## Setup
@@ -19,6 +21,8 @@ npx jest --watch                    # Watch mode
 - `sequelize.sync({ alter: false })` on every startup — no auto-migrations. Schema changes go in `scripts/schema.sql`.
 - Default admin credentials: `admin` / `admin123`.
 - Session TTL: 15 min (`app.js:24`). Relevant for auth testing.
+- Session store: SequelizeStore (MySQL) por defecto. Para benchmark usar `SESSION_STORE=memory` (`app.js:19`).
+- Rate limiting: POST /admin/login limitado a 5 intentos/min/IP via `express-rate-limit` (`routes/auth.js:17`).
 - File uploads: `public/images/covers/`, max 3MB, JPG/PNG/WebP only (`middleware/upload.js`). Directory must exist (gitignored except `default.jpg`).
 
 ## Architecture

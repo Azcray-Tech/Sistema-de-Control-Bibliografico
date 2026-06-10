@@ -1,0 +1,42 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      rampTo: 6
+      name: "Rampa de 2 a 6 usuarios/s durante 60s"
+  cookie: {}
+  defaults:
+    headers:
+      Accept: "text/html"
+      User-Agent: "Artillery-CEELA-Test"
+scenarios:
+  - name: "Admin (70%)"
+    weight: 7
+    flow:
+      - post:
+          url: "/admin/login"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          body: "username=admin&password=admin123"
+      - think: 1
+      - get:
+          url: "/admin/prestamos"
+      - think: 2
+      - get:
+          url: "/admin/dashboard"
+      - think: 1
+      - get:
+          url: "/admin/logout"
+
+  - name: "OPAC (30%)"
+    weight: 3
+    flow:
+      - get:
+          url: "/"
+      - think: 2
+      - get:
+          url: "/buscar?q=lenguaje"
+      - think: 2
+      - get:
+          url: "/material/1"

@@ -9,6 +9,16 @@ const session = require('express-session');
 const path = require('path');
 const models = require('./models');
 const { sequelize } = models;
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const sequelizeSessionStore = new SequelizeStore({
+  db: sequelize,
+  tableName: 'sesiones',
+  checkExpirationInterval: 15 * 60 * 1000,
+  expiration: 15 * 60 * 1000
+});
+const sessionStore = process.env.SESSION_STORE === 'memory'
+  ? new session.MemoryStore()
+  : sequelizeSessionStore;
 const errorHandler = require('./middleware/errorHandler');
 const { cargarUsuarioSession } = require('./middleware/auth');
 const fs = require('fs');
@@ -43,6 +53,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'ceela-secret-key',
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     httpOnly: true,
     maxAge: 15 * 60 * 1000 // 15 minutos por defecto
@@ -96,6 +107,9 @@ async function iniciar() {
     await sequelize.authenticate();
     console.log('Conexión a base de datos establecida correctamente.');
     await sequelize.sync({ alter: false });
+    if (process.env.SESSION_STORE !== 'memory') {
+      await sequelizeSessionStore.sync();
+    }
     if (process.env.NODE_ENV !== 'test') {
       cronService.iniciar();
     }
