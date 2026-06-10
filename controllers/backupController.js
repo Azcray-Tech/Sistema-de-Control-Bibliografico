@@ -80,8 +80,8 @@ class BackupController {
       // 2. Procesar la restauración
       await this.backupService.restaurarBackup(req.file.path, usuarioId);
 
-      // 3. Limpieza asíncrona exitosa del archivo subido
-      await fs.unlink(req.file.path);
+      // 3. Limpieza asíncrona del archivo subido (best-effort)
+      try { await fs.unlink(req.file.path); } catch { }
       
       res.redirect('/admin/restaurar?success=Backup restaurado exitosamente');
     } catch (err) {
