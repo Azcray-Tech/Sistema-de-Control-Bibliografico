@@ -3,6 +3,10 @@
  * @use_case CU-27, CU-28
  * @description Pruebas unitarias del controlador de backup y restauración.
  */
+jest.mock('fs', () => ({
+  promises: { unlink: jest.fn().mockResolvedValue() }
+}));
+
 const BackupController = require('../controllers/backupController');
 
 describe('BackupController', () => {

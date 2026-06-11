@@ -9,10 +9,14 @@ const { crearMocksModelos, mockAuditoria } = require('./mocks/models');
 describe('MaterialService', () => {
   let materialService;
   let mocks;
+  let mockEjemplarService;
 
   beforeEach(() => {
     mocks = crearMocksModelos();
-    materialService = new MaterialService(mocks, mockAuditoria);
+    mockEjemplarService = {
+      agregar: jest.fn()
+    };
+    materialService = new MaterialService(mocks, mockAuditoria, null, mockEjemplarService);
     mockAuditoria.mockClear();
   });
 
@@ -143,30 +147,16 @@ describe('MaterialService', () => {
   });
 
   describe('agregarEjemplares', () => {
-    it('debe lanzar error si material no existe', async () => {
-      mocks.Material.findByPk.mockResolvedValue(null);
+    it('debe delegar a ejemplarService.agregar', async () => {
+      mockEjemplarService.agregar.mockResolvedValue([{ idEjemplar: 1 }]);
+      const resultado = await materialService.agregarEjemplares(1, ['E-001'], 99);
+      expect(mockEjemplarService.agregar).toHaveBeenCalledWith(1, ['E-001'], 99);
+      expect(resultado).toHaveLength(1);
+    });
+
+    it('debe propagar error de ejemplarService', async () => {
+      mockEjemplarService.agregar.mockRejectedValue(new Error('Material no encontrado'));
       await expect(materialService.agregarEjemplares(999, ['E-001'], 1)).rejects.toThrow('Material no encontrado');
-    });
-
-    it('debe lanzar error si hay identificadores duplicados', async () => {
-      mocks.Material.findByPk.mockResolvedValue({ idMaterial: 1 });
-      mocks.Ejemplar.findAll.mockResolvedValue([{ identificadorUnico: 'E-001' }]);
-
-      await expect(materialService.agregarEjemplares(1, ['E-001'], 1)).rejects.toThrow('ya existen');
-    });
-
-    it('debe crear ejemplares y registrar auditoría', async () => {
-      mocks.Material.findByPk.mockResolvedValue({ idMaterial: 1 });
-      mocks.Ejemplar.findAll.mockResolvedValue([]);
-      mocks.Ejemplar.bulkCreate.mockResolvedValue([{ idEjemplar: 2 }, { idEjemplar: 3 }]);
-
-      const resultado = await materialService.agregarEjemplares(1, ['E-010', 'E-011'], 1);
-
-      expect(mocks.Ejemplar.bulkCreate).toHaveBeenCalled();
-      expect(mockAuditoria).toHaveBeenCalledWith(
-        expect.objectContaining({ accion: 'AGREGAR_EJEMPLARES' })
-      );
-      expect(resultado).toHaveLength(2);
     });
   });
 
