@@ -12,6 +12,7 @@ class MaterialController {
   /**
    * @requirement RF-01
    * @use_case CU-01
+   * @description Lista materiales con paginación, filtros y ordenamiento.
    */
   listar = async (req, res, next) => {
     try {
@@ -33,6 +34,11 @@ class MaterialController {
    * @requirement RF-01
    * @use_case CU-01
    */
+  /**
+   * @requirement RF-01
+   * @use_case CU-01
+   * @description Muestra formulario de creación/edición de material.
+   */
   mostrarFormulario = async (req, res, next) => {
     try {
       const categorias = await this.categoriaService.listarActivas();
@@ -52,6 +58,7 @@ class MaterialController {
   /**
    * @requirement RF-01, RF-02, RF-03
    * @use_case CU-01, CU-02, CU-03
+   * @description Guarda o actualiza un material (creación o edición según presencia de id).
    */
   guardar = async (req, res, _next) => {
     try {
@@ -83,6 +90,7 @@ class MaterialController {
   /**
    * @requirement RF-06
    * @use_case CU-06
+   * @description Agrega ejemplares a un material existente.
    */
   agregarEjemplares = async (req, res, _next) => {
     try {
@@ -104,6 +112,7 @@ class MaterialController {
   /**
    * @requirement RF-08
    * @use_case CU-08
+   * @description Elimina (baja lógica) un material por su ID.
    */
   eliminar = async (req, res, _next) => {
     try {

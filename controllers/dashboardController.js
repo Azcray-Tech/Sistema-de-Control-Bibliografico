@@ -11,6 +11,7 @@ class DashboardController {
   /**
    * @requirement RF-31, RF-32
    * @use_case CU-31, CU-32
+   * @description Obtiene estadísticas generales y renderiza el panel de administración.
    */
   mostrarDashboard = async (req, res, next) => {
     try {

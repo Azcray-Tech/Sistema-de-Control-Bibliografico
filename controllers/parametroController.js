@@ -16,6 +16,7 @@ class ParametroController {
   /**
    * @requirement RF-21
    * @use_case CU-21
+   * @description Muestra el formulario de configuración de parámetros del sistema.
    */
   mostrarFormulario = async (req, res, next) => {
     try {
@@ -37,6 +38,7 @@ class ParametroController {
   /**
    * @requirement RF-21
    * @use_case CU-21
+   * @description Guarda los parámetros de configuración del sistema.
    */
   guardar = async (req, res, _next) => {
     try {

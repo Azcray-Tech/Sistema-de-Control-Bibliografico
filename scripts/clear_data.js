@@ -1,4 +1,6 @@
 /**
+ * @requirement RF-DEVOPS
+ * @use_case CU-DEVOPS
  * @description Elimina todos los datos de prueba de la base de datos,
  * conservando: usuario admin, categorías semilla y parámetros de configuración.
  */

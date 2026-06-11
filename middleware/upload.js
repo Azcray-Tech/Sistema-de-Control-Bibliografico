@@ -1,4 +1,6 @@
 /**
+ * @requirement RF-01
+ * @use_case CU-01
  * @description Middleware multer para subida de portadas (imágenes) en formulario de materiales.
  */
 const multer = require('multer');

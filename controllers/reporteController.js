@@ -8,6 +8,11 @@ class ReporteController {
     this.reporteService = reporteService;
   }
 
+  /**
+   * @requirement RF-31
+   * @use_case CU-31
+   * @description Muestra el panel de selección de reportes con lista de categorías.
+   */
   mostrarPanel = async (req, res, next) => {
     try {
       const categorias = await this.reporteService.Categoria.findAll({
@@ -25,6 +30,9 @@ class ReporteController {
     }
   };
 
+  /**
+   * @description Envía el archivo generado (PDF/Excel) como descarga al cliente.
+   */
   _enviarArchivo = (res, resultado) => {
     const mime = resultado.extension === 'pdf'
       ? 'application/pdf'
@@ -34,6 +42,11 @@ class ReporteController {
     res.send(resultado.buffer);
   };
 
+  /**
+   * @requirement RF-31
+   * @use_case CU-31
+   * @description Genera reporte de inventario en PDF o Excel.
+   */
   generarInventario = async (req, res, _next) => {
     try {
       const { tipo, categoriaId, formato } = req.body;
@@ -44,6 +57,11 @@ class ReporteController {
     }
   };
 
+  /**
+   * @requirement RF-32
+   * @use_case CU-32
+   * @description Genera reporte de préstamos activos en PDF o Excel.
+   */
   generarPrestamosActivos = async (req, res, _next) => {
     try {
       const { soloVencidos, formato } = req.body;
@@ -54,6 +72,11 @@ class ReporteController {
     }
   };
 
+  /**
+   * @requirement RF-33
+   * @use_case CU-33
+   * @description Genera reporte de historial de un solicitante en PDF o Excel.
+   */
   generarHistorialSolicitante = async (req, res, _next) => {
     try {
       const { cedula, formato } = req.body;
@@ -64,6 +87,11 @@ class ReporteController {
     }
   };
 
+  /**
+   * @requirement RF-34
+   * @use_case CU-34
+   * @description Genera reporte de ranking de materiales más solicitados en PDF o Excel.
+   */
   generarRanking = async (req, res, _next) => {
     try {
       const { periodo, topN, formato } = req.body;
@@ -74,6 +102,11 @@ class ReporteController {
     }
   };
 
+  /**
+   * @requirement RF-35
+   * @use_case CU-35
+   * @description Genera reporte de préstamos vencidos con datos de contacto en PDF o Excel.
+   */
   generarVencidosContacto = async (req, res, _next) => {
     try {
       const { diasMinimo, formato } = req.body;
@@ -84,6 +117,11 @@ class ReporteController {
     }
   };
 
+  /**
+   * @requirement RF-36
+   * @use_case CU-36
+   * @description Genera reporte de estadísticas generales en PDF o Excel.
+   */
   generarEstadisticas = async (req, res, _next) => {
     try {
       const { fechaDesde, fechaHasta, formato } = req.body;
@@ -94,6 +132,11 @@ class ReporteController {
     }
   };
 
+  /**
+   * @requirement RF-37
+   * @use_case CU-37
+   * @description Genera reporte de solicitantes suspendidos en PDF o Excel.
+   */
   generarSuspendidos = async (req, res, _next) => {
     try {
       const { tipoSuspension, formato } = req.body;

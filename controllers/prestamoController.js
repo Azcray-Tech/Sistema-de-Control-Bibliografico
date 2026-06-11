@@ -11,6 +11,7 @@ class PrestamoController {
   /**
    * @requirement RF-15
    * @use_case CU-15
+   * @description Lista préstamos activos y renderiza la vista principal de préstamos.
    */
   listar = async (req, res, next) => {
     try {
@@ -24,6 +25,7 @@ class PrestamoController {
   /**
    * @requirement RF-15
    * @use_case CU-15
+   * @description Procesa el formulario de registro de un nuevo préstamo.
    */
   registrar = async (req, res, _next) => {
     try {
@@ -41,6 +43,7 @@ class PrestamoController {
   /**
    * @requirement RF-17
    * @use_case CU-17
+   * @description Renueva un préstamo activo extendiendo su fecha de devolución prevista.
    */
   renovar = async (req, res, _next) => {
     try {
@@ -54,6 +57,7 @@ class PrestamoController {
   /**
    * @requirement RF-18
    * @use_case CU-18
+   * @description Procesa la devolución de un ejemplar y calcula sanciones por retraso.
    */
   devolver = async (req, res, _next) => {
     try {
@@ -68,6 +72,7 @@ class PrestamoController {
   /**
    * @requirement RF-33
    * @use_case CU-33
+   * @description Muestra el historial completo de préstamos del sistema.
    */
   historial = async (req, res, next) => {
     try {
@@ -81,6 +86,7 @@ class PrestamoController {
   /**
    * @requirement RF-20, RF-18
    * @use_case CU-20, CU-18
+   * @description Muestra vista de sanciones con préstamos vencidos y sanciones activas.
    */
   sanciones = async (req, res, next) => {
     try {
@@ -101,6 +107,7 @@ class PrestamoController {
   /**
    * @requirement RF-20
    * @use_case CU-20
+   * @description Levanta una sanción activa de un solicitante manualmente.
    */
   levantarSancion = async (req, res, _next) => {
     try {

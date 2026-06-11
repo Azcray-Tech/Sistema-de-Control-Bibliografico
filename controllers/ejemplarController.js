@@ -8,6 +8,11 @@ class EjemplarController {
     this.ejemplarService = ejemplarService;
   }
 
+  /**
+   * @requirement RF-07
+   * @use_case CU-07
+   * @description Lista ejemplares asociados a un material y renderiza vista de gestión.
+   */
   listarPorMaterial = async (req, res, next) => {
     try {
       const { material, ejemplares } = await this.ejemplarService.listarPorMaterial(req.params.materialId);
@@ -21,6 +26,11 @@ class EjemplarController {
     }
   };
 
+  /**
+   * @requirement RF-07
+   * @use_case CU-07
+   * @description Cambia el estado físico de un ejemplar (disponible, prestado, dañado, extraviado).
+   */
   cambiarEstado = async (req, res, _next) => {
     try {
       const usuarioId = req.session.usuarioId;

@@ -11,6 +11,7 @@ class CategoriaController {
   /**
    * @requirement RF-09
    * @use_case CU-09
+   * @description Lista categorías con paginación y búsqueda.
    */
   listar = async (req, res, next) => {
     try {
@@ -29,6 +30,7 @@ class CategoriaController {
   /**
    * @requirement RF-09
    * @use_case CU-09
+   * @description Guarda o actualiza una categoría de material.
    */
   guardar = async (req, res, _next) => {
     try {
@@ -57,6 +59,7 @@ class CategoriaController {
   /**
    * @requirement RF-09
    * @use_case CU-09
+   * @description Desactiva (baja lógica) una categoría de material.
    */
   desactivar = async (req, res, _next) => {
     try {
