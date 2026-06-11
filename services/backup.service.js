@@ -10,6 +10,8 @@ const archiver = require('archiver');
 const extract = require('extract-zip');
 const mysql = require('mysql2/promise');
 
+const TTL_PRE_RESTORE = 24 * 60 * 60 * 1000;
+
 class BackupService {
   constructor(models, auditoria) {
     this.models = models;
@@ -19,15 +21,29 @@ class BackupService {
     this.backupDir = path.join(__dirname, '..', 'backup');
   }
 
-  async _generarDumpSQL() {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASS || '',
-      database: process.env.DB_NAME || 'ceela_biblioteca',
-      multipleStatements: true
+  _formatearTimestamp(now) {
+    const y = now.getFullYear();
+    const M = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    return `${y}-${M}-${d}_${h}${m}${s}`;
+  }
+
+  _crearArchiver(rutaTemp) {
+    const output = fs.createWriteStream(rutaTemp);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const promise = new Promise((resolve, reject) => {
+      output.on('close', resolve);
+      archive.on('error', reject);
+      archive.pipe(output);
     });
+    return { archive, promise };
+  }
+
+  async _generarDumpSQL() {
+    const connection = await this._getConnection();
 
     const tables = [
       'categoria', 'material', 'libro', 'revista', 'tesis', 'anuario',
@@ -65,40 +81,25 @@ class BackupService {
     return sql;
   }
 
+  async _agregarBackupAlArchiver(archive) {
+    archive.append('Generando dump SQL...', { name: 'info.txt' });
+    const sql = await this._generarDumpSQL();
+    archive.append(sql, { name: 'backup.sql' });
+    if (fs.existsSync(this.coversPath)) {
+      archive.directory(this.coversPath, 'portadas');
+    }
+  }
+
   async generarBackup(usuarioId) {
     const now = new Date();
-    const y = now.getFullYear();
-    const M = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    const timestamp = `${y}-${M}-${d}_${h}${m}${s}`;
+    const timestamp = this._formatearTimestamp(now);
     const nombre = `backup_${timestamp}.zip`;
     const rutaTemp = path.join(os.tmpdir(), nombre);
-    const output = fs.createWriteStream(rutaTemp);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const { archive, promise } = this._crearArchiver(rutaTemp);
 
-    await new Promise((resolve, reject) => {
-      output.on('close', resolve);
-      archive.on('error', reject);
-      archive.pipe(output);
-
-      // Dump SQL
-      archive.append('Generando dump SQL...', { name: 'info.txt' });
-
-      // Generar dump y agregarlo al zip
-      this._generarDumpSQL().then(sql => {
-        archive.append(sql, { name: 'backup.sql' });
-
-        // Agregar carpeta de portadas si existe
-        if (fs.existsSync(this.coversPath)) {
-          archive.directory(this.coversPath, 'portadas');
-        }
-
-        archive.finalize();
-      }).catch(reject);
-    });
+    await this._agregarBackupAlArchiver(archive);
+    archive.finalize();
+    await promise;
 
     if (this.auditoria) {
       await this.auditoria({
@@ -116,7 +117,7 @@ class BackupService {
     try {
       if (fs.existsSync(ruta)) {fs.unlinkSync(ruta);}
     } catch (err) {
-      /* Se ignora el fallo si el archivo ya fue eliminado o no existe */
+      if (err.code !== 'ENOENT') {console.warn('limpiarBackup:', err.message);}
     }
   }
 
@@ -129,7 +130,7 @@ class BackupService {
   _limpiarPreRestoresViejos() {
     const dir = this._getPreRestoreDir();
     const ahora = Date.now();
-    const limite = 24 * 60 * 60 * 1000;
+    const limite = TTL_PRE_RESTORE;
     fs.readdirSync(dir).forEach(f => {
       const full = path.join(dir, f);
       if (fs.statSync(full).isFile() && ahora - fs.statSync(full).mtimeMs > limite) {
@@ -150,7 +151,7 @@ class BackupService {
     try { 
       if (fs.existsSync(this._rutaMantenimiento())) {fs.unlinkSync(this._rutaMantenimiento());} 
     } catch (err) {
-      /* Se ignora si el archivo de mantenimiento no existe */
+      if (err.code !== 'ENOENT') {console.warn('_desactivarModoMantenimiento:', err.message);}
     }
   }
 
@@ -187,38 +188,21 @@ class BackupService {
   async _generarPreRestore() {
     this._limpiarPreRestoresViejos();
     const now = new Date();
-    const y = now.getFullYear();
-    const M = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    const nombre = `backup_pre_restore_${y}-${M}-${d}_${h}${m}${s}.zip`;
-
+    const timestamp = this._formatearTimestamp(now);
+    const nombre = `backup_pre_restore_${timestamp}.zip`;
     const rutaTemp = path.join(os.tmpdir(), nombre);
-    const output = fs.createWriteStream(rutaTemp);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const { archive, promise } = this._crearArchiver(rutaTemp);
 
-    await new Promise((resolve, reject) => {
-      output.on('close', resolve);
-      archive.on('error', reject);
-      archive.pipe(output);
-
-      this._generarDumpSQL().then(sql => {
-        archive.append(sql, { name: 'backup.sql' });
-        if (fs.existsSync(this.coversPath)) {
-          archive.directory(this.coversPath, 'portadas');
-        }
-        archive.finalize();
-      }).catch(reject);
-    });
+    await this._agregarBackupAlArchiver(archive);
+    archive.finalize();
+    await promise;
 
     const destino = path.join(this._getPreRestoreDir(), nombre);
     fs.copyFileSync(rutaTemp, destino);
     try { 
       fs.unlinkSync(rutaTemp); 
     } catch (err) {
-      /* Se ignora si falló la limpieza del archivo temporal intermedio */
+      if (err.code !== 'ENOENT') {console.warn('_generarPreRestore cleanup:', err.message);}
     }
 
     return destino;

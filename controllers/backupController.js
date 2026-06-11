@@ -18,6 +18,7 @@ class BackupController {
   /**
    * @requirement RF-27
    * @use_case CU-27
+   * @description Muestra el panel de gestión de backups con estado del backup automático.
    */
   mostrarPanel = async (req, res, next) => {
     try {
@@ -34,6 +35,7 @@ class BackupController {
   /**
    * @requirement RF-27
    * @use_case CU-27
+   * @description Genera un backup manual completo y lo descarga.
    */
   generar = async (req, res, next) => {
     try {
@@ -55,6 +57,7 @@ class BackupController {
   /**
    * @requirement RF-28
    * @use_case CU-28
+   * @description Muestra el formulario para restaurar un backup.
    */
   mostrarRestaurar = async (req, res, next) => {
     try {
@@ -67,6 +70,7 @@ class BackupController {
   /**
    * @requirement RF-28
    * @use_case CU-28
+   * @description Procesa la restauración del sistema desde un archivo de backup.
    */
   restaurar = async (req, res, _next) => {
     // 1. Validación temprana: Si no hay archivo, detenemos la ejecución inmediatamente
@@ -81,7 +85,7 @@ class BackupController {
       await this.backupService.restaurarBackup(req.file.path, usuarioId);
 
       // 3. Limpieza asíncrona del archivo subido (best-effort)
-      try { await fs.unlink(req.file.path); } catch { }
+      await fs.unlink(req.file.path).catch(err => console.warn('Limpieza backup upload:', err.message));
       
       res.redirect('/admin/restaurar?success=Backup restaurado exitosamente');
     } catch (err) {
@@ -89,8 +93,7 @@ class BackupController {
       try {
         await fs.unlink(req.file.path);
       } catch (unlinkErr) {
-        // ESLint no-empty solucionado con un comentario explicativo
-        /* El archivo pudo no existir o ya haber sido borrado; ignoramos para no solapar el error principal */
+        console.warn('Limpieza backup upload (catch):', unlinkErr.message);
       }
 
       res.redirect(`/admin/restaurar?error=${encodeURIComponent(err.message)}`);

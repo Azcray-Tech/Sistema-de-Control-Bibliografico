@@ -12,73 +12,73 @@ class ApiController {
   /**
    * @requirement RF-14
    * @use_case CU-14
+   * @description Busca un solicitante por cédula y retorna JSON para AJAX.
    */
-  buscarSolicitante = async (req, res, _next) => {
+   buscarSolicitante = async (req, res, next) => {
     try {
       const resultado = await this.solicitanteService.buscarResponse(req.query.cedula);
       res.json(resultado);
     } catch (err) {
-      console.error('Error al buscar solicitante:', err);
-      res.status(500).json({ error: 'Error al buscar solicitante' });
+      next(err);
     }
   };
 
   /**
    * @requirement RF-14
    * @use_case CU-14
+   * @description Crea un nuevo solicitante vía AJAX y retorna JSON.
    */
-  crearSolicitante = async (req, res, _next) => {
+   crearSolicitante = async (req, res, next) => {
     try {
       const { cedula, nombre, apellido, correoElectronico, telefono } = req.body;
       const solicitante = await this.solicitanteService.crear({ cedula, nombre, apellido, correoElectronico, telefono });
       res.json({ success: true, solicitante });
     } catch (err) {
-      console.error('Error al crear solicitante:', err);
-      res.status(500).json({ error: err.message || 'Error al crear solicitante' });
+      next(err);
     }
   };
 
   /**
    * @requirement RF-06
    * @use_case CU-06
+   * @description Busca ejemplares por identificador y materialId vía AJAX.
    */
-  buscarEjemplar = async (req, res, _next) => {
+   buscarEjemplar = async (req, res, next) => {
     try {
       const { identificador, materialId } = req.query;
       const ejemplares = await this.materialService.buscarEjemplares({ identificador, materialId });
       res.json({ ejemplares });
     } catch (err) {
-      console.error('Error al buscar ejemplar:', err);
-      res.status(500).json({ error: 'Error al buscar ejemplar' });
+      next(err);
     }
   };
 
   /**
    * @requirement RF-14
    * @use_case CU-14
+   * @description Busca solicitante con sus préstamos activos para el formulario de préstamo.
    */
-  buscarSolicitantePrestamo = async (req, res, _next) => {
+   buscarSolicitantePrestamo = async (req, res, next) => {
     try {
       const data = await this.solicitanteService.buscarConPrestamos(req.query.cedula);
       if (!data) {return res.json({ encontrado: false });}
       res.json({ encontrado: true, solicitante: data });
     } catch (err) {
-      console.error('Error al buscar solicitante para préstamo:', err);
-      res.status(500).json({ encontrado: false, error: 'Error al buscar solicitante' });
+      next(err);
     }
   };
 
   /**
    * @requirement RF-06
    * @use_case CU-06
+   * @description Busca ejemplares disponibles por título vía AJAX.
    */
-  buscarEjemplaresDisponibles = async (req, res, _next) => {
+   buscarEjemplaresDisponibles = async (req, res, next) => {
     try {
       const resultado = await this.materialService.buscarDisponibles(req.query.titulo);
       res.json(resultado);
     } catch (err) {
-      console.error('Error al buscar ejemplares disponibles:', err);
-      res.status(500).json([]);
+      next(err);
     }
   };
 }

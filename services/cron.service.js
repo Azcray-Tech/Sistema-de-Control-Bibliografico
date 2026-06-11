@@ -7,6 +7,10 @@ const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
 
+const MS_POR_DIA = 86400000;
+const DELAY_SUSPENSION = 30000;
+const DELAY_BACKUP = 45000;
+
 class CronService {
   constructor(models, auditoria, backupService, parametroService) {
     this.models = models;
@@ -22,10 +26,16 @@ class CronService {
     this._backupTask = null;
   }
 
-  async ejecutarSuspensionAutomatica() {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+  _log(level, msg) {
+    const prefix = `[Cron]`;
+    if (level === 'error') {
+      console.error(`${prefix} ${msg}`);
+    } else {
+      console.log(`${prefix} ${msg}`);
+    }
+  }
 
+  async _aplicarSuspensionesPorVencimiento(hoy) {
     const vencidos = await this.Prestamo.findAll({
       where: {
         estado: 'Activo',
@@ -37,45 +47,35 @@ class CronService {
 
     for (const prestamo of vencidos) {
       const solicitante = prestamo.Solicitante;
-      if (!solicitante) {continue;}
-      if (solicitante.estado === 'Suspendido permanente') {continue;}
+      if (!solicitante || solicitante.estado === 'Suspendido permanente') {continue;}
+      if (solicitante.estado === 'Suspendido temporal') {continue;}
 
-      const retraso = Math.floor((hoy - new Date(prestamo.fechaDevolucionPrevista)) / 86400000);
+      const retraso = Math.floor((hoy - new Date(prestamo.fechaDevolucionPrevista)) / MS_POR_DIA);
       const factorSancion = await this.parametroService.obtener('factor_sancion', 2);
       const suspensionMaxima = await this.parametroService.obtener('suspension_maxima', 30);
       const diasSancion = Math.min(retraso * factorSancion, suspensionMaxima);
+      const fechaFin = new Date(hoy);
+      fechaFin.setDate(fechaFin.getDate() + diasSancion);
 
-      if (solicitante.estado !== 'Suspendido temporal') {
-        const fechaFin = new Date(hoy);
-        fechaFin.setDate(fechaFin.getDate() + diasSancion);
-
-        await this.Sancion.create({
-          solicitanteCedula: solicitante.cedula,
-          motivo: `Suspensión automática por retraso de ${retraso} días`,
-          fechaInicio: hoy,
-          diasSancion,
-          fechaFin
-        });
-
-        await solicitante.update({
-          estado: 'Suspendido temporal',
-          fechaFinSuspension: fechaFin
-        });
-
-        await this.auditoria({
-          accion: 'SUSPENSION_AUTOMATICA',
-          tablaAfectada: 'solicitante',
-          registroId: solicitante.cedula,
-          valorNuevo: { estado: 'Suspendido temporal', diasSancion, fechaFin }
-        });
-      }
+      await this.Sancion.create({
+        solicitanteCedula: solicitante.cedula,
+        motivo: `Suspensión automática por retraso de ${retraso} días`,
+        fechaInicio: hoy, diasSancion, fechaFin
+      });
+      await solicitante.update({ estado: 'Suspendido temporal', fechaFinSuspension: fechaFin });
+      await this.auditoria({
+        accion: 'SUSPENSION_AUTOMATICA',
+        tablaAfectada: 'solicitante',
+        registroId: solicitante.cedula,
+        valorNuevo: { estado: 'Suspendido temporal', diasSancion, fechaFin }
+      });
     }
+    return vencidos.length;
+  }
 
+  async _elevarSuspensionesVencidasAPermanente(hoy) {
     const suspendidosVencidos = await this.Solicitante.findAll({
-      where: {
-        estado: 'Suspendido temporal',
-        fechaFinSuspension: { [this.Op.lt]: hoy }
-      },
+      where: { estado: 'Suspendido temporal', fechaFinSuspension: { [this.Op.lt]: hoy } },
       include: [{
         model: this.Prestamo,
         where: { estado: 'Activo', fechaDevolucionReal: null },
@@ -87,11 +87,7 @@ class CronService {
       const tienePrestamoActivo = (solicitante.Prestamos || []).length > 0;
       if (!tienePrestamoActivo) {continue;}
 
-      await solicitante.update({
-        estado: 'Suspendido permanente',
-        fechaFinSuspension: null
-      });
-
+      await solicitante.update({ estado: 'Suspendido permanente', fechaFinSuspension: null });
       await this.auditoria({
         accion: 'SUSPENSION_PERMANENTE',
         tablaAfectada: 'solicitante',
@@ -99,8 +95,18 @@ class CronService {
         valorNuevo: { estado: 'Suspendido permanente' }
       });
     }
+    return suspendidosVencidos.length;
+  }
 
-    console.log(`[Cron] Suspensión automática ejecutada: ${vencidos.length} vencidos, ${suspendidosVencidos.length} suspendidos revisados`);
+  async ejecutarSuspensionAutomatica() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const [contVencidos, contSuspendidos] = await Promise.all([
+      this._aplicarSuspensionesPorVencimiento(hoy),
+      this._elevarSuspensionesVencidasAPermanente(hoy)
+    ]);
+    this._log('info', `Suspensión automática ejecutada: ${contVencidos} vencidos, ${contSuspendidos} suspendidos revisados`);
   }
 
   _existeBackupDelDia(ruta) {
@@ -122,17 +128,17 @@ class CronService {
 
       const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
       if (!ruta) {
-        console.log('[Cron] Backup automático: ruta no configurada, omitiendo');
+        this._log('warn', 'Backup automático: ruta no configurada, omitiendo');
         return;
       }
       if (!fs.existsSync(ruta)) {
-        console.log('[Cron] Backup automático: ruta no accesible, omitiendo');
+        this._log('warn', 'Backup automático: ruta no accesible, omitiendo');
         return;
       }
 
       // Evitar duplicados del mismo día
       if (this._existeBackupDelDia(ruta)) {
-        console.log('[Cron] Backup automático: ya existe backup del día actual, omitiendo');
+        this._log('warn', 'Backup automático: ya existe backup del día actual, omitiendo');
         return;
       }
 
@@ -151,9 +157,9 @@ class CronService {
         archivos.slice(7).forEach(f => fs.unlinkSync(f.ruta));
       }
 
-      console.log(`[Cron] Backup automático completado: ${backup.nombre}`);
+      this._log('info', `Backup automático completado: ${backup.nombre}`);
     } catch (err) {
-      console.error('[Cron] Error en backup automático:', err.message);
+          this._log('error', `Error en backup automático: ${err.message}`);
     }
   }
 
@@ -172,10 +178,10 @@ class CronService {
       const expresion = this._horaAExpresionCron(hora);
       this._backupTask = cron.schedule(expresion, () => {
         this.ejecutarBackupAutomatico().catch(err => {
-          console.error('[Cron] Error en backup automático:', err.message);
+      this._log('error', `Error en backup automático: ${err.message}`);
         });
       });
-      console.log(`[Cron] Backup reprogramado a las ${hora} (${expresion})`);
+      this._log('info', `Backup reprogramado a las ${hora} (${expresion})`);
     });
   }
 
@@ -188,11 +194,11 @@ class CronService {
       if (!ruta || !fs.existsSync(ruta)) {return;}
 
       if (!this._existeBackupDelDia(ruta)) {
-        console.log('[Cron] Inicio: no hay backup del día actual, ejecutando...');
+        this._log('info', 'Inicio: no hay backup del día actual, ejecutando...');
         await this.ejecutarBackupAutomatico();
       }
     } catch (err) {
-      console.error('[Cron] Error en verificación de backup al iniciar:', err.message);
+      this._log('error', `Error en verificación de backup al iniciar: ${err.message}`);
     }
   }
 
@@ -208,7 +214,7 @@ class CronService {
     // Suspensión automática: cada día a las 02:00
     cron.schedule('0 2 * * *', () => {
       this.ejecutarSuspensionAutomatica().catch(err => {
-        console.error('[Cron] Error en suspensión automática:', err.message);
+        this._log('error', `Error en suspensión automática: ${err.message}`);
       });
     });
 
@@ -217,15 +223,19 @@ class CronService {
 
     // Ejecutar también al iniciar para detectar rezagados
     setTimeout(() => {
-      this.ejecutarSuspensionAutomatica().catch(() => {});
-    }, 30000);
+      this.ejecutarSuspensionAutomatica().catch(err => {
+        this._log('error', `Error en suspensión automática al iniciar: ${err.message}`);
+      });
+    }, DELAY_SUSPENSION);
 
     // Verificar si hay backup pendiente del día al iniciar
     setTimeout(() => {
-      this._verificarBackupPendienteAlIniciar().catch(() => {});
-    }, 45000);
+      this._verificarBackupPendienteAlIniciar().catch(err => {
+        this._log('error', `Error en verificación de backup al iniciar: ${err.message}`);
+      });
+    }, DELAY_BACKUP);
 
-    console.log('[Cron] Tareas programadas iniciadas');
+    this._log('info', 'Tareas programadas iniciadas');
   }
 }
 

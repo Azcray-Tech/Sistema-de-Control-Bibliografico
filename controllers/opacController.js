@@ -11,8 +11,9 @@ class OpacController {
   /**
    * @requirement RF-22
    * @use_case CU-22
+   * @description Página principal del OPAC con categorías y materiales destacados.
    */
-  index = async (req, res, _next) => {
+  index = async (req, res, next) => {
     try {
       const [categorias, destacados] = await Promise.all([
         this.opacService.obtenerCategorias(),
@@ -25,16 +26,16 @@ class OpacController {
         tipo: '', queryTitulo: '', isbn: ''
       });
     } catch (err) {
-      console.error('Error en OPAC:', err);
-      res.status(500).send('Error al cargar el catálogo');
+      next(err);
     }
   };
 
   /**
    * @requirement RF-23, RF-24
    * @use_case CU-23, CU-24
+   * @description Procesa búsqueda simple y avanzada en el catálogo público.
    */
-  buscar = async (req, res, _next) => {
+  buscar = async (req, res, next) => {
     try {
       const { q, autor, categoriaId, anioDesde, anioHasta, tipo, pagina } = req.query;
       const categorias = await this.opacService.obtenerCategorias();
@@ -57,16 +58,16 @@ class OpacController {
         queryTitulo: q || ''
       });
     } catch (err) {
-      console.error('Error en búsqueda:', err);
-      res.status(500).send('Error al realizar la búsqueda');
+      next(err);
     }
   };
 
   /**
    * @requirement RF-26
    * @use_case CU-26
+   * @description Muestra la ficha completa de un material en el catálogo público.
    */
-  ficha = async (req, res, _next) => {
+  ficha = async (req, res, next) => {
     try {
       const { id } = req.params;
       const material = await this.opacService.obtenerFicha(id);
@@ -75,8 +76,7 @@ class OpacController {
 
       res.render('public/ficha_material', { material });
     } catch (err) {
-      console.error('Error al cargar ficha:', err);
-      res.status(500).send('Error al cargar la ficha del material');
+      next(err);
     }
   };
 }
