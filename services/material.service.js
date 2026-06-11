@@ -17,7 +17,7 @@ function validarISBN10(isbn) {
 }
 
 class MaterialService {
-  constructor({ Material, Libro, Revista, Tesis, Anuario, Categoria, Ejemplar, Autor, Articulo, Prestamo }, auditoria, articuloService) {
+  constructor({ Material, Libro, Revista, Tesis, Anuario, Categoria, Ejemplar, Autor, Articulo, Prestamo }, auditoria, articuloService, ejemplarService) {
     this.Material = Material;
     this.Libro = Libro;
     this.Revista = Revista;
@@ -30,6 +30,7 @@ class MaterialService {
     this.Prestamo = Prestamo;
     this.auditoria = auditoria;
     this.articuloService = articuloService;
+    this.ejemplarService = ejemplarService;
   }
 
   _mapearLibro(d) {
@@ -164,14 +165,18 @@ class MaterialService {
     }
   }
 
-  async _verificarDuplicadosCrear(tipo, libro, revista) {
+  async _verificarDuplicados(tipo, libro, revista, ignorarId) {
     if (tipo === 'libro' && libro?.isbn) {
       const existente = await this.Libro.findOne({ where: { isbn: libro.isbn } });
-      if (existente) {throw new Error(`El ISBN ${libro.isbn} ya está registrado para otro material`);}
+      if (existente && existente.materialId !== Number(ignorarId)) {
+        throw new Error(`El ISBN ${libro.isbn} ya está registrado para otro material`);
+      }
     }
     if (tipo === 'revista' && revista?.issn) {
       const existente = await this.Revista.findOne({ where: { issn: revista.issn } });
-      if (existente) {throw new Error(`El ISSN ${revista.issn} ya está registrado para otra revista`);}
+      if (existente && existente.materialId !== Number(ignorarId)) {
+        throw new Error(`El ISSN ${revista.issn} ya está registrado para otra revista`);
+      }
     }
   }
 
@@ -263,24 +268,9 @@ class MaterialService {
     const { titulo, tipo, libro, revista, tesis } = datos;
 
     this._validarDatosCreacion(titulo, tipo, libro, revista, tesis);
-    await this._verificarDuplicadosCrear(tipo, libro, revista);
+    await this._verificarDuplicados(tipo, libro, revista);
 
     return this._ejecutarTransaccionCreacion(datos, usuarioId);
-  }
-
-  async _verificarDuplicadosActualizar(id, tipo, libro, revista) {
-    if (tipo === 'libro' && libro?.isbn) {
-      const existente = await this.Libro.findOne({ where: { isbn: libro.isbn } });
-      if (existente && existente.materialId !== Number(id)) {
-        throw new Error(`El ISBN ${libro.isbn} ya está registrado para otro material`);
-      }
-    }
-    if (tipo === 'revista' && revista?.issn) {
-      const existente = await this.Revista.findOne({ where: { issn: revista.issn } });
-      if (existente && existente.materialId !== Number(id)) {
-        throw new Error(`El ISSN ${revista.issn} ya está registrado para otra revista`);
-      }
-    }
   }
 
   async _verificarPrestamosActivos(material, titulo, signatura) {
@@ -377,40 +367,17 @@ class MaterialService {
     });
     if (!material) {throw new Error('Material no encontrado');}
 
-    await this._verificarDuplicadosActualizar(id, tipo, libro, revista);
+    await this._verificarDuplicados(tipo, libro, revista, id);
     await this._verificarPrestamosActivos(material, titulo, signatura);
 
     return this._ejecutarTransaccionActualizacion(id, datos, material, usuarioId);
   }
 
   async agregarEjemplares(materialId, identificadores, usuarioId) {
-    const material = await this.Material.findByPk(materialId);
-    if (!material) {throw new Error('Material no encontrado');}
-
-    const existentes = await this.Ejemplar.findAll({
-      where: { materialId, identificadorUnico: identificadores }
-    });
-    if (existentes.length > 0) {
-      throw new Error(`Los siguientes identificadores ya existen para este material: ${existentes.map(e => e.identificadorUnico).join(', ')}`);
+    if (!this.ejemplarService) {
+      throw new Error('EjemplarService no disponible');
     }
-
-    const ejemplares = await this.Ejemplar.bulkCreate(
-      identificadores.map(id => ({
-        materialId,
-        identificadorUnico: id,
-        estado: 'Disponible'
-      }))
-    );
-
-    if (this.auditoria) {
-      await this.auditoria({
-        usuarioId, accion: 'AGREGAR_EJEMPLARES',
-        tablaAfectada: 'ejemplar', registroId: materialId,
-        valorNuevo: { cantidad: identificadores.length, identificadores }
-      });
-    }
-
-    return ejemplares;
+    return this.ejemplarService.agregar(materialId, identificadores, usuarioId);
   }
 
   async eliminar(id, usuarioId) {

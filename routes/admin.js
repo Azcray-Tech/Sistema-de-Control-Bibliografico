@@ -36,9 +36,9 @@ const backupService = new BackupService(models, registrarAuditoria);
 const dashboardService = new DashboardService(models);
 const categoriaService = new CategoriaService(models, registrarAuditoria);
 const articuloService = new ArticuloService(models, registrarAuditoria);
-const materialService = new MaterialService(models, registrarAuditoria, articuloService);
-const prestamoService = new PrestamoService(models, registrarAuditoria, parametroService);
 const ejemplarService = new EjemplarService(models, registrarAuditoria);
+const materialService = new MaterialService(models, registrarAuditoria, articuloService, ejemplarService);
+const prestamoService = new PrestamoService(models, registrarAuditoria, parametroService);
 const usuarioService = new UsuarioService(models, registrarAuditoria);
 
 const dashboardController = new DashboardController(dashboardService);
