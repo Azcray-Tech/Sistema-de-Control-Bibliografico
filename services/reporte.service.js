@@ -3,8 +3,25 @@
  * @use_case CU-31, CU-32, CU-33, CU-34, CU-35, CU-36, CU-37
  * @description Servicio de reportes: genera archivos PDF/Excel para los 7 reportes del Ciclo 4.
  */
+/* eslint-disable max-lines */
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+
+const MS_POR_DIA = 86400000;
+const COLORES = {
+  headerBg: 'FF2C3E50',
+  highlightBg: 'FFFFCD2D',
+  highlightText: 'FFB71C1C',
+  pdfHeaderBg: '#1a237e',
+  pdfHeaderFg: '#FFFFFF',
+  pdfBorder: '#B0BEC5',
+  pdfEvenBg: '#F5F7FA',
+  pdfOddBg: '#FFFFFF',
+  pdfHighlightBg: '#FFCDD2',
+  pdfText: '#263238',
+  pdfHighlightText: '#B71C1C',
+  pdfSubtext: '#78909C'
+};
 
 class ReporteService {
   constructor({ Material, Ejemplar, Prestamo, Solicitante, Categoria, Autor, Sancion, sequelize }) {
@@ -29,7 +46,7 @@ class ReporteService {
 
     const headerRow = ws.getRow(1);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORES.headerBg } };
     headerRow.alignment = { horizontal: 'center' };
     headerRow.height = 24;
 
@@ -37,8 +54,8 @@ class ReporteService {
       const r = ws.addRow(row);
       if (highlightFn && highlightFn(row)) {
         r.eachCell(c => {
-          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
-          c.font = { color: { argb: 'FFB71C1C' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORES.highlightBg } };
+          c.font = { color: { argb: COLORES.highlightText } };
         });
       }
     });
@@ -47,6 +64,13 @@ class ReporteService {
 
     const buffer = await workbook.xlsx.writeBuffer();
     return { buffer, nombre: `${name}.xlsx`, extension: 'xlsx' };
+  }
+
+  _generarReporte({ columns, data, name, sheetName, title, highlightFn, formato }) {
+    if (formato === 'excel') {
+      return this._generarExcel({ columns, data, name, sheetName, highlightFn });
+    }
+    return this._generarPDF({ columns, data, name, title, highlightFn });
   }
 
   async _generarPDF({ columns, data, name, title, highlightFn }) {
@@ -61,109 +85,123 @@ class ReporteService {
       doc.on('end', () => resolve({ buffer: Buffer.concat(buffers), nombre: `${name}.pdf`, extension: 'pdf' }));
       doc.on('error', reject);
 
-      const pageWidth = doc.page.width - 80;
-      const leftMargin = 40;
-
-      const colWidths = columns.map(c => Math.max(c.width || 20, c.header.length * 0.65));
-      const totalBase = colWidths.reduce((a, b) => a + b, 0);
-      const scale = pageWidth / totalBase;
-      const widths = colWidths.map(w => Math.max(w * scale, 14));
-
-      const headerBg = '#1a237e';
-      const headerFg = '#FFFFFF';
-      const borderColor = '#B0BEC5';
-      const evenBg = '#F5F7FA';
-      const oddBg = '#FFFFFF';
-      const highlightBg = '#FFCDD2';
-      const textColor = '#263238';
-      const highlightTextColor = '#B71C1C';
-      const rowPadding = 4;
-
-      let yPos = doc.y;
-      let pageNum = 0;
-
-      const drawFooter = () => {
-        doc.fontSize(7).font('Helvetica').fillColor('#78909C');
-        doc.text(
-          `Sistema Bibliográfico CEELA · Generado: ${new Date().toLocaleDateString()} · Pág. ${pageNum}`,
-          leftMargin, doc.page.height - 30,
-          { width: pageWidth, align: 'center' }
-        );
-      };
-
-      const drawHeader = () => {
-        let xPos = leftMargin;
-        columns.forEach((c, i) => {
-          doc.save();
-          doc.rect(xPos, yPos, widths[i], 18);
-          doc.fillColor(headerBg).fill();
-          doc.rect(xPos, yPos, widths[i], 18).lineWidth(0.5).strokeColor(borderColor).stroke();
-          doc.clip();
-          doc.fillColor(headerFg).fontSize(7.5).font('Helvetica-Bold').text(
-            c.header, xPos + rowPadding, yPos + 4,
-            { width: widths[i] - rowPadding * 2, align: 'left' }
-          );
-          doc.restore();
-          xPos += widths[i];
-        });
-        yPos += 18;
-      };
-
-      doc.fontSize(14).font('Helvetica-Bold').fillColor(headerBg).text(title, { align: 'center' });
-      doc.moveDown(0.4);
-      doc.fontSize(7.5).font('Helvetica').fillColor('#78909C').text(
-        `Generado: ${new Date().toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' })}`,
-        { align: 'right' }
-      );
-      doc.moveDown(0.5);
-      yPos = doc.y;
+      const cfg = this._calcularColumnasPDF(doc, columns);
+      this._renderPDFTitulo(doc, title);
+      cfg.yPos = doc.y;
 
       if (data.length === 0) {
-        doc.fontSize(10).font('Helvetica').fillColor('#78909C').text('No hay datos disponibles para este reporte.', { align: 'center' });
-        drawFooter();
+        this._renderPDFSinDatos(doc);
+        this._renderPDFFooter(doc, cfg, 0);
         doc.end();
         return;
       }
 
-      pageNum++;
-      drawHeader();
-
-      for (let ri = 0; ri < data.length; ri++) {
-        const row = data[ri];
-        const hl = highlightFn ? highlightFn(row) : false;
-        const rowBg = hl ? highlightBg : (ri % 2 === 0 ? evenBg : oddBg);
-        const rowFg = hl ? highlightTextColor : textColor;
-        const rowH = 15;
-
-        if (yPos + rowH > doc.page.height - 50) {
-          drawFooter();
-          doc.addPage();
-          pageNum++;
-          yPos = doc.y;
-          drawHeader();
-        }
-
-        let xPos = leftMargin;
-        columns.forEach((c, i) => {
-          doc.save();
-          doc.rect(xPos, yPos, widths[i], rowH);
-          doc.fillColor(rowBg).fill();
-          doc.rect(xPos, yPos, widths[i], rowH).lineWidth(0.5).strokeColor(borderColor).stroke();
-          doc.clip();
-          const val = c.formatter ? c.formatter(row[c.key]) : (row[c.key] !== null && row[c.key] !== undefined ? String(row[c.key]) : '');
-          doc.fillColor(rowFg).fontSize(7).font('Helvetica').text(
-            val, xPos + rowPadding, yPos + 3,
-            { width: widths[i] - rowPadding * 2, height: rowH - 3, align: 'left', ellipsis: true }
-          );
-          doc.restore();
-          xPos += widths[i];
-        });
-        yPos += rowH;
-      }
-
-      drawFooter();
+      this._renderPDFTabla(doc, cfg, columns, data, highlightFn);
+      this._renderPDFFooter(doc, cfg, cfg.pageNum);
       doc.end();
     });
+  }
+
+  _calcularColumnasPDF(doc, columns) {
+    const pageWidth = doc.page.width - 80;
+    const colWidths = columns.map(c => Math.max(c.width || 20, c.header.length * 0.65));
+    const totalBase = colWidths.reduce((a, b) => a + b, 0);
+    const scale = pageWidth / totalBase;
+    return {
+      pageWidth,
+      leftMargin: 40,
+      widths: colWidths.map(w => Math.max(w * scale, 14)),
+      headerBg: COLORES.pdfHeaderBg,
+      headerFg: COLORES.pdfHeaderFg,
+      borderColor: COLORES.pdfBorder,
+      evenBg: COLORES.pdfEvenBg,
+      oddBg: COLORES.pdfOddBg,
+      highlightBg: COLORES.pdfHighlightBg,
+      textColor: COLORES.pdfText,
+      highlightTextColor: COLORES.pdfHighlightText,
+      rowPadding: 4,
+      yPos: 0,
+      pageNum: 0
+    };
+  }
+
+  _renderPDFTitulo(doc, title) {
+    doc.fontSize(14).font('Helvetica-Bold').fillColor(COLORES.pdfHeaderBg).text(title, { align: 'center' });
+    doc.moveDown(0.4);
+    doc.fontSize(7.5).font('Helvetica').fillColor(COLORES.pdfSubtext).text(
+      `Generado: ${new Date().toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+      { align: 'right' }
+    );
+    doc.moveDown(0.5);
+  }
+
+  _renderPDFSinDatos(doc) {
+    doc.fontSize(10).font('Helvetica').fillColor(COLORES.pdfSubtext)
+      .text('No hay datos disponibles para este reporte.', { align: 'center' });
+  }
+
+  _renderPDFFooter(doc, cfg, pageNum) {
+    doc.fontSize(7).font('Helvetica').fillColor(COLORES.pdfSubtext).text(
+      `Sistema Bibliográfico CEELA · Generado: ${new Date().toLocaleDateString()} · Pág. ${pageNum}`,
+      cfg.leftMargin, doc.page.height - 30,
+      { width: cfg.pageWidth, align: 'center' }
+    );
+  }
+
+  _renderPDFEncabezadoTabla(doc, cfg, columns) {
+    let xPos = cfg.leftMargin;
+    columns.forEach((c, i) => {
+      doc.save();
+      doc.rect(xPos, cfg.yPos, cfg.widths[i], 18);
+      doc.fillColor(cfg.headerBg).fill();
+      doc.rect(xPos, cfg.yPos, cfg.widths[i], 18).lineWidth(0.5).strokeColor(cfg.borderColor).stroke();
+      doc.clip();
+      doc.fillColor(cfg.headerFg).fontSize(7.5).font('Helvetica-Bold').text(
+        c.header, xPos + cfg.rowPadding, cfg.yPos + 4,
+        { width: cfg.widths[i] - cfg.rowPadding * 2, align: 'left' }
+      );
+      doc.restore();
+      xPos += cfg.widths[i];
+    });
+    cfg.yPos += 18;
+  }
+
+  _renderPDFTabla(doc, cfg, columns, data, highlightFn) {
+    cfg.pageNum++;
+    this._renderPDFEncabezadoTabla(doc, cfg, columns);
+
+    for (let ri = 0; ri < data.length; ri++) {
+      const row = data[ri];
+      const hl = highlightFn ? highlightFn(row) : false;
+      const rowBg = hl ? cfg.highlightBg : (ri % 2 === 0 ? cfg.evenBg : cfg.oddBg);
+      const rowFg = hl ? cfg.highlightTextColor : cfg.textColor;
+      const rowH = 15;
+
+      if (cfg.yPos + rowH > doc.page.height - 50) {
+        this._renderPDFFooter(doc, cfg, cfg.pageNum);
+        doc.addPage();
+        cfg.pageNum++;
+        cfg.yPos = doc.y;
+        this._renderPDFEncabezadoTabla(doc, cfg, columns);
+      }
+
+      let xPos = cfg.leftMargin;
+      columns.forEach((c, i) => {
+        doc.save();
+        doc.rect(xPos, cfg.yPos, cfg.widths[i], rowH);
+        doc.fillColor(rowBg).fill();
+        doc.rect(xPos, cfg.yPos, cfg.widths[i], rowH).lineWidth(0.5).strokeColor(cfg.borderColor).stroke();
+        doc.clip();
+        const val = c.formatter ? c.formatter(row[c.key]) : (row[c.key] !== null && row[c.key] !== undefined ? String(row[c.key]) : '');
+        doc.fillColor(rowFg).fontSize(7).font('Helvetica').text(
+          val, xPos + cfg.rowPadding, cfg.yPos + 3,
+          { width: cfg.widths[i] - cfg.rowPadding * 2, height: rowH - 3, align: 'left', ellipsis: true }
+        );
+        doc.restore();
+        xPos += cfg.widths[i];
+      });
+      cfg.yPos += rowH;
+    }
   }
 
   async generarInventario({ tipo, categoriaId } = {}, formato = 'pdf') {
@@ -209,10 +247,7 @@ class ReporteService {
       { header: 'Disponibles', key: 'disponibles', width: 10 }
     ];
 
-    if (formato === 'excel') {
-      return this._generarExcel({ columns, data, name: 'inventario', sheetName: 'Inventario' });
-    }
-    return this._generarPDF({ columns, data, name: 'inventario', title: 'Reporte de Inventario Completo' });
+    return this._generarReporte({ columns, data, name: 'inventario', sheetName: 'Inventario', title: 'Reporte de Inventario Completo', formato });
   }
 
   async generarPrestamosActivos({ soloVencidos } = {}, formato = 'pdf') {
@@ -257,14 +292,7 @@ class ReporteService {
       { header: 'Vencida', key: 'vencida', width: 10 }
     ];
 
-    if (formato === 'excel') {
-      const wbData = data.map(d => ({ ...d }));
-      return this._generarExcel({ columns, data: wbData, name: 'prestamos_activos', sheetName: 'Préstamos', highlightFn: row => row.vencida === 'Sí' });
-    }
-    return this._generarPDF({
-      columns, data, name: 'prestamos_activos', title: 'Reporte de Préstamos Activos',
-      highlightFn: row => row.vencida === 'Sí'
-    });
+    return this._generarReporte({ columns, data, name: 'prestamos_activos', sheetName: 'Préstamos', title: 'Reporte de Préstamos Activos', highlightFn: row => row.vencida === 'Sí', formato });
   }
 
   async generarHistorialSolicitante(cedula, formato = 'pdf') {
@@ -288,8 +316,8 @@ class ReporteService {
     const hoy = new Date();
     const data = prestamos.map(p => {
       const diasRetraso = p.fechaDevolucionReal
-        ? Math.max(0, Math.floor((new Date(p.fechaDevolucionReal) - new Date(p.fechaDevolucionPrevista)) / 86400000))
-        : (p.estado === 'Activo' ? Math.max(0, Math.floor((hoy - new Date(p.fechaDevolucionPrevista)) / 86400000)) : null);
+        ? Math.max(0, Math.floor((new Date(p.fechaDevolucionReal) - new Date(p.fechaDevolucionPrevista)) / MS_POR_DIA))
+        : (p.estado === 'Activo' ? Math.max(0, Math.floor((hoy - new Date(p.fechaDevolucionPrevista)) / MS_POR_DIA)) : null);
       return {
         titulo: p.Ejemplar?.Material?.titulo || '',
         ejemplar: p.Ejemplar?.identificadorUnico || '',
@@ -317,13 +345,7 @@ class ReporteService {
       'SUSPENDIDO_PERMANENTE': 'Suspendido permanente'
     }[solicitante.estado] || solicitante.estado;
 
-    if (formato === 'excel') {
-      return this._generarExcel({ columns, data, name: `historial_${cedula}`, sheetName: 'Historial' });
-    }
-    return this._generarPDF({
-      columns, data, name: `historial_${cedula}`,
-      title: `Historial de Préstamos - ${solicitante.nombre} ${solicitante.apellido} (${statusLabel})`
-    });
+    return this._generarReporte({ columns, data, name: `historial_${cedula}`, sheetName: 'Historial', title: `Historial de Préstamos - ${solicitante.nombre} ${solicitante.apellido} (${statusLabel})`, formato });
   }
 
   async generarRanking({ periodo, topN } = {}, formato = 'pdf') {
@@ -385,11 +407,8 @@ class ReporteService {
       { header: 'Préstamos', key: 'totalPrestamos', width: 12 }
     ];
 
-    if (formato === 'excel') {
-      const wbData = data.map((d, i) => ({ pos: i + 1, ...d }));
-      return this._generarExcel({ columns, data: wbData, name: 'ranking', sheetName: 'Ranking' });
-    }
-    return this._generarPDF({ columns, data: data.map((d, i) => ({ pos: i + 1, ...d })), name: 'ranking', title: 'Ranking de Materiales Más Prestados' });
+    const rankedData = data.map((d, i) => ({ pos: i + 1, ...d }));
+    return this._generarReporte({ columns, data: rankedData, name: 'ranking', sheetName: 'Ranking', title: 'Ranking de Materiales Más Prestados', formato });
   }
 
   async generarVencidosContacto({ diasMinimo } = {}, formato = 'pdf') {
@@ -411,7 +430,7 @@ class ReporteService {
 
     let data = prestamos.map(p => {
       const prevista = new Date(p.fechaDevolucionPrevista);
-      const retraso = Math.max(0, Math.floor((hoy - prevista) / 86400000));
+      const retraso = Math.max(0, Math.floor((hoy - prevista) / MS_POR_DIA));
       return {
         solicitante: `${p.Solicitante?.apellido || ''}, ${p.Solicitante?.nombre || ''}`,
         cedula: p.Solicitante?.cedula || '',
@@ -442,18 +461,10 @@ class ReporteService {
       { header: 'Días Retraso', key: 'diasRetraso', width: 12 }
     ];
 
-    if (formato === 'excel') {
-      return this._generarExcel({ columns, data, name: 'vencidos_contacto', sheetName: 'Vencidos' });
-    }
-    return this._generarPDF({
-      columns, data, name: 'vencidos_contacto', title: 'Préstamos Vencidos con Datos de Contacto',
-      highlightFn: row => row.diasRetraso > 0
-    });
+    return this._generarReporte({ columns, data, name: 'vencidos_contacto', sheetName: 'Vencidos', title: 'Préstamos Vencidos con Datos de Contacto', highlightFn: row => row.diasRetraso > 0, formato });
   }
 
-  async generarEstadisticas({ fechaDesde, fechaHasta } = {}, formato = 'pdf') {
-    if (!fechaDesde || !fechaHasta) {throw new Error('El período (fecha_desde y fecha_hasta) es obligatorio');}
-
+  async _agruparEstadisticas(fechaDesde, fechaHasta) {
     const Op = this.Prestamo.sequelize.constructor.Op;
     const fn = this.sequelize.fn;
     const col = this.sequelize.col;
@@ -472,7 +483,6 @@ class ReporteService {
     });
 
     const mapTipo = {};
-
     for (const item of raw) {
       const ej = await this.Ejemplar.findByPk(item.ejemplarId, {
         include: [{ model: this.Material }]
@@ -480,9 +490,7 @@ class ReporteService {
       const m = ej?.Material;
       if (m) {
         const key = `${m.tipo}|${m.categoriaId}`;
-        if (!mapTipo[key]) {
-          mapTipo[key] = { tipo: m.tipo, categoriaId: m.categoriaId, total: 0 };
-        }
+        if (!mapTipo[key]) { mapTipo[key] = { tipo: m.tipo, categoriaId: m.categoriaId, total: 0 }; }
         mapTipo[key].total += parseInt(item.total, 10);
       }
     }
@@ -493,17 +501,19 @@ class ReporteService {
       ? await this.Categoria.findAll({ where: { idCategoria: catIds } })
       : [];
     const catMap = {};
-    for (const cat of categorias) {
-      catMap[cat.idCategoria] = cat.nombre;
-    }
+    for (const cat of categorias) { catMap[cat.idCategoria] = cat.nombre; }
 
-    const data = grupos.map(item => ({
+    return grupos.map(item => ({
       categoria: item.categoriaId ? (catMap[item.categoriaId] || 'Sin categoría') : 'Sin categoría',
       tipo: item.tipo,
       totalPrestamos: item.total
-    }));
+    })).sort((a, b) => b.totalPrestamos - a.totalPrestamos);
+  }
 
-    data.sort((a, b) => b.totalPrestamos - a.totalPrestamos);
+  async generarEstadisticas({ fechaDesde, fechaHasta } = {}, formato = 'pdf') {
+    if (!fechaDesde || !fechaHasta) {throw new Error('El período (fecha_desde y fecha_hasta) es obligatorio');}
+
+    const data = await this._agruparEstadisticas(fechaDesde, fechaHasta);
 
     const columns = [
       { header: 'Categoría', key: 'categoria', width: 25 },
@@ -511,10 +521,7 @@ class ReporteService {
       { header: 'Cantidad Préstamos', key: 'totalPrestamos', width: 20 }
     ];
 
-    if (formato === 'excel') {
-      return this._generarExcel({ columns, data, name: `estadisticas_${fechaDesde}_${fechaHasta}`, sheetName: 'Estadísticas' });
-    }
-    return this._generarPDF({ columns, data, name: `estadisticas_${fechaDesde}_${fechaHasta}`, title: 'Estadísticas de Préstamos por Categoría y Tipo' });
+    return this._generarReporte({ columns, data, name: `estadisticas_${fechaDesde}_${fechaHasta}`, sheetName: 'Estadísticas', title: 'Estadísticas de Préstamos por Categoría y Tipo', formato });
   }
 
   async generarSuspendidos({ tipoSuspension } = {}, formato = 'pdf') {
@@ -564,10 +571,7 @@ class ReporteService {
       { header: 'Último Motivo', key: 'ultimoMotivo', width: 40 }
     ];
 
-    if (formato === 'excel') {
-      return this._generarExcel({ columns, data, name: 'suspendidos', sheetName: 'Suspendidos' });
-    }
-    return this._generarPDF({ columns, data, name: 'suspendidos', title: 'Listado de Solicitantes Suspendidos' });
+    return this._generarReporte({ columns, data, name: 'suspendidos', sheetName: 'Suspendidos', title: 'Listado de Solicitantes Suspendidos', formato });
   }
 }
 

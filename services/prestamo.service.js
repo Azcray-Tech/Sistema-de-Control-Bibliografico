@@ -3,6 +3,8 @@
  * @use_case CU-15, CU-17, CU-18
  * @description Servicio de préstamos: registrar, renovar, devolver, calcular sanciones por retraso.
  */
+const MS_POR_DIA = 86400000;
+
 class PrestamoService {
   constructor({ Prestamo, Solicitante, Ejemplar, Material, UsuarioSistema, Sancion }, auditoria, parametroService) {
     this.Prestamo = Prestamo;
@@ -28,6 +30,26 @@ class PrestamoService {
     });
   }
 
+  async _chequearSancionActiva(solicitanteCedula) {
+    const sancionActiva = await this.Sancion.findOne({
+      where: {
+        solicitanteCedula,
+        fechaFin: { [this.Prestamo.sequelize.constructor.Op.gte]: new Date() }
+      }
+    });
+    if (sancionActiva) {throw new Error('El solicitante tiene una sanción activa');}
+  }
+
+  async _chequearLimitePrestamos(solicitanteCedula) {
+    const maxPrestamos = await this.parametroService.obtener('max_prestamos_simultaneos', 3);
+    const prestamosActivos = await this.Prestamo.count({
+      where: { solicitanteCedula, estado: 'Activo' }
+    });
+    if (prestamosActivos >= maxPrestamos) {
+      throw new Error(`Límite de préstamos alcanzado (máx: ${maxPrestamos})`);
+    }
+  }
+
   async _validarPrestamo(solicitanteCedula) {
     const solicitante = await this.Solicitante.findByPk(solicitanteCedula);
     if (!solicitante) {throw new Error('Solicitante no encontrado');}
@@ -43,21 +65,8 @@ class PrestamoService {
       }
     }
 
-    const sancionActiva = await this.Sancion.findOne({
-      where: {
-        solicitanteCedula,
-        fechaFin: { [this.Prestamo.sequelize.constructor.Op.gte]: new Date() }
-      }
-    });
-    if (sancionActiva) {throw new Error('El solicitante tiene una sanción activa');}
-
-    const maxPrestamos = await this.parametroService.obtener('max_prestamos_simultaneos', 3);
-    const prestamosActivos = await this.Prestamo.count({
-      where: { solicitanteCedula, estado: 'Activo' }
-    });
-    if (prestamosActivos >= maxPrestamos) {
-      throw new Error(`Límite de préstamos alcanzado (máx: ${maxPrestamos})`);
-    }
+    await this._chequearSancionActiva(solicitanteCedula);
+    await this._chequearLimitePrestamos(solicitanteCedula);
   }
 
   async registrar(solicitanteCedula, ejemplarId, usuarioPrestamistaId) {
@@ -151,7 +160,7 @@ class PrestamoService {
 
     const hoy = new Date();
     const fechaPrevista = new Date(prestamo.fechaDevolucionPrevista);
-    const retraso = Math.max(0, Math.floor((hoy - fechaPrevista) / 86400000));
+    const retraso = Math.max(0, Math.floor((hoy - fechaPrevista) / MS_POR_DIA));
 
     await prestamo.update({ estado: 'Devuelto', fechaDevolucionReal: hoy });
     await prestamo.Ejemplar.update({ estado: 'Disponible' });
@@ -296,7 +305,7 @@ class PrestamoService {
     const hoy = new Date();
     return prestamosVencidos.map(p => {
       const prevista = new Date(p.fechaDevolucionPrevista);
-      const retraso = Math.max(0, Math.floor((hoy - prevista) / 86400000));
+      const retraso = Math.max(0, Math.floor((hoy - prevista) / MS_POR_DIA));
       return { ...p.toJSON(), retraso };
     });
   }

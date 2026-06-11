@@ -18,15 +18,7 @@ function maintenanceMode(req, res, next) {
   if (req.path === '/admin/login') {return next();}
   const flag = path.join(os.tmpdir(), 'ceela_MAINTENANCE_MODE');
   if (fs.existsSync(flag)) {
-    return res.status(503).send(`
-      <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-      <title>Sistema en Mantenimiento</title>
-      <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f8f9fa}.card{text-align:center;padding:3rem;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.1)}h1{color:#dc3545}code{background:#f1f1f1;padding:2px 6px;border-radius:4px}</style></head>
-      <body><div class="card"><h1>🔧 Sistema en Mantenimiento</h1>
-      <p>El sistema está en modo mantenimiento debido a un error crítico en una operación de restauración.</p>
-      <p>Contacte al administrador del servidor para resolver el problema.</p>
-      <hr><small class="text-muted">CEELA — Sistema de Control Bibliográfico</small></div></body></html>
-    `);
+    return res.status(503).render('maintenance');
   }
   next();
 }
