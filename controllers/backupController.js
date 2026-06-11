@@ -78,6 +78,11 @@ class BackupController {
       return res.redirect('/admin/restaurar?error=Debe seleccionar un archivo de backup');
     }
 
+    if (!req.body.confirmarRestauracion) {
+      await fs.unlink(req.file.path).catch(() => {});
+      return res.redirect('/admin/restaurar?error=Debe confirmar que entiende que los datos serán reemplazados');
+    }
+
     try {
       const usuarioId = req.session.usuarioId;
       

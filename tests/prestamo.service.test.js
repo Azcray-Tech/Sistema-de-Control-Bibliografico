@@ -513,6 +513,259 @@ describe('PrestamoService', () => {
     });
   });
 
+  describe('listarActivos', () => {
+    it('debe retornar préstamos activos con includes', async () => {
+      const mockActivos = [{ idPrestamo: 1, estado: 'Activo' }];
+      mocks.Prestamo.findAll.mockResolvedValue(mockActivos);
+
+      const resultado = await prestamoService.listarActivos();
+
+      expect(resultado).toEqual(mockActivos);
+      expect(mocks.Prestamo.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { estado: 'Activo' },
+          limit: 100,
+          order: [['fechaPrestamo', 'DESC']]
+        })
+      );
+    });
+  });
+
+  describe('registrar', () => {
+    let mockSolicitante, mockEjemplar;
+
+    beforeEach(() => {
+      mockSolicitante = {
+        cedula: '123',
+        estado: 'Activo',
+        fechaFinSuspension: null
+      };
+      mockEjemplar = {
+        idEjemplar: 1,
+        estado: 'Disponible',
+        Material: {},
+        update: jest.fn().mockResolvedValue(undefined)
+      };
+      mocks.Solicitante.findByPk.mockResolvedValue(mockSolicitante);
+      mocks.Ejemplar.findByPk.mockResolvedValue(mockEjemplar);
+      mocks.Prestamo.count.mockResolvedValue(0);
+      mocks.Prestamo.sequelize.transaction.mockResolvedValue({
+        commit: jest.fn(),
+        rollback: jest.fn(),
+        LOCK: { UPDATE: 'update' }
+      });
+      mocks.Prestamo.create.mockResolvedValue({
+        idPrestamo: 1,
+        solicitanteCedula: '123',
+        ejemplarId: 1
+      });
+    });
+
+    it('debe registrar un préstamo exitosamente', async () => {
+      const resultado = await prestamoService.registrar('123', 1, 1);
+
+      expect(mocks.Solicitante.findByPk).toHaveBeenCalledWith('123');
+      expect(mocks.Prestamo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          solicitanteCedula: '123',
+          ejemplarId: 1,
+          estado: 'Activo'
+        }),
+        expect.objectContaining({ transaction: expect.any(Object) })
+      );
+      expect(mockEjemplar.update).toHaveBeenCalledWith(
+        { estado: 'Prestado' },
+        expect.objectContaining({ transaction: expect.any(Object) })
+      );
+      expect(mockAuditoria).toHaveBeenCalledWith(
+        expect.objectContaining({ accion: 'CREAR_PRESTAMO' })
+      );
+      expect(resultado).toHaveProperty('idPrestamo');
+    });
+
+    it('debe lanzar error si solicitante no existe', async () => {
+      mocks.Solicitante.findByPk.mockResolvedValue(null);
+      await expect(prestamoService.registrar('999', 1, 1))
+        .rejects.toThrow('Solicitante no encontrado');
+    });
+
+    it('debe lanzar error si solicitante está suspendido permanente', async () => {
+      mockSolicitante.estado = 'Suspendido permanente';
+      await expect(prestamoService.registrar('123', 1, 1))
+        .rejects.toThrow('suspendido');
+    });
+
+    it('debe lanzar error si solicitante está suspendido temporal con fecha vigente', async () => {
+      const futuro = new Date();
+      futuro.setDate(futuro.getDate() + 30);
+      mockSolicitante.estado = 'Suspendido temporal';
+      mockSolicitante.fechaFinSuspension = futuro;
+      await expect(prestamoService.registrar('123', 1, 1))
+        .rejects.toThrow('suspendido');
+    });
+
+    it('debe lanzar error si solicitante tiene sanción activa', async () => {
+      mocks.Sancion.findOne.mockResolvedValue({ idSancion: 1 });
+      await expect(prestamoService.registrar('123', 1, 1))
+        .rejects.toThrow('sanción activa');
+    });
+
+    it('debe lanzar error si alcanzó límite de préstamos', async () => {
+      mocks.Prestamo.count.mockResolvedValue(3);
+      await expect(prestamoService.registrar('123', 1, 1))
+        .rejects.toThrow('Límite de préstamos alcanzado');
+    });
+
+    it('debe lanzar error si ejemplar no existe', async () => {
+      mocks.Ejemplar.findByPk.mockResolvedValue(null);
+      await expect(prestamoService.registrar('123', 1, 1))
+        .rejects.toThrow('Ejemplar no encontrado');
+    });
+
+    it('debe lanzar error si ejemplar no está disponible', async () => {
+      mockEjemplar.estado = 'Prestado';
+      await expect(prestamoService.registrar('123', 1, 1))
+        .rejects.toThrow('Ejemplar no disponible');
+    });
+
+    it('debe hacer rollback si el create falla', async () => {
+      mocks.Prestamo.create.mockRejectedValue(new Error('DB error'));
+      const transaction = await mocks.Prestamo.sequelize.transaction();
+      await expect(prestamoService.registrar('123', 1, 1)).rejects.toThrow('DB error');
+      expect(transaction.rollback).toHaveBeenCalled();
+    });
+  });
+
+  describe('operaciones sin auditoria', () => {
+    let serviceSinAud;
+    let m;
+
+    beforeEach(() => {
+      m = crearMocksModelos();
+      serviceSinAud = new PrestamoService(m, null, crearParametroServiceMock());
+    });
+
+    it('registrar no debe fallar sin auditoria', async () => {
+      const mockSol = { cedula: '123', estado: 'Activo', fechaFinSuspension: null };
+      const mockEj = { idEjemplar: 1, estado: 'Disponible', Material: {}, update: jest.fn().mockResolvedValue(undefined) };
+      m.Solicitante.findByPk.mockResolvedValue(mockSol);
+      m.Ejemplar.findByPk.mockResolvedValue(mockEj);
+      m.Prestamo.count.mockResolvedValue(0);
+      m.Sancion.findOne.mockResolvedValue(null);
+      m.Prestamo.sequelize.transaction.mockResolvedValue({
+        commit: jest.fn(), rollback: jest.fn(), LOCK: { UPDATE: 'update' }
+      });
+      m.Prestamo.create.mockResolvedValue({ idPrestamo: 1 });
+      const res = await serviceSinAud.registrar('123', 1, 1);
+      expect(res.idPrestamo).toBe(1);
+    });
+
+    it('devolver no debe fallar sin auditoria', async () => {
+      const mockP = {
+        idPrestamo: 1, estado: 'Activo', fechaDevolucionPrevista: new Date(),
+        solicitanteCedula: '123',
+        Ejemplar: { update: jest.fn().mockResolvedValue(undefined) },
+        Solicitante: { update: jest.fn().mockResolvedValue(undefined) },
+        update: jest.fn().mockResolvedValue(undefined)
+      };
+      m.Prestamo.findByPk.mockResolvedValue(mockP);
+      const res = await serviceSinAud.devolver(1, 1);
+      expect(res).toBe(mockP);
+    });
+
+    it('levantarSancion no debe fallar sin auditoria', async () => {
+      const mockSol = {
+        cedula: '123', estado: 'Suspendido temporal', fechaFinSuspension: new Date(),
+        update: jest.fn().mockResolvedValue(undefined)
+      };
+      m.Solicitante.findByPk.mockResolvedValue(mockSol);
+      const res = await serviceSinAud.levantarSancion('123', 1, 'Motivo');
+      expect(res).toBe(mockSol);
+    });
+  });
+
+  describe('renovar', () => {
+    let mockPrestamo;
+
+    beforeEach(() => {
+      mockPrestamo = {
+        idPrestamo: 1,
+        estado: 'Activo',
+        renovaciones: 0,
+        fechaDevolucionPrevista: new Date(Date.now() + 86400000),
+        Solicitante: {},
+        update: jest.fn().mockResolvedValue(undefined)
+      };
+      mocks.Prestamo.findByPk.mockResolvedValue(mockPrestamo);
+    });
+
+    it('debe renovar un préstamo exitosamente', async () => {
+      const resultado = await prestamoService.renovar(1);
+
+      expect(mockPrestamo.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          renovaciones: 1,
+          fechaDevolucionPrevista: expect.any(Date)
+        })
+      );
+      expect(resultado).toBe(mockPrestamo);
+    });
+
+    it('debe lanzar error si préstamo no existe', async () => {
+      mocks.Prestamo.findByPk.mockResolvedValue(null);
+      await expect(prestamoService.renovar(999)).rejects.toThrow('no encontrado');
+    });
+
+    it('debe lanzar error si préstamo no está activo', async () => {
+      mocks.Prestamo.findByPk.mockResolvedValue({ id: 1, estado: 'Devuelto' });
+      await expect(prestamoService.renovar(1)).rejects.toThrow('no está activo');
+    });
+
+    it('debe lanzar error si alcanzó límite de renovaciones', async () => {
+      mockPrestamo.renovaciones = 1;
+      await expect(prestamoService.renovar(1)).rejects.toThrow('Límite de renovaciones');
+    });
+
+    it('debe lanzar error si el préstamo está vencido', async () => {
+      mockPrestamo.fechaDevolucionPrevista = new Date(Date.now() - 86400000);
+      await expect(prestamoService.renovar(1)).rejects.toThrow('vencido');
+    });
+  });
+
+  describe('historial', () => {
+    it('debe retornar historial de préstamos ordenado', async () => {
+      const mockHistorial = [{ idPrestamo: 1 }];
+      mocks.Prestamo.findAll.mockResolvedValue(mockHistorial);
+
+      const resultado = await prestamoService.historial();
+
+      expect(resultado).toEqual(mockHistorial);
+      expect(mocks.Prestamo.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order: [['fechaPrestamo', 'DESC']]
+        })
+      );
+    });
+  });
+
+  describe('devolver', () => {
+    it('debe devolver préstamo correctamente', async () => {
+      const mockPrestamo = {
+        idPrestamo: 1,
+        estado: 'Activo',
+        fechaDevolucionPrevista: new Date(),
+        solicitanteCedula: '123',
+        Ejemplar: { update: jest.fn().mockResolvedValue(undefined) },
+        Solicitante: { update: jest.fn().mockResolvedValue(undefined) },
+        update: jest.fn().mockResolvedValue(undefined)
+      };
+      mocks.Prestamo.findByPk.mockResolvedValue(mockPrestamo);
+
+      await expect(prestamoService.devolver(1, 1))
+        .resolves.toBeDefined();
+    });
+  });
+
   describe('obtenerVencidos', () => {
     it('debe retornar préstamos vencidos con días de retraso', async () => {
       const fechaVencida = new Date();

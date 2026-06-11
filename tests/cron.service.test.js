@@ -354,4 +354,125 @@ describe('CronService', () => {
       expect(expr).toBe('0 0 * * *');
     });
   });
+
+  describe('_verificarBackupPendienteAlIniciar', () => {
+    it('debe retornar si backup está deshabilitado', async () => {
+      mockParametroService.obtener.mockResolvedValue('0');
+      await cronService._verificarBackupPendienteAlIniciar();
+      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+    });
+
+    it('debe retornar si la ruta no está configurada', async () => {
+      mockParametroService.obtenerTexto.mockResolvedValue('');
+      await cronService._verificarBackupPendienteAlIniciar();
+      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+    });
+
+    it('debe retornar si la ruta no es accesible', async () => {
+      fs.existsSync = jest.fn().mockReturnValue(false);
+      await cronService._verificarBackupPendienteAlIniciar();
+      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+    });
+
+    it('debe no hacer nada si ya existe backup del día', async () => {
+      const hoy = new Date();
+      const y = hoy.getFullYear();
+      const M = String(hoy.getMonth() + 1).padStart(2, '0');
+      const d = String(hoy.getDate()).padStart(2, '0');
+      fs.readdirSync = jest.fn().mockReturnValue([`backup_${y}-${M}-${d}_000000.zip`]);
+      await cronService._verificarBackupPendienteAlIniciar();
+      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+    });
+
+    it('debe ejecutar backup automático si no existe backup del día', async () => {
+      const spy = jest.spyOn(cronService, 'ejecutarBackupAutomatico').mockResolvedValue(undefined);
+      await cronService._verificarBackupPendienteAlIniciar();
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('debe capturar error si algo falla', async () => {
+      mockParametroService.obtener.mockRejectedValue(new Error('Fallo'));
+      await expect(cronService._verificarBackupPendienteAlIniciar()).resolves.not.toThrow();
+    });
+  });
+
+  describe('iniciar', () => {
+    it('debe programar cron jobs y establecer timeouts', async () => {
+      const setTimeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation(() => {});
+
+      cronService.iniciar();
+
+      expect(cron.schedule).toHaveBeenCalledWith('0 2 * * *', expect.any(Function));
+
+      await new Promise(process.nextTick);
+
+      expect(cron.schedule).toHaveBeenCalledTimes(2);
+      expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 30000);
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 45000);
+
+      setTimeoutSpy.mockRestore();
+    });
+
+    it('debe capturar error en cron de suspensión automática', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      let cronCallback;
+      cron.schedule = jest.fn((expr, cb) => {
+        if (expr === '0 2 * * *') cronCallback = cb;
+        return mockTask;
+      });
+      cronService.iniciar();
+      await new Promise(process.nextTick);
+
+      cronService.ejecutarSuspensionAutomatica = jest.fn().mockRejectedValue(new Error('Falló'));
+      await cronCallback();
+      expect(consoleSpy).toHaveBeenCalledWith('[Cron] Error en suspensión automática: Falló');
+      consoleSpy.mockRestore();
+    });
+
+    it('debe capturar error en setTimeout de suspensión automática', async () => {
+      const setTimeoutCalls = [];
+      jest.spyOn(global, 'setTimeout').mockImplementation((cb, ms) => {
+        setTimeoutCalls.push({ cb, ms });
+      });
+      cronService.ejecutarSuspensionAutomatica = jest.fn().mockRejectedValue(new Error('Timeout fail'));
+      cronService.iniciar();
+
+      const suspTimeout = setTimeoutCalls.find(c => c.ms === 30000);
+      await suspTimeout.cb();
+      expect(cronService.ejecutarSuspensionAutomatica).toHaveBeenCalled();
+    });
+
+    it('debe capturar error en setTimeout de backup pendiente', async () => {
+      const setTimeoutCalls = [];
+      jest.spyOn(global, 'setTimeout').mockImplementation((cb, ms) => {
+        setTimeoutCalls.push({ cb, ms });
+      });
+      cronService._verificarBackupPendienteAlIniciar = jest.fn().mockRejectedValue(new Error('Backup fail'));
+      cronService.iniciar();
+
+      const backupTimeout = setTimeoutCalls.find(c => c.ms === 45000);
+      await backupTimeout.cb();
+      expect(cronService._verificarBackupPendienteAlIniciar).toHaveBeenCalled();
+    });
+  });
+
+  describe('reprogramarBackup catch callback', () => {
+    it('debe capturar error en el cron de backup automático', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      let cronCallback;
+      cron.schedule = jest.fn((expr, cb) => {
+        cronCallback = cb;
+        return mockTask;
+      });
+      await cronService.reprogramarBackup();
+      await new Promise(process.nextTick);
+
+      cronService.ejecutarBackupAutomatico = jest.fn().mockRejectedValue(new Error('Error backup'));
+      await cronCallback();
+      expect(consoleSpy).toHaveBeenLastCalledWith('[Cron] Error en backup automático: Error backup');
+      consoleSpy.mockRestore();
+    });
+  });
 });

@@ -1,0 +1,35 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 1
+      rampTo: 5
+      name: "Rampa de 1 a 5 usuarios/s durante 30s"
+    - duration: 30
+      arrivalRate: 5
+      name: "Mantener 5 usuarios/s durante 30s"
+  cookie: {}
+  defaults:
+    headers:
+      Accept: "text/html"
+      User-Agent: "Artillery-CEELA-Test"
+scenarios:
+  - name: "Carga documental (bibliotecario)"
+    flow:
+      - post:
+          url: "/admin/login"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          body: "username=admin&password=admin123"
+      - think: 2
+      - get:
+          url: "/admin/materiales"
+      - think: 3
+      - get:
+          url: "/admin/materiales/nuevo"
+      - think: 1
+      - get:
+          url: "/admin/dashboard"
+      - think: 2
+      - get:
+          url: "/admin/logout"

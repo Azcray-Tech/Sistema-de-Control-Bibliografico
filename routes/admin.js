@@ -7,8 +7,23 @@ const router = require('express').Router();
 const models = require('../models');
 const { registrarAuditoria } = require('../middleware/auditoria');
 const { requiereAuth, requiereRol } = require('../middleware/auth');
+const multer = require('multer');
 const upload = require('../middleware/upload');
-const uploadBackup = require('multer')({ dest: require('os').tmpdir() });
+const uploadBackup = multer({ dest: require('os').tmpdir() });
+
+function manejarErrorMulter(err, req, res, next) {
+  if (err instanceof multer.MulterError) {
+    const id = req.params.id;
+    const errorMsg = err.code === 'LIMIT_FILE_SIZE'
+      ? 'El archivo excede el límite de 4 MB'
+      : err.message;
+    if (id) {
+      return res.redirect(`/admin/materiales/${id}/editar?error=${encodeURIComponent(errorMsg)}`);
+    }
+    return res.redirect(`/admin/materiales/nuevo?error=${encodeURIComponent(errorMsg)}`);
+  }
+  next(err);
+}
 
 const DashboardService = require('../services/dashboard.service');
 const MaterialService = require('../services/material.service');
@@ -57,8 +72,8 @@ router.get('/dashboard', requiereAuth, dashboardController.mostrarDashboard);
 router.get('/materiales', requiereAuth, materialController.listar);
 router.get('/materiales/nuevo', requiereAuth, materialController.mostrarFormulario);
 router.get('/materiales/:id/editar', requiereAuth, materialController.mostrarFormulario);
-router.post('/materiales', requiereAuth, upload.single('portada'), materialController.guardar);
-router.post('/materiales/:id', requiereAuth, upload.single('portada'), materialController.guardar);
+router.post('/materiales', requiereAuth, (req, res, next) => upload.single('portada')(req, res, (err) => err ? manejarErrorMulter(err, req, res, next) : next()), materialController.guardar);
+router.post('/materiales/:id', requiereAuth, (req, res, next) => upload.single('portada')(req, res, (err) => err ? manejarErrorMulter(err, req, res, next) : next()), materialController.guardar);
 router.post('/materiales/:id/ejemplares', requiereAuth, materialController.agregarEjemplares);
 router.post('/materiales/:id/eliminar', requiereAuth, materialController.eliminar);
 

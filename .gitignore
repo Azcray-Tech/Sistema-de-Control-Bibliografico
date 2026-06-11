@@ -12,6 +12,8 @@ app_error.txt
 app_output.txt
 *.txt    
 reports/
+.opencode/
+tests/stress/report-*.json
 # Logs y archivos temporales
 *.log
 *.txt
@@ -25,3 +27,6 @@ build/
 
 pruebasCiclo1.md
 pruebasCiclo2.md
+
+# Documentación local (no subir al repositorio)
+docs/

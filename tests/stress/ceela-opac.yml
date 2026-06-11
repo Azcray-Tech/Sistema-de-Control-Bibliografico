@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 1
+      rampTo: 3
+      name: "Rampa de 1 a 3 usuarios/s durante 30s"
+    - duration: 30
+      arrivalRate: 3
+      name: "Mantener 3 usuarios/s durante 30s"
+  defaults:
+    headers:
+      Accept: "text/html"
+      User-Agent: "Artillery-CEELA-Test"
+scenarios:
+  - name: "Consulta OPAC"
+    flow:
+      - get:
+          url: "/"
+      - think: 3
+      - get:
+          url: "/buscar?q=programacion"
+      - think: 2
+      - get:
+          url: "/material/1"
+      - think: 3
+      - get:
+          url: "/buscar?q=historia"

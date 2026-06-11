@@ -136,10 +136,19 @@ describe('BackupController', () => {
         success: undefined
       });
     });
+
+    it('debe llamar a next si render falla', async () => {
+      const renderError = new Error('Render error');
+      res.render.mockImplementation(() => { throw renderError; });
+      await controller.mostrarRestaurar(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(renderError);
+    });
   });
 
   describe('restaurar', () => {
     it('debe restaurar desde archivo subido y redirigir con éxito', async () => {
+      req.body.confirmarRestauracion = '1';
       req.file = { path: '/tmp/upload.zip', originalname: 'backup.zip' };
       mockBackupService.restaurarBackup.mockResolvedValue({
         success: true, preRestore: '/tmp/pre_restore.zip'
@@ -162,6 +171,7 @@ describe('BackupController', () => {
     });
 
     it('debe redirigir con error si la restauración falla', async () => {
+      req.body.confirmarRestauracion = '1';
       req.file = { path: '/tmp/upload.zip' };
       mockBackupService.restaurarBackup.mockRejectedValue(new Error('SQL inválido'));
 

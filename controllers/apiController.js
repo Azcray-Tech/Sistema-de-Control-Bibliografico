@@ -19,7 +19,7 @@ class ApiController {
       const resultado = await this.solicitanteService.buscarResponse(req.query.cedula);
       res.json(resultado);
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: 'Error al buscar solicitante' });
     }
   };
 
@@ -34,7 +34,7 @@ class ApiController {
       const solicitante = await this.solicitanteService.crear({ cedula, nombre, apellido, correoElectronico, telefono });
       res.json({ success: true, solicitante });
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: err.message || 'Error al crear solicitante' });
     }
   };
 
@@ -49,7 +49,7 @@ class ApiController {
       const ejemplares = await this.materialService.buscarEjemplares({ identificador, materialId });
       res.json({ ejemplares });
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: 'Error al buscar ejemplares' });
     }
   };
 
@@ -64,7 +64,7 @@ class ApiController {
       if (!data) {return res.json({ encontrado: false });}
       res.json({ encontrado: true, solicitante: data });
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: 'Error al buscar solicitante' });
     }
   };
 
@@ -78,7 +78,7 @@ class ApiController {
       const resultado = await this.materialService.buscarDisponibles(req.query.titulo);
       res.json(resultado);
     } catch (err) {
-      next(err);
+      res.status(500).json([]);
     }
   };
 }

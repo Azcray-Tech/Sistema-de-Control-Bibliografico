@@ -2,14 +2,18 @@
   "name": "sistema-control-bibliografico",
   "version": "1.0.0",
   "description": "Sistema de Control Bibliográfico - CEELA",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
     "lint": "eslint .",
     "test": "jest --passWithNoTests --no-cache",
     "test:coverage": "jest --passWithNoTests --coverage --coverageDirectory=reports/coverage --no-cache",
     "test:watch": "jest --watch --passWithNoTests",
+    "test:e2e": "node scripts/create_test_db.js && jest --config jest.e2e.config.js --runInBand --forceExit",
+    "test:integration": "node scripts/create_test_db.js && jest --config jest.integration.config.js --runInBand --forceExit",
+    "test:stress": "echo 'Usar: npx artillery run tests/stress/ceela-<escenario>.yml'",
+    "benchmark:session": "node tests/benchmark-session.js",
     "metrics": "node scripts/metrics.js",
     "metrics:coverage": "jest --passWithNoTests --coverage --coverageDirectory=reports/coverage --no-cache",
     "metrics:lint": "eslint . -f html -o reports/lint.html",
@@ -25,10 +29,12 @@
     "bcryptjs": "^2.4.3",
     "code-health-meter": "^4.1.2",
     "connect-flash": "^0.1.1",
+    "connect-session-sequelize": "^7.1.7",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "exceljs": "^4.4.0",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.5.2",
     "express-session": "^1.17.3",
     "extract-zip": "^2.0.1",
     "isbn-validate": "^1.0.3",
@@ -39,18 +45,14 @@
     "sequelize": "^6.35.0",
     "sharp": "^0.33.0"
   },
-  "jest": {
-    "transform": {},
-    "setupFiles": [
-      "./tests/setup.js"
-    ]
-  },
   "devDependencies": {
+    "artillery": "^2.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-sonarjs": "^4.0.3",
     "jest": "^30.4.2",
     "jscpd": "^5.0.5",
     "nodemon": "^3.0.2",
+    "supertest": "^7.2.2",
     "typhonjs-escomplex": "^0.1.0"
   }
 }

@@ -1,0 +1,32 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 1
+      rampTo: 3
+      name: "Rampa de 1 a 3 usuarios/s durante 30s"
+    - duration: 30
+      arrivalRate: 3
+      name: "Mantener 3 usuarios/s durante 30s"
+  cookie: {}
+  defaults:
+    headers:
+      Accept: "text/html"
+      User-Agent: "Artillery-CEELA-Test"
+scenarios:
+  - name: "Registro de préstamo"
+    flow:
+      - post:
+          url: "/admin/login"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          body: "username=admin&password=admin123"
+      - think: 1
+      - get:
+          url: "/admin/prestamos"
+      - think: 2
+      - get:
+          url: "/admin/dashboard"
+      - think: 1
+      - get:
+          url: "/admin/logout"

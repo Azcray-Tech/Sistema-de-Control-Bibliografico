@@ -294,11 +294,9 @@ textarea.form-control {
 
 .ficha-portada-img {
     width: 100%;
-    max-width: 255px;
-    height: auto;
+    height: 100%;
+    object-fit: fill;
     display: block;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .ficha-portada-placeholder {
@@ -353,15 +351,17 @@ textarea.form-control {
 }
 
 .ficha-portada-card {
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #e9ecef;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     margin-bottom: 1rem;
-    text-align: left;
 }
 
 .ficha-portada-card img,
 .ficha-portada-card .ficha-portada-placeholder {
-    margin-left: 0 !important;
     display: block;
-    text-align: left;
 }
 
 .ficha-resumen-box {
@@ -559,7 +559,7 @@ textarea.form-control {
 }
 
 @media (max-width: 991px) {
-    .ficha-portada-img, .ficha-portada-placeholder { max-width: 200px; }
+    .ficha-portada-card { max-width: 200px; }
 }
 
 @media (max-width: 768px) {
@@ -567,7 +567,7 @@ textarea.form-control {
     .ficha-titulo { font-size: 1.5rem; }
     .ficha-info-grid { grid-template-columns: 1fr; }
     .ficha-autores { font-size: 1rem; }
-    .ficha-portada-img, .ficha-portada-placeholder { max-width: 180px; }
+    .ficha-portada-card { max-width: 180px; }
 }
 
 .info-value {
