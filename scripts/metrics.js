@@ -6,11 +6,11 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { walkFiles } = require('./_fileUtils');
 
 const REPORTS_DIR = path.join(__dirname, '..', 'reports');
 const ROOT_DIR = path.join(__dirname, '..');
 
-const EXCLUDE_DIRS = new Set(['node_modules', 'reports', 'report', '.git', 'public/js']);
 const EXCLUDE_FILES = new Set(['package-lock.json']);
 
 function _handleRunError(err, opts) {
@@ -43,59 +43,47 @@ function ensureDir(dir) {
   if (!fs.existsSync(dir)) {fs.mkdirSync(dir, { recursive: true });}
 }
 
+function _contarLinea(t, estado) {
+  if (estado.inBlock) {
+    if (t.includes('*/')) {estado.inBlock = false;}
+    return 1;
+  }
+  if (t.startsWith('/*')) {
+    if (!t.includes('*/')) {estado.inBlock = true;}
+    return 1;
+  }
+  if (t.startsWith('//')) {return 1;}
+  if (t.startsWith('*')) {return 1;}
+  if (t.startsWith('#')) {return 1;}
+  return 0;
+}
+
+function _contarComentarios(lines) {
+  let comment = 0;
+  const estado = { inBlock: false };
+  for (const l of lines) {
+    comment += _contarLinea(l.trim(), estado);
+  }
+  return comment;
+}
+
 function countLines(dir) {
+  const files = walkFiles(dir, ['.js', '.sql', '.json', '.ejs'], ['node_modules', 'reports', 'report', '.git', 'public']);
   const results = [];
   let totalCode = 0, totalComment = 0, totalBlank = 0;
 
-  function _contarLinea(t, estado) {
-    if (estado.inBlock) {
-      if (t.includes('*/')) {estado.inBlock = false;}
-      return 1;
-    }
-    if (t.startsWith('/*')) {
-      if (!t.includes('*/')) {estado.inBlock = true;}
-      return 1;
-    }
-    if (t.startsWith('//')) {return 1;}
-    if (t.startsWith('*')) {return 1;}
-    if (t.startsWith('#')) {return 1;}
-    return 0;
+  for (const full of files) {
+    if (EXCLUDE_FILES.has(path.basename(full))) { continue; }
+    const rel = path.relative(ROOT_DIR, full);
+    const content = fs.readFileSync(full, 'utf8');
+    const lines = content.split('\n');
+    const total = lines.length;
+    const blank = lines.filter(l => /^\s*$/.test(l)).length;
+    const comment = _contarComentarios(lines);
+    const code = total - blank - comment;
+    totalCode += code; totalComment += comment; totalBlank += blank;
+    results.push({ file: rel, code, comment, blank, total });
   }
-
-  function _contarComentarios(lines) {
-    let comment = 0;
-    const estado = { inBlock: false };
-    for (const l of lines) {
-      comment += _contarLinea(l.trim(), estado);
-    }
-    return comment;
-  }
-
-  function walk(d) {
-    let entries;
-    try { entries = fs.readdirSync(d); } catch { return; }
-    for (const entry of entries) {
-      const full = path.join(d, entry);
-      let stat;
-      try { stat = fs.statSync(full); } catch { continue; }
-      if (stat.isDirectory()) {
-        if (!EXCLUDE_DIRS.has(entry)) {walk(full);}
-      } else if (EXCLUDE_FILES.has(entry)) {
-        // skip
-      } else if (/\.(js|sql|json|ejs)$/i.test(entry)) {
-        const rel = path.relative(ROOT_DIR, full);
-        const content = fs.readFileSync(full, 'utf8');
-        const lines = content.split('\n');
-        const total = lines.length;
-        const blank = lines.filter(l => /^\s*$/.test(l)).length;
-        const comment = _contarComentarios(lines);
-        const code = total - blank - comment;
-        totalCode += code; totalComment += comment; totalBlank += blank;
-        results.push({ file: rel, code, comment, blank, total });
-      }
-    }
-  }
-  walk(dir);
   return { files: results, totalCode, totalComment, totalBlank };
 }
 

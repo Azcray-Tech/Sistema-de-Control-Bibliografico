@@ -73,6 +73,10 @@ Every route, controller method, and model MUST have JSDoc tags:
  */
 ```
 
+## Notes
+- **CCN analysis**: `typhonjs-escomplex` does not detect class-field arrow methods (`method = () => {}`). All controllers use this syntax and report CCN=0 in `reports/complexity/index.html`. For actual complexity, check the ESLint report (`reports/lint.html`) which handles class fields correctly.
+- **Excluded from metrics**: `public/js/` (minified libs), `node_modules/`, `reports/`, `.git/`, `coverage/`, `documentacion/`, `tests/`.
+
 ## Testing
 - **Jest** with `--passWithNoTests`. No real DB needed — tests use mocks.
 - **Mock factory**: `tests/mocks/models.js` — `crearMocksModelos()` returns all model mocks; `mockAuditoria` is a `jest.fn()`. Pass directly to service/controller constructors (DI).
