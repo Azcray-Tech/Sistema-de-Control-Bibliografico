@@ -22,7 +22,7 @@ const loginLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip
+  keyGenerator: rateLimit.ipKeyGenerator
 });
 
 router.get('/login', redirigirSiAutenticado, authController.mostrarLogin);

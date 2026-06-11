@@ -42,7 +42,7 @@ describe('OpacService', () => {
       const result = await opacService.obtenerDestacados();
 
       expect(mocks.Material.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: 8, order: [['createdAt', 'DESC']] })
+        expect.objectContaining({ limit: 12, order: [['createdAt', 'DESC']] })
       );
       expect(result).toHaveLength(1);
     });
