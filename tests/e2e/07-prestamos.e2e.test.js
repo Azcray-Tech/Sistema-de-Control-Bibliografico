@@ -16,7 +16,7 @@ const {
 const db = require('../../models');
 
 let agent;
-let adminId = 1;
+const adminId = 1;
 
 beforeAll(async () => {
   await iniciar();

@@ -14,7 +14,7 @@ class ApiController {
    * @use_case CU-14
    * @description Busca un solicitante por cédula y retorna JSON para AJAX.
    */
-   buscarSolicitante = async (req, res, next) => {
+    buscarSolicitante = async (req, res, _next) => {
     try {
       const resultado = await this.solicitanteService.buscarResponse(req.query.cedula);
       res.json(resultado);
@@ -28,7 +28,7 @@ class ApiController {
    * @use_case CU-14
    * @description Crea un nuevo solicitante vía AJAX y retorna JSON.
    */
-   crearSolicitante = async (req, res, next) => {
+   crearSolicitante = async (req, res, _next) => {
     try {
       const { cedula, nombre, apellido, correoElectronico, telefono } = req.body;
       const solicitante = await this.solicitanteService.crear({ cedula, nombre, apellido, correoElectronico, telefono });
@@ -43,7 +43,7 @@ class ApiController {
    * @use_case CU-06
    * @description Busca ejemplares por identificador y materialId vía AJAX.
    */
-   buscarEjemplar = async (req, res, next) => {
+   buscarEjemplar = async (req, res, _next) => {
     try {
       const { identificador, materialId } = req.query;
       const ejemplares = await this.materialService.buscarEjemplares({ identificador, materialId });
@@ -58,7 +58,7 @@ class ApiController {
    * @use_case CU-14
    * @description Busca solicitante con sus préstamos activos para el formulario de préstamo.
    */
-   buscarSolicitantePrestamo = async (req, res, next) => {
+   buscarSolicitantePrestamo = async (req, res, _next) => {
     try {
       const data = await this.solicitanteService.buscarConPrestamos(req.query.cedula);
       if (!data) {return res.json({ encontrado: false });}
@@ -73,7 +73,7 @@ class ApiController {
    * @use_case CU-06
    * @description Busca ejemplares disponibles por título vía AJAX.
    */
-   buscarEjemplaresDisponibles = async (req, res, next) => {
+   buscarEjemplaresDisponibles = async (req, res, _next) => {
     try {
       const resultado = await this.materialService.buscarDisponibles(req.query.titulo);
       res.json(resultado);

@@ -41,7 +41,7 @@ describe('AuthService', () => {
 
     it('debe retornar datos del usuario sin contraseña en éxito', async () => {
       const bcrypt = require('bcryptjs');
-      const hash = bcrypt.hashSync('admin123', 10);
+      const hash = bcrypt.hashSync('admin123', 4);
       mocks.UsuarioSistema.findOne.mockResolvedValue({ ...mockUsuario, contrasenaHash: hash });
 
       const resultado = await authService.autenticar('admin', 'admin123');
@@ -54,7 +54,7 @@ describe('AuthService', () => {
   describe('iniciarSesion', () => {
     it('debe autenticar y registrar auditoría con LOGIN', async () => {
       const bcrypt = require('bcryptjs');
-      const hash = bcrypt.hashSync('admin123', 10);
+      const hash = bcrypt.hashSync('admin123', 4);
       mocks.UsuarioSistema.findOne.mockResolvedValue({ ...mockUsuario, contrasenaHash: hash });
 
       const resultado = await authService.iniciarSesion('admin', 'admin123');

@@ -38,7 +38,7 @@ const BackupService = require('./services/backup.service');
 const CronService = require('./services/cron.service');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const _PORT = process.env.PORT || 3000;
 
 // Configuración de sesión
 app.use(session({

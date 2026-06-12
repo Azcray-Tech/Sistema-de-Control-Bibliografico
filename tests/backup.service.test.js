@@ -52,7 +52,7 @@ describe('BackupService', () => {
     archiver.mockReturnValue(mockArchive);
     fs.createWriteStream = jest.fn().mockReturnValue(mockOutput);
     fs.existsSync = jest.fn().mockReturnValue(true);
-    fs.statSync = jest.fn().mockReturnValue({ size: 1234, mtime: new Date() });
+    fs.statSync = jest.fn().mockReturnValue({ size: 1234, mtime: new Date(), mtimeMs: Date.now(), isDirectory: () => false });
     fs.unlinkSync = jest.fn();
     fs.readFileSync = jest.fn().mockReturnValue('INSERT INTO ...');
     fs.readdirSync = jest.fn().mockReturnValue([]);
@@ -100,6 +100,38 @@ describe('BackupService', () => {
       await backupService.generarBackup(1);
       // Should not throw - covers skipped gracefully
     });
+
+    it('debe generar INSERTs con tipos variados en dump SQL', async () => {
+      const mockConn = {
+        query: jest.fn().mockImplementation(async (sql) => {
+          if (sql.includes('categoria')) {
+            return [[{ idCategoria: 1, nombre: 'Ficción', activa: true }]];
+          }
+          if (sql.includes('material')) {
+            return [[{
+              idMaterial: 1, titulo: 'Libro X', tipo: 'libro',
+              anioPublicacion: 2024, precio: 29.99,
+              fechaCreacion: new Date('2024-06-01'), sinopsis: null
+            }]];
+          }
+          return [[]];
+        }),
+        end: jest.fn()
+      };
+      mysql.createConnection = jest.fn().mockResolvedValue(mockConn);
+
+      await backupService.generarBackup(1);
+
+      const archiveInstance = archiver();
+      expect(archiveInstance.append).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO `categoria`"),
+        { name: 'backup.sql' }
+      );
+      expect(archiveInstance.append).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO `material`"),
+        { name: 'backup.sql' }
+      );
+    });
   });
 
   describe('limpiarBackup', () => {
@@ -113,6 +145,13 @@ describe('BackupService', () => {
       fs.existsSync = jest.fn().mockReturnValue(false);
       await backupService.limpiarBackup('/tmp/inexistente.zip');
       expect(fs.unlinkSync).not.toHaveBeenCalled();
+    });
+
+    it('debe capturar error si unlinkSync lanza excepción', async () => {
+      fs.existsSync = jest.fn().mockReturnValue(true);
+      fs.unlinkSync = jest.fn().mockImplementation(() => { throw new Error('Permiso denegado'); });
+
+      await expect(backupService.limpiarBackup('/tmp/backup.zip')).resolves.not.toThrow();
     });
   });
 
@@ -168,6 +207,107 @@ describe('BackupService', () => {
 
       await expect(backupService.restaurarBackup('/tmp/backup.zip', 1))
         .rejects.toThrow();
+    });
+
+    it('debe copiar portadas durante restore si existen', async () => {
+      fs.readdirSync = jest.fn().mockImplementation((p) => {
+        const str = p.toString();
+        if (str.includes('portadas')) {return ['cubierta.jpg'];}
+        return [];
+      });
+      fs.copyFileSync = jest.fn();
+
+      await backupService.restaurarBackup('/tmp/backup.zip', 1);
+
+      expect(fs.copyFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('cubierta.jpg'),
+        expect.stringContaining('covers')
+      );
+    });
+
+    it('debe resetear auto-increment de tablas durante restore', async () => {
+      const mockConn = {
+        query: jest.fn().mockImplementation(async (sql) => {
+          if (sql.includes('INFORMATION_SCHEMA')) {
+            return [[{ TABLE_NAME: 'categoria' }, { TABLE_NAME: 'material' }]];
+          }
+          return [[]];
+        }),
+        end: jest.fn()
+      };
+      mysql.createConnection = jest.fn().mockResolvedValue(mockConn);
+
+      await backupService.restaurarBackup('/tmp/backup.zip', 1);
+
+      const connCall = await mysql.createConnection.mock.results[0].value;
+      expect(connCall.query).toHaveBeenCalledWith(
+        expect.stringContaining('ALTER TABLE')
+      );
+    });
+
+    it('debe limpiar directorio temporal recursivamente con subdirectorios', async () => {
+      fs.readdirSync = jest.fn().mockImplementation((p) => {
+        const str = p.toString();
+        if (str.includes('subdir') && !str.includes('inner.txt')) {
+          return ['inner.txt'];
+        }
+        if (str.includes('restore_') && !str.includes('inner.txt')) {
+          return ['subdir', 'file.txt'];
+        }
+        return [];
+      });
+      fs.statSync = jest.fn().mockImplementation((p) => {
+        const str = p.toString();
+        if (str.includes('subdir') && !str.includes('inner.txt') && !str.includes('file.txt')) {
+          return { isDirectory: () => true, mtime: new Date(), mtimeMs: Date.now() };
+        }
+        if (str.includes('restore_') && !str.includes('subdir') && !str.includes('file.txt')) {
+          return { isDirectory: () => true, mtime: new Date(), mtimeMs: Date.now() };
+        }
+        return { isDirectory: () => false, mtime: new Date(), size: 100, mtimeMs: Date.now() };
+      });
+
+      await backupService.restaurarBackup('/tmp/backup.zip', 1);
+
+      expect(fs.rmdirSync).toHaveBeenCalled();
+    });
+
+    it('debe hacer rollback automático si restore falla con pre-restore disponible', async () => {
+      const mockConnOk = {
+        query: jest.fn().mockResolvedValue([[]]),
+        end: jest.fn()
+      };
+      mysql.createConnection = jest.fn()
+        .mockResolvedValueOnce(mockConnOk)   // _generarDumpSQL en _generarPreRestore
+        .mockRejectedValueOnce(new Error('Error al ejecutar SQL'))  // _ejecutarSqlScript original
+        .mockResolvedValue(mockConnOk);      // _ejecutarSqlScript en rollback
+
+      await expect(backupService.restaurarBackup('/tmp/backup.zip', 1))
+        .rejects.toThrow('Falló la restauración');
+
+      expect(mockAuditoria).toHaveBeenCalledWith(
+        expect.objectContaining({ accion: 'RESTORE_FALLIDO_CON_ROLLBACK' })
+      );
+    });
+
+    it('debe activar mantenimiento si restore falla y rollback también falla', async () => {
+      const mockConnOk = {
+        query: jest.fn().mockResolvedValue([[]]),
+        end: jest.fn()
+      };
+      mysql.createConnection = jest.fn()
+        .mockResolvedValueOnce(mockConnOk)   // _generarDumpSQL en _generarPreRestore
+        .mockRejectedValueOnce(new Error('Error al ejecutar SQL'));  // _ejecutarSqlScript
+      extract
+        .mockResolvedValueOnce(undefined)    // extract inicial en restaurarBackup (éxito)
+        .mockRejectedValueOnce(new Error('Error al extraer rollback'));  // extract en rollback
+
+      await expect(backupService.restaurarBackup('/tmp/backup.zip', 1))
+        .rejects.toThrow('FALLO CRÍTICO');
+
+      expect(mockAuditoria).toHaveBeenCalledWith(
+        expect.objectContaining({ accion: 'RESTORE_FALLIDO_SIN_ROLLBACK' })
+      );
     });
   });
 });

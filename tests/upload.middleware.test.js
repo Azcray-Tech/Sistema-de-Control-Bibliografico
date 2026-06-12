@@ -1,6 +1,6 @@
 const path = require('path');
 
-var capturedDestination, capturedFilename;
+let capturedDestination, capturedFilename;
 
 jest.mock('multer', () => {
   const mockDiskStorage = jest.fn((opts) => {
@@ -13,7 +13,7 @@ jest.mock('multer', () => {
   return fn;
 });
 
-var fileFilter;
+let fileFilter;
 beforeAll(() => {
   const mod = require('../middleware/upload');
   fileFilter = mod.fileFilter;

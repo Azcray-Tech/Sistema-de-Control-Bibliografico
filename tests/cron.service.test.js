@@ -32,7 +32,14 @@ describe('CronService', () => {
   let mockBackupService;
   let mockTask;
 
+  let timeouts;
+
   beforeEach(() => {
+    timeouts = [];
+    jest.spyOn(global, 'setTimeout').mockImplementation((cb, ms) => {
+      timeouts.push({ cb, ms });
+      return { unref: () => {} };
+    });
     mocks = crearMocksModelos();
     mockParametroService = crearParametroServiceMock();
     mockBackupService = {
@@ -56,6 +63,10 @@ describe('CronService', () => {
     fs.statSync = jest.fn().mockReturnValue({ mtime: new Date(), size: 1234 });
     fs.copyFileSync = jest.fn();
     fs.unlinkSync = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('ejecutarSuspensionAutomatica', () => {
@@ -419,7 +430,7 @@ describe('CronService', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       let cronCallback;
       cron.schedule = jest.fn((expr, cb) => {
-        if (expr === '0 2 * * *') cronCallback = cb;
+        if (expr === '0 2 * * *') { cronCallback = cb; }
         return mockTask;
       });
       cronService.iniciar();

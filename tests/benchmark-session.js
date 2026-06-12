@@ -34,7 +34,7 @@ async function waitForServer(url, timeoutMs = 30000) {
   while (Date.now() - start < timeoutMs) {
     try {
       const res = await fetch(url);
-      if (res.ok || res.status === 302 || res.status === 404) return true;
+      if (res.ok || res.status === 302 || res.status === 404) { return true; }
     } catch { /* server not ready yet */ }
     await sleep(500);
   }
@@ -86,8 +86,8 @@ async function runArtillery(reportPath) {
     });
     child.on('error', reject);
     child.on('exit', code => {
-      if (code === 0) resolve();
-      else reject(new Error(`Artillery exited with code ${code}`));
+      if (code === 0) { resolve(); }
+      else { reject(new Error(`Artillery exited with code ${code}`)); }
     });
   });
 }
@@ -156,7 +156,7 @@ function showComparison(memory, sequelize) {
       diff = diff > 0 ? `+${diff}` : String(diff);
     } else {
       diff = `${(Number(seq) - Number(mem)).toFixed(0)} ms`;
-      if (Number(seq) > Number(mem)) diff = `+${diff}`;
+      if (Number(seq) > Number(mem)) { diff = `+${diff}`; }
     }
     console.log(`  ${label.padEnd(24)} ${memStr.padStart(12)} ${seqStr.padStart(14)}   ${diff}`);
   }
