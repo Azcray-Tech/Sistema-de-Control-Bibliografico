@@ -12,6 +12,7 @@
     --color-text-dark: #2d3748;
     --color-text-muted: #718096;
     --sidebar-width: 280px;
+    --font-size-base: 18px;
     
     /* UI Polish Variables */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

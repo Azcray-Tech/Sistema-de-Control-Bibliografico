@@ -40,9 +40,12 @@
    ESTILOS GLOBALES BASE
    ============================================ */
 
+html {
+    font-size: var(--font-size-base);
+}
+
 body {
     font-family: 'Source Sans 3', sans-serif;
-    font-size: 14pt;
     background: var(--color-bg-light);
     color: var(--color-text-dark);
 }
