@@ -165,7 +165,7 @@
                                             title="Eliminar">
                                         <i class="bi bi-trash"></i>
                                     </button>
-                                    <form id="form-delete-<%= m.idMaterial %>" method="POST" action="/admin/materiales/<%= m.idMaterial %>/eliminar" style="display:none;"></form>
+                                    <form id="form-delete-<%= m.idMaterial %>" method="POST" action="/admin/materiales/<%= m.idMaterial %>/eliminar" class="d-none"></form>
                                 </div>
                             </td>
                         </tr>
@@ -281,7 +281,7 @@ $(document).ready(function() {
         <div class="col-7">
             <span class="badge bg-primary mb-2" id="oc-tipo"></span>
             <span class="badge" style="background:var(--color-accent);color:white;" id="oc-categoria"></span>
-            <h4 class="mt-2 mb-1" id="oc-titulo" style="font-family:'Libre Baskerville', serif; color:var(--color-text-dark);"></h4>
+            <h4 class="mt-2 mb-1" id="oc-titulo"></h4>
             <p class="text-muted mb-2" id="oc-autor"></p>
             <div class="small text-muted"><i class="bi bi-upc-scan me-1"></i> <span id="oc-codigo"></span></div>
         </div>

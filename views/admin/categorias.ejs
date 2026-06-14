@@ -63,7 +63,7 @@
                                         <span class="badge bg-secondary">Inactiva</span>
                                         <% } else if (totalMateriales === 0) { %>
                                         <form method="POST" action="/admin/categorias/<%= c.idCategoria %>/desactivar"
-                                            style="display:inline;" id="formDesactivar_<%= c.idCategoria %>">
+                                            class="d-inline" id="formDesactivar_<%= c.idCategoria %>">
                                             <button type="button" class="btn btn-sm btn-outline-danger" title="Desactivar"
                                                 onclick="eliminarCategoria('<%= c.nombre %>', 'formDesactivar_<%= c.idCategoria %>')">
                                                 <i class="bi bi-trash"></i>

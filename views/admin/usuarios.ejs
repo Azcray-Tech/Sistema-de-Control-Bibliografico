@@ -64,7 +64,7 @@
                             title="Desactivar">
                             <i class="bi bi-person-x"></i>
                         </button>
-                        <form id="form-desactivar-<%= u.idUsuario %>" method="POST" action="/admin/usuarios/<%= u.idUsuario %>/desactivar" style="display:none;"></form>
+                        <form id="form-desactivar-<%= u.idUsuario %>" method="POST" action="/admin/usuarios/<%= u.idUsuario %>/desactivar" class="d-none"></form>
                         <% } else if (!u.activo) { %>
                         <span class="text-muted small">—</span>
                         <% } else { %>

@@ -28,10 +28,10 @@
         <div class="form-text small">Presione Enter o haga clic en Buscar</div>
     </div>
 
-    <div id="resultadoSolicitante" style="display:none;" class="mb-4"></div>
+    <div id="resultadoSolicitante" class="d-none mb-4"></div>
 
     <!-- Formulario registro solicitante nuevo -->
-    <div id="formNuevoSolicitante" style="display:none;" class="mb-4 p-3 rounded" style="background:var(--color-bg-light);border:1px solid var(--color-border-tertiary);">
+    <div id="formNuevoSolicitante" class="d-none mb-4 p-3 rounded" style="background:var(--color-bg-light);border:1px solid #dee2e6;">
         <h6 class="mb-3"><i class="bi bi-person-plus me-2"></i>Registrar Nuevo Solicitante</h6>
         <div class="row g-3">
             <div class="col-md-4">
@@ -59,7 +59,7 @@
     </div>
 
     <!-- Paso 2: Seleccionar Material -->
-    <div id="paso2" style="display:none;">
+    <div id="paso2" class="d-none">
         <hr class="my-4">
         <div class="mb-3">
             <label class="form-label fw-bold"><i class="bi bi-book-fill me-1"></i>Paso 2 — Seleccionar Material</label>
@@ -134,13 +134,13 @@
                     </td>
                     <td>
                         <div class="d-flex justify-content-center gap-2">
-                            <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/devolver" style="display:inline;">
+                            <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/devolver" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-outline-success" title="Devolver">
                                     <i class="bi bi-check-lg"></i>
                                 </button>
                             </form>
                             <% if (diff <= 0) { %>
-                            <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/renovar" style="display:inline;">
+                            <form method="POST" action="/admin/prestamos/<%= p.idPrestamo %>/renovar" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-outline-primary" title="Renovar">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
