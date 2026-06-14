@@ -1,4 +1,4 @@
-<%- include('../layouts/admin_start', {title: (material ? 'Editar' : 'Agregar') + ' Material', page: 'materiales', heading: '<i class="bi bi-' + (material ? 'pencil-square' : 'plus-circle') + ' me-2"></i>' + (material ? 'Editar' : 'Agregar') + ' Material', subheading: material ? 'Modifique la informaci\u00f3n del material' : 'Complete los campos requeridos'}) %>
+<%- include('../layouts/admin_start', {title: (material ? 'Editar' : 'Agregar') + ' Material', page: 'materiales-nuevo', heading: '<i class="bi bi-' + (material ? 'pencil-square' : 'plus-circle') + ' me-2"></i>' + (material ? 'Editar' : 'Agregar') + ' Material', subheading: material ? 'Modifique la informaci\u00f3n del material' : 'Complete los campos requeridos'}) %>
 <% if (typeof error !== 'undefined' && error) { %>
 <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div>
 <% } %>
