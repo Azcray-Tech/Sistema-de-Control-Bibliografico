@@ -3,8 +3,11 @@
 <div class="content-card">
     <form method="POST" action="/admin/configuracion">
         <div class="row g-4">
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm h-100">
+
+            <!-- Columna Izquierda: Préstamos + Sesión y Respaldos -->
+            <div class="col-md-6 d-flex flex-column gap-4">
+
+                <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
                         <h6 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2 text-primary"></i>Préstamos</h6>
                         <small class="text-muted">Configuración relacionada con préstamos y renovaciones</small>
@@ -12,51 +15,35 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label fw-medium">Días de préstamo</label>
-                            <input type="number" name="dias_prestamo" class="form-control"
-                                value="<%= parametros.dias_prestamo || 7 %>" min="1" required>
+                            <div class="input-group">
+                                <input type="number" name="dias_prestamo" class="form-control"
+                                    value="<%= parametros.dias_prestamo || 7 %>" min="1" required>
+                                <span class="input-group-text">días</span>
+                            </div>
                             <small class="text-muted">Duración por defecto de un préstamo (días)</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-medium">Máximo de préstamos simultáneos</label>
-                            <input type="number" name="max_prestamos_simultaneos" class="form-control"
-                                value="<%= parametros.max_prestamos_simultaneos || 3 %>" min="1" required>
+                            <div class="input-group">
+                                <input type="number" name="max_prestamos_simultaneos" class="form-control"
+                                    value="<%= parametros.max_prestamos_simultaneos || 3 %>" min="1" required>
+                                <span class="input-group-text">préstamos</span>
+                            </div>
                             <small class="text-muted">Cantidad máxima de préstamos activos por solicitante</small>
                         </div>
                         <div class="mb-0">
                             <label class="form-label fw-medium">Renovaciones permitidas</label>
-                            <input type="number" name="renovaciones_permitidas" class="form-control"
-                                value="<%= parametros.renovaciones_permitidas || 1 %>" min="0" required>
+                            <div class="input-group">
+                                <input type="number" name="renovaciones_permitidas" class="form-control"
+                                    value="<%= parametros.renovaciones_permitidas || 1 %>" min="0" required>
+                                <span class="input-group-text">veces</span>
+                            </div>
                             <small class="text-muted">Número de renovaciones permitidas por préstamo (0 = no permitir)</small>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
-                        <h6 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Sanciones</h6>
-                        <small class="text-muted">Configuración de sanciones por retraso</small>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-medium">Factor de sanción</label>
-                            <input type="number" name="factor_sancion" class="form-control"
-                                value="<%= parametros.factor_sancion || 2 %>" min="1" required>
-                            <small class="text-muted">Días de suspensión por cada día de retraso</small>
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label fw-medium">Suspensión máxima (días)</label>
-                            <input type="number" name="suspension_maxima" class="form-control"
-                                value="<%= parametros.suspension_maxima || 30 %>" min="1" required>
-                            <small class="text-muted">Tope máximo de días de suspensión aplicable</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm h-100">
+                <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
                         <h6 class="fw-bold mb-0"><i class="bi bi-clock me-2 text-info"></i>Sesión y Respaldos</h6>
                         <small class="text-muted">Configuración de sesión y programación de backups</small>
@@ -64,8 +51,11 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label fw-medium">Tiempo de inactividad (minutos)</label>
-                            <input type="number" name="tiempo_inactividad" class="form-control"
-                                value="<%= parametros.tiempo_inactividad || 15 %>" min="1" required>
+                            <div class="input-group">
+                                <input type="number" name="tiempo_inactividad" class="form-control"
+                                    value="<%= parametros.tiempo_inactividad || 15 %>" min="1" required>
+                                <span class="input-group-text">min</span>
+                            </div>
                             <small class="text-muted">Minutos de inactividad antes del cierre automático de sesión</small>
                         </div>
                         <div class="mb-3">
@@ -92,10 +82,40 @@
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm h-100" style="background: var(--color-bg-light);">
+            <!-- Columna Derecha: Sanciones + Info Premium -->
+            <div class="col-md-6 d-flex flex-column gap-4">
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Sanciones</h6>
+                        <small class="text-muted">Configuración de sanciones por retraso</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Factor de sanción</label>
+                            <div class="input-group">
+                                <input type="number" name="factor_sancion" class="form-control"
+                                    value="<%= parametros.factor_sancion || 2 %>" min="1" required>
+                                <span class="input-group-text">×</span>
+                            </div>
+                            <small class="text-muted">Días de suspensión por cada día de retraso</small>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-medium">Suspensión máxima (días)</label>
+                            <div class="input-group">
+                                <input type="number" name="suspension_maxima" class="form-control"
+                                    value="<%= parametros.suspension_maxima || 30 %>" min="1" required>
+                                <span class="input-group-text">días</span>
+                            </div>
+                            <small class="text-muted">Tope máximo de días de suspensión aplicable</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm bg-white" style="border-left: 4px solid var(--color-primary); border-radius: 12px;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
                         <i class="bi bi-info-circle fs-2" style="color: var(--color-primary);"></i>
                         <p class="text-muted mt-2 mb-0" style="max-width: 300px;">
@@ -104,13 +124,17 @@
                         </p>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="d-flex justify-content-end mt-4 pt-3 border-top">
-            <button type="submit" class="btn btn-primary-custom px-4">
-                <i class="bi bi-check-lg me-1"></i>Guardar Configuración
-            </button>
+            </div>
+
+            <!-- Botón Guardar -->
+            <div class="col-12">
+                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary-custom px-4">
+                        <i class="bi bi-check-lg me-1"></i>Guardar Configuración
+                    </button>
+                </div>
+            </div>
         </div>
     </form>
 </div>
