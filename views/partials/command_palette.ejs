@@ -1,0 +1,41 @@
+<div class="modal fade" id="commandPaletteModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden; background: #fff;">
+            <div class="modal-header border-0 p-3" style="background: var(--color-bg-light);">
+                <i class="bi bi-search me-3" style="font-size: 1.5rem; color: var(--color-text-muted);"></i>
+                <input type="text" id="commandSearchInput" class="form-control border-0 shadow-none fs-4"
+                       placeholder="Buscar libros, usuarios o comandos..."
+                       style="background: transparent; color: var(--color-text-dark);" autocomplete="off">
+            </div>
+            <div class="modal-body p-0" id="commandResults" style="max-height: 400px; overflow-y: auto;">
+                <div class="p-3 text-muted" style="font-size: 0.9rem;">
+                    <div class="mb-2 text-uppercase fw-bold" style="font-size: 0.75rem;">Acciones Rápidas</div>
+                    <a href="/admin/materiales/nuevo" class="d-flex align-items-center text-decoration-none p-2 rounded hover-bg-light text-dark">
+                        <i class="bi bi-plus-circle me-3 text-primary" style="font-size: 1.2rem;"></i>
+                        <span>Agregar Nuevo Material</span>
+                        <small class="ms-auto text-muted">Ir a vista</small>
+                    </a>
+                    <a href="/admin/prestamos" class="d-flex align-items-center text-decoration-none p-2 rounded hover-bg-light text-dark">
+                        <i class="bi bi-arrow-left-right me-3 text-success" style="font-size: 1.2rem;"></i>
+                        <span>Registrar Préstamo</span>
+                        <small class="ms-auto text-muted">Ir a vista</small>
+                    </a>
+                    <a href="/admin/dashboard" class="d-flex align-items-center text-decoration-none p-2 rounded hover-bg-light text-dark">
+                        <i class="bi bi-speedometer2 me-3 text-secondary" style="font-size: 1.2rem;"></i>
+                        <span>Volver al Dashboard</span>
+                        <small class="ms-auto text-muted">Ir a vista</small>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-2" style="background: #f8f9fa; font-size: 0.8rem;">
+                <span class="text-muted"><kbd class="bg-white border text-dark shadow-sm">↑</kbd> <kbd class="bg-white border text-dark shadow-sm">↓</kbd> para navegar</span>
+                <span class="text-muted ms-3"><kbd class="bg-white border text-dark shadow-sm">Enter</kbd> para seleccionar</span>
+                <span class="text-muted ms-3"><kbd class="bg-white border text-dark shadow-sm">Esc</kbd> para cerrar</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-bg-light:hover { background-color: #f1f5f9; }
+</style>
