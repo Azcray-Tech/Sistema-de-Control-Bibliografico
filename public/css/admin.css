@@ -118,9 +118,13 @@ body.sidebar-collapsed .sidebar-toggle {
     display: flex;
 }
 
-.sidebar.collapsed .menu-text,
-.sidebar.collapsed .logout-btn span {
-    display: none;
+.sidebar.collapsed .menu-text {
+    display: block;
+    font-size: 0.6rem;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .sidebar.collapsed .menu-section {
@@ -128,9 +132,12 @@ body.sidebar-collapsed .sidebar-toggle {
 }
 
 .sidebar.collapsed .menu-item {
+    flex-direction: column;
     justify-content: center;
-    padding: 0.8rem 0.25rem;
-    gap: 0;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem 0.15rem;
+    gap: 0.1rem;
 }
 
 .sidebar.collapsed .menu-item i {
@@ -139,10 +146,13 @@ body.sidebar-collapsed .sidebar-toggle {
 }
 
 .sidebar.collapsed .logout-btn {
+    flex-direction: column;
     justify-content: center;
-    padding: 0.8rem 0.25rem;
-    margin: 1rem 0.25rem;
-    gap: 0;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem 0.15rem;
+    margin: 0.5rem 0.15rem;
+    gap: 0.1rem;
 }
 
 .sidebar.collapsed .logout-btn i {
@@ -151,11 +161,14 @@ body.sidebar-collapsed .sidebar-toggle {
 
 .sidebar.collapsed .menu-parent-header {
     justify-content: center;
-    padding: 0.8rem 0.25rem;
+    padding: 0.5rem 0.15rem;
 }
 
 .sidebar.collapsed .menu-parent-header span {
-    display: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
 }
 
 .sidebar.collapsed .menu-arrow {
