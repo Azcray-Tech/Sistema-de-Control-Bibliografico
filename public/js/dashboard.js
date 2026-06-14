@@ -51,24 +51,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         new Chart(document.getElementById('chartPrestamosMes'), {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'Préstamos',
                     data: data,
-                    backgroundColor: function(ctx) {
-                        const chart = ctx.chart;
-                        const { ctx: c, chartArea } = chart;
-                        if (!chartArea) return 'rgba(44, 95, 79, 0.75)';
-                        const gradient = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(44, 95, 79, 0.25)');
-                        gradient.addColorStop(1, '#2c5f4f');
-                        return gradient;
-                    },
+                    fill: true,
+                    tension: 0.4,
+                    backgroundColor: 'rgba(44, 95, 79, 0.12)',
                     borderColor: '#2c5f4f',
-                    borderWidth: 1,
-                    borderRadius: 4
+                    borderWidth: 2,
+                    pointBackgroundColor: '#2c5f4f',
+                    pointRadius: 3,
+                    pointHoverRadius: 5
                 }]
             },
             options: {

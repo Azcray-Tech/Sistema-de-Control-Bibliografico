@@ -31,7 +31,7 @@
     "sonarjs/no-identical-functions": "warn",
     "sonarjs/max-switch-cases": ["warn", 8]
   },
-  "ignorePatterns": ["node_modules/", "public/js/", "reports/"],
+  "ignorePatterns": ["node_modules/", "public/js/", "reports/", "views/"],
   "overrides": [
     {
       "files": ["tests/**"],
