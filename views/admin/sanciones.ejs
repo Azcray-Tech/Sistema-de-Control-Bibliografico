@@ -1,131 +1,119 @@
-<!DOCTYPE html>
-<html lang="es">
-<head><title>Retrasos y Sanciones - CEELA</title><%- include('../partials/head') %></head>
-<body>
-<div class="admin-wrapper">
-    <%- include('../partials/sidebar', {page:'sanciones'}) %>
-    <div class="main-content">
-        <div class="top-bar">
-            <div><h2><i class="bi bi-exclamation-triangle me-2"></i>Retrasos y Sanciones</h2>
-            <small class="text-muted">Control de retrasos y gestión de sanciones de solicitantes</small></div>
-        </div>
+<%- include('../layouts/admin_start', {title:'Retrasos y Sanciones', page:'sanciones', heading:'<i class="bi bi-exclamation-triangle me-2"></i>Retrasos y Sanciones', subheading:'Control de retrasos y gesti\u00f3n de sanciones de solicitantes'}) %>
 
-        <% if (usuarioSession && usuarioSession.rol === 'Administrador') { %>
-        <div class="content-card mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-person-slash me-2 text-danger"></i>Solicitantes Suspendidos</h5>
-                    <small class="text-muted">Sanciones activas que pueden ser levantadas manualmente</small>
-                </div>
-                <span class="badge bg-danger"><%= sancionesActivas ? sancionesActivas.length : 0 %> activa(s)</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-custom align-middle">
-                    <thead>
-                        <tr>
-                            <th>Solicitante</th>
-                            <th>Cédula</th>
-                            <th>Estado</th>
-                            <th>Suspendido hasta</th>
-                            <th class="text-center">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% (sancionesActivas || []).forEach(s => { %>
-                        <tr>
-                            <td class="fw-medium"><%= s.nombre %> <%= s.apellido %></td>
-                            <td><%= s.cedula %></td>
-                            <td>
-                                <% if (s.estado === 'Suspendido permanente') { %>
-                                <span class="badge bg-danger">Permanente</span>
-                                <% } else { %>
-                                <span class="badge bg-warning text-dark">Temporal</span>
-                                <% } %>
-                            </td>
-                            <td>
-                                <% if (s.fechaFinSuspension) { %>
-                                <%= new Date(s.fechaFinSuspension).toLocaleDateString('es-VE') %>
-                                <% } else { %>
-                                <span class="text-muted">—</span>
-                                <% } %>
-                            </td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-success"
-                                    onclick="abrirModalLevantar('<%= s.cedula %>', '<%= s.nombre %> <%= s.apellido %>')"
-                                    title="Levantar suspensión">
-                                    <i class="bi bi-unlock me-1"></i>Levantar
-                                </button>
-                            </td>
-                        </tr>
-                        <% }) %>
-                        <% if (!sancionesActivas || sancionesActivas.length === 0) { %>
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                <i class="bi bi-check-circle me-2 text-success"></i>No hay solicitantes suspendidos
-                            </td>
-                        </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
+<% if (usuarioSession && usuarioSession.rol === 'Administrador') { %>
+<div class="content-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-person-slash me-2 text-danger"></i>Solicitantes Suspendidos</h5>
+            <small class="text-muted">Sanciones activas que pueden ser levantadas manualmente</small>
         </div>
-        <% } %>
+        <span class="badge bg-danger"><%= sancionesActivas ? sancionesActivas.length : 0 %> activa(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Solicitante</th>
+                    <th>Cédula</th>
+                    <th>Estado</th>
+                    <th>Suspendido hasta</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% (sancionesActivas || []).forEach(s => { %>
+                <tr>
+                    <td class="fw-medium"><%= s.nombre %> <%= s.apellido %></td>
+                    <td><%= s.cedula %></td>
+                    <td>
+                        <% if (s.estado === 'Suspendido permanente') { %>
+                        <span class="badge bg-danger">Permanente</span>
+                        <% } else { %>
+                        <span class="badge bg-warning text-dark">Temporal</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <% if (s.fechaFinSuspension) { %>
+                        <%= new Date(s.fechaFinSuspension).toLocaleDateString('es-VE') %>
+                        <% } else { %>
+                        <span class="text-muted">—</span>
+                        <% } %>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-success"
+                            onclick="abrirModalLevantar('<%= s.cedula %>', '<%= s.nombre %> <%= s.apellido %>')"
+                            title="Levantar suspensión">
+                            <i class="bi bi-unlock me-1"></i>Levantar
+                        </button>
+                    </td>
+                </tr>
+                <% }) %>
+                <% if (!sancionesActivas || sancionesActivas.length === 0) { %>
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="bi bi-check-circle me-2 text-success"></i>No hay solicitantes suspendidos
+                    </td>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+<% } %>
 
-        <div class="content-card">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-warning"></i>Préstamos Vencidos</h5>
-                    <small class="text-muted">Préstamos con fecha de devolución vencida</small>
-                </div>
-                <span class="badge bg-warning text-dark"><%= prestamosVencidos.length %> vencido(s)</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-custom align-middle">
-                    <thead>
-                        <tr>
-                            <th>Solicitante</th>
-                            <th>Cédula</th>
-                            <th>Material</th>
-                            <th>Días de retraso</th>
-                            <th>Estado</th>
-                            <th>Suspendido hasta</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% prestamosVencidos.forEach(p => {
-                        const sol = p.Solicitante;
-                        const ej = p.Ejemplar;
-                        const mat = ej ? ej.Material : null;
-                        const suspendidoHasta = sol && sol.fechaFinSuspension ? new Date(sol.fechaFinSuspension) : null;
-                        %>
-                        <tr>
-                            <td class="fw-medium"><%= sol ? sol.nombre + ' ' + sol.apellido : '-' %></td>
-                            <td><%= sol ? sol.cedula : '-' %></td>
-                            <td><%= mat ? mat.titulo.substring(0,50) : '-' %></td>
-                            <td><span class="badge bg-danger"><%= p.retraso %> días</span></td>
-                            <td>
-                                <% if (p.estado === 'Activo') { %>
-                                <span class="badge bg-warning text-dark">Vencido</span>
-                                <% } else { %>
-                                <span class="badge bg-secondary">Devuelto</span>
-                                <% } %>
-                            </td>
-                            <td>
-                                <% if (suspendidoHasta && suspendidoHasta >= new Date()) { %>
-                                <span class="badge bg-warning"><%= suspendidoHasta.toLocaleDateString('es-VE') %></span>
-                                <% } else { %>—<% } %>
-                            </td>
-                        </tr>
-                        <% }) %>
-                        <% if (prestamosVencidos.length===0) { %>
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4"><i class="bi bi-check-circle me-2 text-success"></i>No hay préstamos vencidos</td>
-                        </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-warning"></i>Préstamos Vencidos</h5>
+            <small class="text-muted">Préstamos con fecha de devolución vencida</small>
         </div>
+        <span class="badge bg-warning text-dark"><%= prestamosVencidos.length %> vencido(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Solicitante</th>
+                    <th>Cédula</th>
+                    <th>Material</th>
+                    <th>Días de retraso</th>
+                    <th>Estado</th>
+                    <th>Suspendido hasta</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% prestamosVencidos.forEach(p => {
+                const sol = p.Solicitante;
+                const ej = p.Ejemplar;
+                const mat = ej ? ej.Material : null;
+                const suspendidoHasta = sol && sol.fechaFinSuspension ? new Date(sol.fechaFinSuspension) : null;
+                %>
+                <tr>
+                    <td class="fw-medium"><%= sol ? sol.nombre + ' ' + sol.apellido : '-' %></td>
+                    <td><%= sol ? sol.cedula : '-' %></td>
+                    <td><%= mat ? mat.titulo.substring(0,50) : '-' %></td>
+                    <td><span class="badge bg-danger"><%= p.retraso %> días</span></td>
+                    <td>
+                        <% if (p.estado === 'Activo') { %>
+                        <span class="badge bg-warning text-dark">Vencido</span>
+                        <% } else { %>
+                        <span class="badge bg-secondary">Devuelto</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <% if (suspendidoHasta && suspendidoHasta >= new Date()) { %>
+                        <span class="badge bg-warning"><%= suspendidoHasta.toLocaleDateString('es-VE') %></span>
+                        <% } else { %>—<% } %>
+                    </td>
+                </tr>
+                <% }) %>
+                <% if (prestamosVencidos.length===0) { %>
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4"><i class="bi bi-check-circle me-2 text-success"></i>No hay préstamos vencidos</td>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -195,5 +183,4 @@ $(document).ready(function () {
     <% } %>
 });
 </script>
-</body>
-</html>
+<%- include('../layouts/admin_end') %>

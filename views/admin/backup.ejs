@@ -1,80 +1,63 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Backup - CEELA</title><%- include('../partials/head') %>
-</head>
-<body>
-    <div class="admin-wrapper">
-        <%- include('../partials/sidebar', {page:'backup'}) %>
-        <div class="main-content">
-            <div class="top-bar">
+<%- include('../layouts/admin_start', {title:'Backup', page:'backup', heading:'<i class="bi bi-database me-2"></i>Backup del Sistema', subheading:'Generaci\u00f3n y descarga de copias de seguridad'}) %>
+
+<% if (typeof estadoBackup !== 'undefined' && estadoBackup && estadoBackup.configurada && !estadoBackup.accesible) { %>
+<div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div><strong>Alerta de Backup Automático:</strong> <%= estadoBackup.mensaje %>. Verifique la ruta en
+    <a href="/admin/configuracion" class="alert-link">Configuración del Sistema</a>.</div>
+</div>
+<% } %>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="p-3 rounded-circle" style="background: #e8f5e9;">
+                    <i class="bi bi-shield-check text-success" style="font-size: 1.8rem;"></i>
+                </div>
                 <div>
-                    <h2><i class="bi bi-database me-2"></i>Backup del Sistema</h2>
-                    <small class="text-muted">Generación y descarga de copias de seguridad</small>
+                    <h5 class="fw-bold mb-1">Backup Manual</h5>
+                    <p class="text-muted mb-0">
+                        Genera un archivo .zip que contiene un dump completo de la base de datos (estructura y datos)
+                        y la carpeta de portadas. El archivo se descargará automáticamente al completarse.
+                    </p>
                 </div>
             </div>
 
-            <% if (typeof estadoBackup !== 'undefined' && estadoBackup && estadoBackup.configurada && !estadoBackup.accesible) { %>
-            <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <div><strong>Alerta de Backup Automático:</strong> <%= estadoBackup.mensaje %>. Verifique la ruta en
-                <a href="/admin/configuracion" class="alert-link">Configuración del Sistema</a>.</div>
+            <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-info-circle"></i>
+                <div>El backup puede tomar varios segundos dependiendo del tamaño de la base de datos y las portadas.</div>
             </div>
-            <% } %>
 
-            <div class="row g-4">
-                <div class="col-lg-8">
-                    <div class="content-card">
-                        <div class="d-flex align-items-start gap-3 mb-4">
-                            <div class="p-3 rounded-circle" style="background: #e8f5e9;">
-                                <i class="bi bi-shield-check text-success" style="font-size: 1.8rem;"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-1">Backup Manual</h5>
-                                <p class="text-muted mb-0">
-                                    Genera un archivo .zip que contiene un dump completo de la base de datos (estructura y datos)
-                                    y la carpeta de portadas. El archivo se descargará automáticamente al completarse.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
-                            <i class="bi bi-info-circle"></i>
-                            <div>El backup puede tomar varios segundos dependiendo del tamaño de la base de datos y las portadas.</div>
-                        </div>
-
-                        <form method="POST" action="/admin/backup/generar" id="formBackup">
-                            <button type="submit" class="btn btn-success btn-lg px-5" id="btnGenerar" onclick="this.disabled=true; this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Generando...'; document.getElementById('formBackup').submit();">
-                                <i class="bi bi-download me-2"></i>Generar y Descargar Backup
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100" style="background: #f8fafd;">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Información</h6>
-                            <ul class="list-unstyled text-muted small mb-0">
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Dump completo de la base de datos</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Carpeta de portadas incluida</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Formato .zip con timestamp</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Listo para restaurar en cualquier momento</li>
-                                <li><i class="bi bi-exclamation-triangle text-warning me-1"></i> No conservar el archivo en el servidor</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <form method="POST" action="/admin/backup/generar" id="formBackup">
+                <button type="submit" class="btn btn-success btn-lg px-5" id="btnGenerar" onclick="this.disabled=true; this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Generando...'; document.getElementById('formBackup').submit();">
+                    <i class="bi bi-download me-2"></i>Generar y Descargar Backup
+                </button>
+            </form>
         </div>
     </div>
 
-    <script>
-        $(document).ready(function () {
-        <% if (typeof error !== 'undefined' && error) { %>
-            Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-        <% } %>
-        });
-    </script>
-</body>
-</html>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100" style="background: #f8fafd;">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Información</h6>
+                <ul class="list-unstyled text-muted small mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Dump completo de la base de datos</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Carpeta de portadas incluida</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Formato .zip con timestamp</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Listo para restaurar en cualquier momento</li>
+                    <li><i class="bi bi-exclamation-triangle text-warning me-1"></i> No conservar el archivo en el servidor</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+    <% if (typeof error !== 'undefined' && error) { %>
+        Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+    <% } %>
+    });
+</script>
+<%- include('../layouts/admin_end') %>

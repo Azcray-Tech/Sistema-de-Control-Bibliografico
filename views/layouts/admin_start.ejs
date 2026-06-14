@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title><%= title %> - CEELA</title>
+    <%- include('../partials/head') %>
+    <%- typeof headStyles !== 'undefined' ? headStyles : '' %>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('../partials/sidebar', {page: page}) %>
+        <div class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h2><%- heading %></h2>
+                    <% if (typeof subheading !== 'undefined' && subheading) { %>
+                    <small class="text-muted"><%- subheading %></small>
+                    <% } %>
+                </div>
+            </div>

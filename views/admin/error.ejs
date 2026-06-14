@@ -1,18 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head><title>Error - CEELA</title><%- include('../partials/head') %></head>
-<body>
-    <div class="admin-wrapper">
-        <%- include('../partials/sidebar', {page:'dashboard'}) %>
-        <div class="main-content">
-            <div class="top-bar">
-                <div><h2><i class="bi bi-exclamation-triangle me-2"></i>Error</h2></div>
-            </div>
-            <div class="content-card">
-                <div class="alert alert-danger"><%= mensaje %></div>
-                <a href="/admin/dashboard" class="btn btn-primary-custom">Volver al Dashboard</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+<%- include('../layouts/admin_start', {title:'Error', page:'dashboard', heading:'<i class="bi bi-exclamation-triangle me-2"></i>Error'}) %>
+<div class="content-card">
+    <div class="alert alert-danger"><%= mensaje %></div>
+    <a href="/admin/dashboard" class="btn btn-primary-custom">Volver al Dashboard</a>
+</div>
+<%- include('../layouts/admin_end') %>

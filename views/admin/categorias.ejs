@@ -1,23 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Categorías - CEELA</title><%- include('../partials/head') %>
-</head>
-<body>
-    <div class="admin-wrapper">
-        <%- include('../partials/sidebar', {page:'categorias'}) %>
-        <div class="main-content">
-            <div class="top-bar">
-                <div>
-                    <h2><i class="bi bi-tags me-2"></i>Gestión de Categorías</h2>
-                    <small class="text-muted">Administrar categorías del catálogo</small>
-                </div>
-            </div>
+<%- include('../layouts/admin_start', {title:'Categor\u00edas', page:'categorias', heading:'<i class="bi bi-tags me-2"></i>Gesti\u00f3n de Categor\u00edas', subheading:'Administrar categor\u00edas del cat\u00e1logo'}) %>
 
-            <div class="content-card">
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                    <h5 class="mb-0 fw-bold">
-                        Categorías Registradas
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h5 class="mb-0 fw-bold">
+            Categorías Registradas
                         <span class="badge bg-light text-dark border ms-2"><%= total %></span>
                     </h5>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -210,5 +196,4 @@
 
     </script>
     <script src="/js/categorias.js"></script>
-</body>
-</html>
+<%- include('../layouts/admin_end') %>

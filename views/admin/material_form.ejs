@@ -1,23 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title><%= material ? 'Editar' : 'Agregar' %> Material - CEELA</title>
-    <%- include('../partials/head') %>
-</head>
-<body>
-    <div class="admin-wrapper">
-        <%- include('../partials/sidebar', {page: material ? 'materiales' : 'materiales'}) %>
-        <div class="main-content">
-            <div class="top-bar">
-                <div>
-                    <h2><i class="bi bi-<%= material ? 'pencil-square' : 'plus-circle' %> me-2"></i><%= material ? 'Editar' : 'Agregar' %> Material</h2>
-                    <small class="text-muted"><%= material ? 'Modifique la información del material' : 'Complete los campos requeridos' %></small>
-                </div>
-            </div>
-            <% if (typeof error !== 'undefined' && error) { %>
-            <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div>
-            <% } %>
-            <%
+<%- include('../layouts/admin_start', {title: (material ? 'Editar' : 'Agregar') + ' Material', page: 'materiales', heading: '<i class="bi bi-' + (material ? 'pencil-square' : 'plus-circle') + ' me-2"></i>' + (material ? 'Editar' : 'Agregar') + ' Material', subheading: material ? 'Modifique la informaci\u00f3n del material' : 'Complete los campos requeridos'}) %>
+<% if (typeof error !== 'undefined' && error) { %>
+<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div>
+<% } %>
+<%
             function v(field, materialVal) {
               if (typeof formData !== 'undefined' && formData !== null && typeof formData[field] !== 'undefined' && formData[field] !== '') return formData[field];
               return (typeof materialVal !== 'undefined' && materialVal !== null && materialVal !== false) ? materialVal : '';
@@ -598,5 +583,4 @@
     <style>
         [x-cloak] { display: none !important; }
     </style>
-</body>
-</html>
+<%- include('../layouts/admin_end') %>

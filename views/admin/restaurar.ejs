@@ -1,95 +1,78 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Restaurar - CEELA</title><%- include('../partials/head') %>
-</head>
-<body>
-    <div class="admin-wrapper">
-        <%- include('../partials/sidebar', {page:'backup'}) %>
-        <div class="main-content">
-            <div class="top-bar">
+<%- include('../layouts/admin_start', {title:'Restaurar', page:'backup', heading:'<i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar Sistema', subheading:'Restauraci\u00f3n completa desde un archivo de backup'}) %>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="p-3 rounded-circle" style="background: #fff3e0;">
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.8rem;"></i>
+                </div>
                 <div>
-                    <h2><i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar Sistema</h2>
-                    <small class="text-muted">Restauración completa desde un archivo de backup</small>
+                    <h5 class="fw-bold mb-1">Restaurar desde Backup</h5>
+                    <p class="text-muted mb-0">
+                        Selecciona un archivo .zip generado por la herramienta de backup para restaurar
+                        completamente la base de datos y las portadas.
+                    </p>
                 </div>
             </div>
 
-            <div class="row g-4">
-                <div class="col-lg-8">
-                    <div class="content-card">
-                        <div class="d-flex align-items-start gap-3 mb-4">
-                            <div class="p-3 rounded-circle" style="background: #fff3e0;">
-                                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.8rem;"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold mb-1">Restaurar desde Backup</h5>
-                                <p class="text-muted mb-0">
-                                    Selecciona un archivo .zip generado por la herramienta de backup para restaurar
-                                    completamente la base de datos y las portadas.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <div><strong>¡ADVERTENCIA!</strong> Esta acción reemplazará todos los datos actuales del sistema.
-                            Asegúrate de haber generado un backup reciente antes de continuar.</div>
-                        </div>
-
-                        <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
-                            <i class="bi bi-info-circle"></i>
-                            <div>El proceso de restauración puede tomar varios minutos. No cierres el navegador ni apagues el servidor durante la operación.</div>
-                        </div>
-
-                        <form method="POST" action="/admin/restaurar/ejecutar" enctype="multipart/form-data" id="formRestaurar">
-                            <div class="mb-3">
-                                <label for="archivoBackup" class="form-label fw-bold">Archivo de Backup (.zip)</label>
-                                <input type="file" class="form-control" id="archivoBackup" name="archivoBackup"
-                                       accept=".zip" required>
-                            </div>
-
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="checkbox" id="confirmarRestauracion" name="confirmarRestauracion" required>
-                                <label class="form-check-label text-danger" for="confirmarRestauracion">
-                                    Entiendo que todos los datos actuales serán reemplazados
-                                </label>
-                            </div>
-
-                            <button type="submit" class="btn btn-danger btn-lg px-5" id="btnRestaurar"
-                                    onclick="this.disabled=true; this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Restaurando...'; document.getElementById('formRestaurar').submit();">
-                                <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar Sistema
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100" style="background: #f8fafd;">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Requisitos</h6>
-                            <ul class="list-unstyled text-muted small mb-0">
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Archivo .zip generado por el sistema</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Debe contener backup.sql</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Opcional: carpeta portadas/</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Conexión a BD activa</li>
-                                <li><i class="bi bi-shield-lock text-success me-1"></i> Solo disponible para Administrador</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div><strong>¡ADVERTENCIA!</strong> Esta acción reemplazará todos los datos actuales del sistema.
+                Asegúrate de haber generado un backup reciente antes de continuar.</div>
             </div>
+
+            <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-info-circle"></i>
+                <div>El proceso de restauración puede tomar varios minutos. No cierres el navegador ni apagues el servidor durante la operación.</div>
+            </div>
+
+            <form method="POST" action="/admin/restaurar/ejecutar" enctype="multipart/form-data" id="formRestaurar">
+                <div class="mb-3">
+                    <label for="archivoBackup" class="form-label fw-bold">Archivo de Backup (.zip)</label>
+                    <input type="file" class="form-control" id="archivoBackup" name="archivoBackup"
+                           accept=".zip" required>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="confirmarRestauracion" name="confirmarRestauracion" required>
+                    <label class="form-check-label text-danger" for="confirmarRestauracion">
+                        Entiendo que todos los datos actuales serán reemplazados
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-danger btn-lg px-5" id="btnRestaurar"
+                        onclick="this.disabled=true; this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Restaurando...'; document.getElementById('formRestaurar').submit();">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar Sistema
+                </button>
+            </form>
         </div>
     </div>
 
-    <script>
-        $(document).ready(function () {
-        <% if (typeof error !== 'undefined' && error) { %>
-            Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-        <% } %>
-        <% if (typeof success !== 'undefined' && success) { %>
-            Swal.fire({ icon: 'success', title: 'Restaurado', text: '<%= success %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-        <% } %>
-        });
-    </script>
-</body>
-</html>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100" style="background: #f8fafd;">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Requisitos</h6>
+                <ul class="list-unstyled text-muted small mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Archivo .zip generado por el sistema</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Debe contener backup.sql</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Opcional: carpeta portadas/</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Conexión a BD activa</li>
+                    <li><i class="bi bi-shield-lock text-success me-1"></i> Solo disponible para Administrador</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+    <% if (typeof error !== 'undefined' && error) { %>
+        Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+        Swal.fire({ icon: 'success', title: 'Restaurado', text: '<%= success %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+    <% } %>
+    });
+</script>
+<%- include('../layouts/admin_end') %>

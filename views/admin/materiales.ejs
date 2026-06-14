@@ -1,15 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Catálogo - CEELA</title>
-    <%- include('../partials/head') %>
-    <style>
-    .sort-header { color: var(--color-text-dark); text-decoration: none; }
-    .sort-header:hover { color: var(--color-primary); }
-    .sort-active { color: var(--color-primary) !important; font-weight: 600; }
-    </style>
-</head>
-<body>
+<%- include('../layouts/admin_start', {title:'Cat\u00e1logo', page:'materiales', heading:'<i class="bi bi-book me-2"></i>Biblioteca', subheading:'Gesti\u00f3n del cat\u00e1logo de materiales', headStyles:'<style>.sort-header { color: var(--color-text-dark); text-decoration: none; } .sort-header:hover { color: var(--color-primary); } .sort-active { color: var(--color-primary) !important; font-weight: 600; }</style>'}) %>
 <% if (success === 'creado' && successId) { %>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -49,7 +38,7 @@
     Swal.fire({
       icon: 'success',
       title: 'Material dado de baja',
-      text: 'El material ha sido desactivado del catálogo.',
+      text: 'El material ha sido desactivado del cat\u00e1logo.',
       showConfirmButton: true,
       confirmButtonText: 'Aceptar',
       confirmButtonColor: '#2c5f4f'
@@ -70,14 +59,7 @@
   });
 </script>
 <% } %>
-<div class="admin-wrapper">
-    <%- include('../partials/sidebar', {page:'materiales'}) %>
-    <div class="main-content">
-        <div class="top-bar">
-            <div><h2><i class="bi bi-book me-2"></i>Biblioteca</h2>
-            <small class="text-muted">Gestión del catálogo de materiales</small></div>
-        </div>
-        <div class="content-card">
+<div class="content-card">
 
 <form method="GET" action="/admin/materiales" class="search-admin-form mb-3" id="searchForm">
   <div class="d-flex gap-2 align-items-center">
@@ -204,7 +186,7 @@ const pageUrl = (p) => {
 %>
 <div class="dt-footer mt-3">
   <div class="dataTables_info">
-    Página <%= pagina %> de <%= totalPaginas %> (<%= total %> registros)
+    P\u00e1gina <%= pagina %> de <%= totalPaginas %> (<%= total %> registros)
   </div>
   <div class="dataTables_paginate">
     <ul class="pagination">
@@ -233,14 +215,14 @@ $(document).ready(function() {
         let ejemplares = btn.data('ejemplares') || 0;
         let form = $('#form-delete-' + id);
 
-        let mensaje = 'Se eliminará <strong>"' + titulo + '"</strong>';
+        let mensaje = 'Se eliminar\u00e1 <strong>"' + titulo + '"</strong>';
         if (ejemplares > 0) {
             mensaje += ' junto con <strong>' + ejemplares + ' ejemplare' + (ejemplares > 1 ? 's' : '') + '</strong>';
         }
         mensaje += ' y todos los datos asociados.';
 
         Swal.fire({
-            title: '¿Eliminar material?',
+            title: '\u00bfEliminar material?',
             html: mensaje,
             icon: 'warning',
             showCancelButton: true,
@@ -290,7 +272,7 @@ $(document).ready(function() {
 
 <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasMaterial" aria-labelledby="offcanvasMaterialLabel" style="width: 450px;">
   <div class="offcanvas-header bg-light border-bottom">
-    <h5 class="offcanvas-title" id="offcanvasMaterialLabel"><i class="bi bi-info-circle me-2 text-primary"></i>Detalles Rápidos</h5>
+    <h5 class="offcanvas-title" id="offcanvasMaterialLabel"><i class="bi bi-info-circle me-2 text-primary"></i>Detalles R\u00e1pidos</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
@@ -307,7 +289,7 @@ $(document).ready(function() {
     
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body bg-light rounded">
-            <h6 class="text-muted text-uppercase small fw-bold mb-2"><i class="bi bi-pencil-square me-1"></i>Última modificación</h6>
+            <h6 class="text-muted text-uppercase small fw-bold mb-2"><i class="bi bi-pencil-square me-1"></i>\u00daltima modificaci\u00f3n</h6>
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <div class="small text-muted">Fecha</div>
@@ -340,9 +322,8 @@ $(document).ready(function() {
     
     <div class="d-grid gap-2">
         <a href="#" id="oc-btn-editar" class="btn btn-primary-custom"><i class="bi bi-pencil me-2"></i>Editar Material y Ejemplares</a>
-        <a href="#" id="oc-btn-publico" class="btn btn-outline-secondary" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Ver Ficha Pública</a>
+        <a href="#" id="oc-btn-publico" class="btn btn-outline-secondary" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Ver Ficha P\u00fablica</a>
     </div>
   </div>
 </div>
-</body>
-</html>
+<%- include('../layouts/admin_end') %>

@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head><title>Resultados - CEELA</title><%- include('../partials/head') %></head>
-<body>
+<%- include('../layouts/public_start', {title:'Resultados'}) %>
 <%
 const query = {};
 if (typeof q !== 'undefined' && q) query.q = q;
@@ -36,7 +33,6 @@ function removeKey(params, key) {
     return '/buscar?' + parts.join('&');
 }
 %>
-<%- include('../partials/navbar_public') %>
 <div class="hero-search" style="padding:2rem 0;">
     <div class="container text-center">
         <h2>Catálogo Bibliográfico</h2>
@@ -197,5 +193,4 @@ function removeKey(params, key) {
 <script>
     sessionStorage.setItem('lastSearchUrl', window.location.href);
 </script>
-</body>
-</html>
+<%- include('../layouts/public_end') %>
