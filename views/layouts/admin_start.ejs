@@ -3,6 +3,8 @@
 <head>
     <title><%= title %> - CEELA</title>
     <%- include('../partials/head') %>
+    <script>if(localStorage.getItem('sidebarCollapsed')==='true'){document.documentElement.classList.add('sc')}</script>
+    <style>html.sc .sidebar{width:75px}html.sc .sidebar,html.sc .sidebar *{transition:none!important}html.sc .main-content{margin-left:75px}html.sc .main-content,html.sc .main-content *{transition:none!important}</style>
     <%- typeof headStyles !== 'undefined' ? headStyles : '' %>
 </head>
 <body>

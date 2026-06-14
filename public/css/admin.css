@@ -402,6 +402,7 @@ body.sidebar-collapsed .main-content {
     margin-left: var(--sidebar-width);
     flex: 1;
     padding: 2rem;
+    transition: margin-left 0.3s ease;
 }
 /* ============================================
    FORMULARIOS
@@ -531,6 +532,7 @@ textarea.form-control {
     box-shadow: var(--shadow-sm);
     margin-bottom: 2rem;
     border: 1px solid rgba(0,0,0,0.02);
+    animation: fadeInUp 0.4s ease-out both;
 }
 
 .content-card {
@@ -539,6 +541,7 @@ textarea.form-control {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     margin-bottom: 2rem;
+    animation: fadeInUp 0.4s ease-out both;
     transition: var(--transition-fast);
 }
 
@@ -1715,3 +1718,5 @@ textarea.form-control {
 .filter-remove:hover {
     color: #dc3545;
 }
+
+

@@ -8,6 +8,7 @@
             toggleBtn.classList.add('bi-list');
         }
     }
+    document.documentElement.classList.remove('sc');
 })();
 
 function toggleSidebar() {
