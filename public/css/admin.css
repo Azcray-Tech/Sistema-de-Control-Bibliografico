@@ -261,6 +261,12 @@ body.sidebar-collapsed .main-content {
     flex: 1;
     overflow-y: auto;
     padding: 0.5rem 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+    display: none;
 }
 
 .menu-item {
