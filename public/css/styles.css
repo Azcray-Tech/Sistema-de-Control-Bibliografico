@@ -2539,76 +2539,36 @@ textarea.form-control {
 }
 
 /* ============================================
-   REPORTES
+   REPORTES (refactor: lista compacta horizontal)
    ============================================ */
 
-.report-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    margin-bottom: 1.5rem;
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-}
-
-.report-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    border-left-color: var(--color-primary);
-}
-
-.report-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+.report-row-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-}
-
-.report-card.primary .report-icon {
     background: rgba(44, 95, 79, 0.1);
     color: var(--color-primary);
+    flex-shrink: 0;
 }
 
-.report-card.secondary .report-icon {
-    background: rgba(139, 115, 85, 0.1);
-    color: var(--color-secondary);
+.btn-excel {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+.btn-excel:hover {
+    background-color: #1e4238;
+    border-color: #1e4238;
+    color: #fff;
 }
 
-.report-card.accent .report-icon {
-    background: rgba(212, 165, 116, 0.1);
-    color: var(--color-accent);
-}
-
-.report-card.info .report-icon {
-    background: rgba(23, 162, 184, 0.1);
-    color: #17a2b8;
-}
-
-.report-card h5 {
-    margin-bottom: 0.75rem;
-    color: var(--color-text-dark);
-}
-
-.report-card p {
-    color: var(--color-text-muted);
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-}
-
-.reports-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-}
-
-.reports-grid .content-card {
-    margin-bottom: 0;
+.dropdown-item:active,
+.dropdown-item:hover {
+    background-color: rgba(44, 95, 79, 0.1);
+    color: var(--color-primary);
 }
 
 .backup-section {
