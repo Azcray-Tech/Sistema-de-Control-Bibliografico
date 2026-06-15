@@ -31,7 +31,7 @@ class OpacService {
     });
   }
 
-  async buscar({ q, _autor, categoriaId, anioDesde, anioHasta, tipo, pagina = 1 }) {
+  async buscar({ q, _autor, categoriaId, anioDesde, anioHasta, tipo, page: pageInput = 1 }) {
     const Op = this.Material.sequelize.constructor.Op;
     const where = {};
 
@@ -49,7 +49,7 @@ class OpacService {
       if (anioHasta) {where.anioPublicacion[Op.lte] = parseInt(anioHasta, 10);}
     }
 
-    const page = Math.max(1, parseInt(pagina, 10) || 1);
+    const page = Math.max(1, parseInt(pageInput, 10) || 1);
     const limit = 20;
     const offset = (page - 1) * limit;
 
@@ -74,7 +74,7 @@ class OpacService {
     return {
       materiales: materialesConDisponibles,
       total: count,
-      pagina: page,
+      page,
       totalPaginas: Math.ceil(count / limit)
     };
   }
