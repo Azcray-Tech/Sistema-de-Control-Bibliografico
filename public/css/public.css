@@ -339,6 +339,27 @@
     text-align: justify;
     color: var(--color-text-dark);
     font-size: 1rem;
+    max-height: 180px;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+}
+
+.ficha-resumen-texto.expanded {
+    max-height: 1000px;
+}
+
+.btn-toggle {
+    color: var(--color-accent);
+    background: none;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 0.5rem;
+}
+
+.btn-toggle:hover {
+    text-decoration: underline;
 }
 
 .ficha-disponibilidad {
