@@ -1,32 +1,31 @@
 <%- include('../layouts/admin_start', {title:'Usuarios', page:'usuarios', heading:'<i class="bi bi-people me-2"></i>Usuarios del Sistema', subheading:'Gesti\u00f3n de cuentas de personal'}) %>
 <% if (success === 'creado') { %>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    Swal.fire({ icon: 'success', title: 'Usuario creado', text: 'La cuenta de usuario se creó correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-  });
-</script>
+<script>document.addEventListener('DOMContentLoaded',()=>Swal.fire({icon:'success',title:'Usuario creado',text:'La cuenta de usuario se cre\u00f3 correctamente.',confirmButtonText:'Aceptar',confirmButtonColor:'#2c5f4f'}));</script>
 <% } else if (success === 'desactivado') { %>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    Swal.fire({ icon: 'success', title: 'Usuario desactivado', text: 'El usuario fue desactivado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-  });
-</script>
+<script>document.addEventListener('DOMContentLoaded',()=>Swal.fire({icon:'success',title:'Usuario desactivado',text:'El usuario fue desactivado correctamente.',confirmButtonText:'Aceptar',confirmButtonColor:'#2c5f4f'}));</script>
 <% } else if (error) { %>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-  });
-</script>
+<script>document.addEventListener('DOMContentLoaded',()=>Swal.fire({icon:'error',title:'Error',text:'<%- error %>',confirmButtonText:'Aceptar',confirmButtonColor:'#2c5f4f'}));</script>
 <% } %>
 <div class="content-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div><span class="text-muted">Total: <strong><%= usuarios.length %></strong> usuario(s)</span></div>
-        <a href="/admin/usuarios/nuevo" class="btn btn-primary-custom btn-sm">
+    <div class="d-flex gap-2 align-items-center mb-3">
+        <div class="search-admin flex-grow-1">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchUsuario" class="form-control search-admin-input" placeholder="Buscar por nombre, usuario o cédula...">
+        </div>
+        <select id="filterRol" class="form-select form-select-sm" style="width:140px;">
+            <option value="">Todos los roles</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Bibliotecario">Bibliotecario</option>
+        </select>
+        <a href="/admin/usuarios/nuevo" class="btn btn-primary-custom btn-sm flex-shrink-0">
             <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
         </a>
     </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div><span class="text-muted">Total: <strong id="totalUsuarios"><%= usuarios.length %></strong> usuario(s)</span></div>
+    </div>
     <div class="table-responsive">
-        <table class="table table-custom table-sm">
+        <table class="table table-custom" id="tablaUsuarios">
             <thead>
                 <tr>
                     <th>Usuario</th>
@@ -41,21 +40,21 @@
             <tbody>
                 <% usuarios.forEach(function(u) { %>
                 <tr>
-                    <td><code><%= u.nombreUsuario %></code></td>
-                    <td><%= u.nombre %> <%= u.apellido %></td>
-                    <td><%= u.cedula %></td>
-                    <td>
-                        <span class="badge <%= u.rol === 'Administrador' ? 'bg-dark' : 'bg-primary' %>">
+                    <td class="align-middle"><code class="small"><%= u.nombreUsuario %></code></td>
+                    <td class="align-middle"><%= u.nombre %> <%= u.apellido %></td>
+                    <td class="align-middle"><%= u.cedula %></td>
+                    <td class="align-middle">
+                        <span class="badge" style="background:<%= u.rol === 'Administrador' ? '#343a40' : 'var(--color-primary)' %>;color:white;">
                             <%= u.rol %>
                         </span>
                     </td>
-                    <td>
+                    <td class="align-middle">
                         <span class="badge <%= u.activo ? 'bg-success' : 'bg-secondary' %>">
                             <%= u.activo ? 'Activo' : 'Inactivo' %>
                         </span>
                     </td>
-                    <td class="small"><%= new Date(u.createdAt).toLocaleDateString('es-VE') %></td>
-                    <td>
+                    <td class="align-middle small"><%= new Date(u.createdAt).toLocaleDateString('es-VE') %></td>
+                    <td class="align-middle">
                         <% if (u.activo && u.idUsuario !== usuarioSession.usuarioId) { %>
                         <button type="button" class="btn btn-sm btn-outline-danger btn-desactivar"
                             data-id="<%= u.idUsuario %>"
@@ -78,26 +77,43 @@
     </div>
 </div>
 <script>
-$('.btn-desactivar').on('click', function() {
-    let btn = $(this);
-    let id = btn.data('id');
-    let nombre = btn.data('nombre');
-    let usuario = btn.data('usuario');
-    Swal.fire({
-        title: '¿Desactilet usuario?',
-        html: 'Se desactivará la cuenta de <strong>"' + nombre + '" (' + usuario + ')</strong>.<br>El usuario no podrá iniciar sesión.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="bi bi-person-x me-2"></i>Desactivar',
-        cancelButtonText: 'Cancelar',
-        reverseButtons: true
-    }).then(function(result) {
-        if (result.isConfirmed) {
-            $('#form-desactivar-' + id).submit();
-        }
+$(function() {
+    $('.btn-desactivar').on('click', function() {
+        let btn = $(this);
+        let id = btn.data('id');
+        let nombre = btn.data('nombre');
+        let usuario = btn.data('usuario');
+        Swal.fire({
+            title: '\u00bfDesactivar usuario?',
+            html: 'Se desactivar\u00e1 la cuenta de <strong>"' + nombre + '" (' + usuario + ')</strong>.<br>El usuario no podr\u00e1 iniciar sesi\u00f3n.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-person-x me-2"></i>Desactivar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $('#form-desactivar-' + id).submit();
+            }
+        });
     });
+
+    function filtrar() {
+        let q = $('#searchUsuario').val().toLowerCase();
+        let rol = $('#filterRol').val().toLowerCase();
+        let visible = 0;
+        $('#tablaUsuarios tbody tr').each(function() {
+            let txt = $(this).text().toLowerCase();
+            let match = (!q || txt.includes(q)) && (!rol || txt.includes(rol));
+            $(this).toggle(match);
+            if (match) visible++;
+        });
+        $('#totalUsuarios').text(visible);
+    }
+    $('#searchUsuario').on('input', filtrar);
+    $('#filterRol').on('change', filtrar);
 });
 </script>
 <%- include('../layouts/admin_end') %>

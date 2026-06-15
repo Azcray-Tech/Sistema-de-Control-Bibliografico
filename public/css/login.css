@@ -16,6 +16,7 @@ body.login-page {
     overflow: hidden;
     max-width: 900px;
     margin: 2rem auto;
+    animation: fadeInUp 0.5s ease-out both;
 }
 
 .login-left {
@@ -25,6 +26,12 @@ body.login-page {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    animation: fadeInUp 0.5s ease-out 0.15s both;
+}
+
+.login-right {
+    padding: 3rem 2.5rem;
+    animation: fadeInUp 0.5s ease-out 0.25s both;
 }
 
 .login-left h2 {
@@ -37,10 +44,6 @@ body.login-page {
     font-size: 1rem;
     opacity: 0.9;
     line-height: 1.6;
-}
-
-.login-right {
-    padding: 3rem 2.5rem;
 }
 
 .icon-library {
