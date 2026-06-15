@@ -211,20 +211,24 @@ describe('CronService', () => {
       expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
     });
 
-    it('debe salir si no hay ruta configurada', async () => {
-      mockParametroService.obtenerTexto.mockResolvedValue('');
+    it('debe usar ruta por defecto si no hay ruta configurada', async () => {
+      mockParametroService.obtenerTexto
+        .mockResolvedValueOnce('1')
+        .mockResolvedValueOnce('');
 
       await cronService.ejecutarBackupAutomatico();
 
-      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+      expect(mockBackupService.generarBackup).toHaveBeenCalledWith(null);
     });
 
-    it('debe salir si la ruta no es accesible', async () => {
+    it('debe crear directorio si la ruta no existe', async () => {
       fs.existsSync = jest.fn().mockReturnValue(false);
+      fs.mkdirSync = jest.fn();
 
       await cronService.ejecutarBackupAutomatico();
 
-      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+      expect(mockBackupService.generarBackup).toHaveBeenCalledWith(null);
     });
 
     it('debe salir si ya existe backup del día', async () => {
@@ -327,10 +331,14 @@ describe('CronService', () => {
   });
 
   describe('verificarRutaBackup', () => {
-    it('debe indicar que no está configurada si no hay ruta', async () => {
+    it('debe indicar usando ruta por defecto si no hay ruta configurada', async () => {
       mockParametroService.obtenerTexto.mockResolvedValue('');
       const resultado = await cronService.verificarRutaBackup();
-      expect(resultado).toEqual({ configurada: false, accesible: false, mensaje: 'Ruta no configurada' });
+      expect(resultado).toEqual({
+        configurada: false, accesible: true, tieneBackupHoy: false,
+        usandoDefault: true, ruta: expect.any(String),
+        mensaje: 'No hay ruta configurada. Se usará la ruta por defecto (backups/)'
+      });
     });
 
     it('debe indicar ruta configurada pero no accesible', async () => {
@@ -339,6 +347,7 @@ describe('CronService', () => {
       const resultado = await cronService.verificarRutaBackup();
       expect(resultado).toEqual({
         configurada: true, accesible: false, tieneBackupHoy: false,
+        usandoDefault: false, ruta: 'D:\\backups',
         mensaje: 'La ruta configurada no es accesible'
       });
     });
@@ -355,6 +364,7 @@ describe('CronService', () => {
       const resultado = await cronService.verificarRutaBackup();
       expect(resultado).toEqual({
         configurada: true, accesible: true, tieneBackupHoy: true,
+        usandoDefault: false, ruta: 'D:\\backups',
         mensaje: null
       });
     });
@@ -379,16 +389,20 @@ describe('CronService', () => {
       expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
     });
 
-    it('debe retornar si la ruta no está configurada', async () => {
-      mockParametroService.obtenerTexto.mockResolvedValue('');
+    it('debe usar ruta por defecto si no está configurada', async () => {
+      mockParametroService.obtenerTexto
+        .mockResolvedValueOnce('1')
+        .mockResolvedValueOnce('');
       await cronService._verificarBackupPendienteAlIniciar();
-      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+      expect(mockBackupService.generarBackup).toHaveBeenCalledWith(null);
     });
 
-    it('debe retornar si la ruta no es accesible', async () => {
+    it('debe crear directorio si la ruta no existe y ejecutar backup', async () => {
       fs.existsSync = jest.fn().mockReturnValue(false);
+      fs.mkdirSync = jest.fn();
       await cronService._verificarBackupPendienteAlIniciar();
-      expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
+      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+      expect(mockBackupService.generarBackup).toHaveBeenCalledWith(null);
     });
 
     it('debe no hacer nada si ya existe backup del día', async () => {

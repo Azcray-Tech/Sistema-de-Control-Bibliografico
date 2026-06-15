@@ -1,11 +1,19 @@
 <%- include('../layouts/admin_start', {title:'Backup', page:'backup', heading:'<i class="bi bi-database me-2"></i>Backup del Sistema', subheading:'Generaci\u00f3n y descarga de copias de seguridad'}) %>
 
-<% if (typeof estadoBackup !== 'undefined' && estadoBackup && estadoBackup.configurada && !estadoBackup.accesible) { %>
-<div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
-    <i class="bi bi-exclamation-triangle-fill"></i>
-    <div><strong>Alerta de Backup Automático:</strong> <%= estadoBackup.mensaje %>. Verifique la ruta en
-    <a href="/admin/configuracion" class="alert-link">Configuración del Sistema</a>.</div>
-</div>
+<% if (typeof estadoBackup !== 'undefined' && estadoBackup) { %>
+  <% if (estadoBackup.usandoDefault) { %>
+    <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-info-circle-fill"></i>
+      <div><strong>Backup Automático:</strong> No hay ruta configurada. Los backups se guardarán en <code><%= estadoBackup.ruta %></code>.
+      Para cambiarlo, vaya a <a href="/admin/configuracion" class="alert-link">Configuración del Sistema</a>.</div>
+    </div>
+  <% } else if (!estadoBackup.accesible) { %>
+    <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div><strong>Alerta de Backup Automático:</strong> <%= estadoBackup.mensaje %>. Verifique la ruta en
+      <a href="/admin/configuracion" class="alert-link">Configuración del Sistema</a>.</div>
+    </div>
+  <% } %>
 <% } %>
 
 <div class="row g-4">

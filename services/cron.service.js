@@ -10,6 +10,7 @@ const path = require('path');
 const MS_POR_DIA = 86400000;
 const DELAY_SUSPENSION = 30000;
 const DELAY_BACKUP = 45000;
+const RUTA_BACKUP_DEFAULT = path.join(__dirname, '..', 'backups');
 
 class CronService {
   constructor(models, auditoria, backupService, parametroService) {
@@ -126,14 +127,12 @@ class CronService {
       const habilitado = await this.parametroService.obtenerTexto('backup_auto_habilitado', '0');
       if (habilitado !== '1') {return;}
 
-      const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
+      let ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
       if (!ruta) {
-        this._log('warn', 'Backup automático: ruta no configurada, omitiendo');
-        return;
+        ruta = RUTA_BACKUP_DEFAULT;
       }
       if (!fs.existsSync(ruta)) {
-        this._log('warn', 'Backup automático: ruta no accesible, omitiendo');
-        return;
+        fs.mkdirSync(ruta, { recursive: true });
       }
 
       // Evitar duplicados del mismo día
@@ -190,8 +189,13 @@ class CronService {
       const habilitado = await this.parametroService.obtenerTexto('backup_auto_habilitado', '0');
       if (habilitado !== '1') {return;}
 
-      const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
-      if (!ruta || !fs.existsSync(ruta)) {return;}
+      let ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
+      if (!ruta) {
+        ruta = RUTA_BACKUP_DEFAULT;
+      }
+      if (!fs.existsSync(ruta)) {
+        fs.mkdirSync(ruta, { recursive: true });
+      }
 
       if (!this._existeBackupDelDia(ruta)) {
         this._log('info', 'Inicio: no hay backup del día actual, ejecutando...');
@@ -203,11 +207,21 @@ class CronService {
   }
 
   async verificarRutaBackup() {
-    const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
-    if (!ruta) {return { configurada: false, accesible: false, mensaje: 'Ruta no configurada' };}
+    const rutaConfig = await this.parametroService.obtenerTexto('ruta_backup_automatico');
+    const usandoDefault = !rutaConfig;
+    const ruta = rutaConfig || RUTA_BACKUP_DEFAULT;
     const accesible = fs.existsSync(ruta);
     const tieneBackupHoy = accesible ? this._existeBackupDelDia(ruta) : false;
-    return { configurada: true, accesible, tieneBackupHoy, mensaje: accesible ? null : 'La ruta configurada no es accesible' };
+    return {
+      configurada: !usandoDefault,
+      accesible,
+      tieneBackupHoy,
+      usandoDefault,
+      ruta,
+      mensaje: usandoDefault
+        ? 'No hay ruta configurada. Se usará la ruta por defecto (backups/)'
+        : (accesible ? null : 'La ruta configurada no es accesible')
+    };
   }
 
   iniciar() {
