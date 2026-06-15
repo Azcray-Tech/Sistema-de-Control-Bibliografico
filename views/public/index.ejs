@@ -114,7 +114,7 @@
         <div class="row g-3">
             <% destacados.forEach(m => { %>
             <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                <div class="portada-card" onclick="window.location.href='/material/<%= m.idMaterial %>'">
+                <div class="portada-card" onclick="sessionStorage.setItem('lastSearchUrl','/');window.location.href='/material/<%= m.idMaterial %>'">
                     <% if (m.portada) { %>
                         <img src="/images/covers/<%= m.portada %>" alt="<%= m.titulo %>" class="portada-img">
                     <% } else { %>
