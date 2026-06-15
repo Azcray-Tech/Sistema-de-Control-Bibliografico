@@ -2,7 +2,7 @@
 <% if (typeof error !== 'undefined' && error) { %>
 <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div>
 <% } %>
-<div class="form-container">
+<div class="form-container content-card">
     <form method="POST" action="/admin/usuarios" x-data="{ contrasena: '', contrasenaConfirmar: '', mostrarPass: false }">
         <div class="row g-4">
             <div class="col-lg-6">

@@ -12,7 +12,7 @@
               return false;
             }
             %>
-            <div class="form-container">
+            <div class="form-container content-card">
                 <form method="POST" action="/admin/materiales<%= material ? '/' + material.idMaterial : '' %>"
                     enctype="multipart/form-data" x-data="{
                       tipo: '<%= formData?.tipo ?? (material?.tipo ?? '') %>',
