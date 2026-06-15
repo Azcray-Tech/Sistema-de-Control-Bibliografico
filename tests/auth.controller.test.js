@@ -21,7 +21,10 @@ describe('AuthController', () => {
     req = {
       body: {},
       query: {},
-      session: { destroy: jest.fn(cb => cb()) }
+      session: {
+        destroy: jest.fn(cb => cb()),
+        regenerate: jest.fn(cb => cb(null))
+      }
     };
     res = {
       render: jest.fn(),
@@ -43,7 +46,7 @@ describe('AuthController', () => {
   });
 
   describe('iniciarSesion', () => {
-    it('debe autenticar y redirigir al dashboard', async () => {
+    it('debe regenerar sesión, autenticar y redirigir al dashboard', async () => {
       req.body = { username: 'admin', password: 'admin123' };
       mockAuthService.iniciarSesion.mockResolvedValue({
         idUsuario: 1, nombreUsuario: 'admin', rol: 'Administrador', nombre: 'Admin'
@@ -51,6 +54,7 @@ describe('AuthController', () => {
 
       await controller.iniciarSesion(req, res);
 
+      expect(req.session.regenerate).toHaveBeenCalled();
       expect(req.session.usuarioId).toBe(1);
       expect(req.session.rol).toBe('Administrador');
       expect(res.redirect).toHaveBeenCalledWith('/admin/dashboard');

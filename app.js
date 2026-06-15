@@ -46,8 +46,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
+  rolling: true,
   cookie: {
     httpOnly: true,
+    secure: false,
+    sameSite: 'Lax',
     maxAge: 15 * 60 * 1000 // 15 minutos por defecto
   }
 }));

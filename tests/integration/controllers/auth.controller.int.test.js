@@ -29,15 +29,18 @@ describe('AuthController - integración con servicios reales', () => {
     expect(res.render).toHaveBeenCalledWith('login', { error: null });
   });
 
-  test('iniciarSesion debe redirigir al dashboard con credenciales correctas', async () => {
+  test('iniciarSesion debe regenerar sesión y redirigir al dashboard', async () => {
     const req = {
       body: { username: 'admin', password: 'admin123' },
-      session: {},
+      session: {
+        regenerate: jest.fn(cb => cb(null)),
+      },
     };
     const res = mockRes();
     const next = jest.fn();
 
     await controller.iniciarSesion(req, res, next);
+    expect(req.session.regenerate).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith('/admin/dashboard');
     expect(req.session.usuarioId).toBeDefined();
     expect(req.session.rol).toBe('Administrador');

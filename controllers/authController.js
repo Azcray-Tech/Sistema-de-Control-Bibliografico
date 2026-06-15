@@ -27,12 +27,17 @@ class AuthController {
       const { username, password } = req.body;
       const usuario = await this.authService.iniciarSesion(username, password);
 
-      req.session.usuarioId = usuario.idUsuario;
-      req.session.nombreUsuario = usuario.nombreUsuario;
-      req.session.rol = usuario.rol;
-      req.session.nombre = usuario.nombre;
+      req.session.regenerate((err) => {
+        if (err) {
+          return res.render('login', { error: 'Error al iniciar sesión. Intente nuevamente.' });
+        }
+        req.session.usuarioId = usuario.idUsuario;
+        req.session.nombreUsuario = usuario.nombreUsuario;
+        req.session.rol = usuario.rol;
+        req.session.nombre = usuario.nombre;
 
-      res.redirect('/admin/dashboard');
+        res.redirect('/admin/dashboard');
+      });
     } catch (err) {
       res.render('login', { error: err.message });
     }
