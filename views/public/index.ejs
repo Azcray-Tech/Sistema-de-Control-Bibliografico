@@ -32,14 +32,16 @@
                     </div>
                 </form>
                 <div class="quick-categories mt-3">
-                    <span style="font-weight:600;margin-right:0.5rem;">Categorías rápidas:</span>
-                    <% if (categorias && categorias.length > 0) { %>
-                        <% categorias.forEach(c => { %>
-                            <a href="/buscar?categoriaId=<%= c.idCategoria %>" class="category-chip"><%= c.nombre %></a>
-                        <% }) %>
-                    <% } else { %>
-                        <span class="text-muted small">No hay categorías disponibles</span>
-                    <% } %>
+                    <span class="quick-categories-label">Categorías rápidas:</span>
+                    <div class="quick-categories-scroll">
+                        <% if (categorias && categorias.length > 0) { %>
+                            <% categorias.forEach(c => { %>
+                                <a href="/buscar?categoriaId=<%= c.idCategoria %>" class="category-chip"><%= c.nombre %></a>
+                            <% }) %>
+                        <% } else { %>
+                            <span class="text-muted small">No hay categorías disponibles</span>
+                        <% } %>
+                    </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="advanced">
