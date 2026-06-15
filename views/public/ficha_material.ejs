@@ -47,7 +47,7 @@
                 <% if (material.sinopsis) { %>
                 <div class="ficha-resumen-box mt-3">
                     <h4 class="ficha-resumen-titulo"><i class="bi bi-file-text me-2"></i>Sinopsis</h4>
-                    <div class="ficha-resumen-texto" id="resumen"><%- material.sinopsis.replace(/\n/g, '<br>') %></div>
+                    <div class="ficha-resumen-texto" id="resumen"><%- '<p>' + material.sinopsis.replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>') + '</p>' %></div>
                     <% if (material.sinopsis.length > 300) { %>
                     <button id="toggleBtn" class="btn-toggle">Ver más</button>
                     <% } %>
@@ -166,8 +166,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const btn = document.getElementById("toggleBtn");
     if (resumen && btn) {
         btn.addEventListener("click", function() {
-            resumen.classList.toggle("expanded");
-            btn.textContent = resumen.classList.contains("expanded") ? "Ver menos" : "Ver más";
+            if (resumen.classList.contains("expanded")) {
+                resumen.style.maxHeight = "180px";
+                resumen.classList.remove("expanded");
+                btn.textContent = "Ver más";
+            } else {
+                resumen.classList.add("expanded");
+                resumen.style.maxHeight = resumen.scrollHeight + "px";
+                btn.textContent = "Ver menos";
+            }
         });
     }
 });
