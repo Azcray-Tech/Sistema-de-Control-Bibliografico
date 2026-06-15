@@ -15,6 +15,7 @@ reports/
 .opencode/
 tests/stress/report-*.json
 .vscode
+backups
 
 # Logs y archivos temporales
 *.log
