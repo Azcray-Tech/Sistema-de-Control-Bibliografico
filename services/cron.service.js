@@ -123,7 +123,7 @@ class CronService {
     if (!this.backupService) {return;}
 
     try {
-      const habilitado = await this.parametroService.obtener('backup_auto_habilitado', '0');
+      const habilitado = await this.parametroService.obtenerTexto('backup_auto_habilitado', '0');
       if (habilitado !== '1') {return;}
 
       const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');
@@ -187,7 +187,7 @@ class CronService {
 
   async _verificarBackupPendienteAlIniciar() {
     try {
-      const habilitado = await this.parametroService.obtener('backup_auto_habilitado', '0');
+      const habilitado = await this.parametroService.obtenerTexto('backup_auto_habilitado', '0');
       if (habilitado !== '1') {return;}
 
       const ruta = await this.parametroService.obtenerTexto('ruta_backup_automatico');

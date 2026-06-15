@@ -113,7 +113,7 @@ describe('OpacService', () => {
 
       const result = await opacService.buscar({ q: 'test', pagina: -5 });
 
-      expect(result.pagina).toBe(1);
+      expect(result.page).toBe(1);
     });
 
     it('debe manejar 0 resultados', async () => {

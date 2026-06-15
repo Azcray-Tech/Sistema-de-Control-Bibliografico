@@ -15,12 +15,18 @@ const crearParametroServiceMock = () => ({
   obtener: jest.fn().mockImplementation(async (clave, defecto) => {
     const valores = {
       factor_sancion: 2,
-      suspension_maxima: 30,
-      backup_auto_habilitado: '1'
+      suspension_maxima: 30
     };
     return valores[clave] ?? defecto;
   }),
-  obtenerTexto: jest.fn().mockResolvedValue('09:00'),
+  obtenerTexto: jest.fn().mockImplementation(async (clave, defecto) => {
+    const valores = {
+      backup_auto_habilitado: '1',
+      hora_backup_automatico: '09:00',
+      ruta_backup_automatico: 'D:\\backups'
+    };
+    return valores[clave] ?? defecto;
+  }),
   obtenerTodos: jest.fn().mockResolvedValue([]),
   actualizar: jest.fn().mockResolvedValue(undefined)
 });
@@ -198,7 +204,7 @@ describe('CronService', () => {
 
   describe('ejecutarBackupAutomatico', () => {
     it('debe salir si está deshabilitado', async () => {
-      mockParametroService.obtener.mockResolvedValue('0');
+      mockParametroService.obtenerTexto.mockResolvedValue('0');
 
       await cronService.ejecutarBackupAutomatico();
 
@@ -368,7 +374,7 @@ describe('CronService', () => {
 
   describe('_verificarBackupPendienteAlIniciar', () => {
     it('debe retornar si backup está deshabilitado', async () => {
-      mockParametroService.obtener.mockResolvedValue('0');
+      mockParametroService.obtenerTexto.mockResolvedValue('0');
       await cronService._verificarBackupPendienteAlIniciar();
       expect(mockBackupService.generarBackup).not.toHaveBeenCalled();
     });
@@ -403,7 +409,7 @@ describe('CronService', () => {
     });
 
     it('debe capturar error si algo falla', async () => {
-      mockParametroService.obtener.mockRejectedValue(new Error('Fallo'));
+      mockParametroService.obtenerTexto.mockRejectedValue(new Error('Fallo'));
       await expect(cronService._verificarBackupPendienteAlIniciar()).resolves.not.toThrow();
     });
   });

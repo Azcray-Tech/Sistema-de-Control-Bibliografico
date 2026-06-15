@@ -32,7 +32,7 @@ function maintenanceMode(req, res, next) {
   }
   next();
 }
-const registrarAuditoria = require('./middleware/auditoria');
+const { registrarAuditoria } = require('./middleware/auditoria');
 const ParametroService = require('./services/parametro.service');
 const BackupService = require('./services/backup.service');
 const CronService = require('./services/cron.service');
