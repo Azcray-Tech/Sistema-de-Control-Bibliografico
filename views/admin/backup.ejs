@@ -30,7 +30,7 @@
             </div>
 
             <form method="POST" action="/admin/backup/generar" id="formBackup">
-                <button type="submit" class="btn btn-success btn-lg px-5" id="btnGenerar" onclick="this.disabled=true; this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Generando...'; document.getElementById('formBackup').submit();">
+                <button type="button" class="btn btn-success btn-lg px-5" id="btnGenerar">
                     <i class="bi bi-download me-2"></i>Generar y Descargar Backup
                 </button>
             </form>
@@ -54,10 +54,48 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-    <% if (typeof error !== 'undefined' && error) { %>
-        Swal.fire({ icon: 'error', title: 'Error', text: '<%= error %>', confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
-    <% } %>
+    document.getElementById('btnGenerar').addEventListener('click', async function () {
+        const btn = this;
+        const textoOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando...';
+
+        try {
+            const res = await fetch('/admin/backup/generar', { method: 'POST', redirect: 'manual' });
+
+            if (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301) {
+                const location = res.headers.get('Location') || '';
+                const match = location.match(/error=([^&]+)/);
+                throw new Error(match ? decodeURIComponent(match[1]) : 'Error al generar el backup');
+            }
+
+            if (!res.ok) {
+                throw new Error('Error al generar el backup');
+            }
+
+            const ct = res.headers.get('Content-Type') || '';
+            if (ct.includes('zip') || ct.includes('octet-stream')) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const cd = res.headers.get('Content-Disposition') || '';
+                const match = cd.match(/filename="?(.+?)"?$/);
+                const filename = match ? match[1] : 'backup.zip';
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } else {
+                throw new Error('Respuesta inesperada del servidor');
+            }
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        }
     });
 </script>
 <%- include('../layouts/admin_end') %>
