@@ -18,8 +18,8 @@ async function buscarSolicitante() {
   const data = await res.json();
 
   const div = document.getElementById('resultadoSolicitante');
-  div.style.display = 'block';
-  document.getElementById('formNuevoSolicitante').style.display = 'none';
+  div.classList.remove('d-none');
+  document.getElementById('formNuevoSolicitante').classList.add('d-none');
 
   if (data.encontrado) {
     const s = data.solicitante;
@@ -66,7 +66,7 @@ async function buscarSolicitante() {
     } else {
       solicitanteSeleccionado = s;
       document.getElementById('hiddenSolicitanteCedula').value = s.cedula;
-      document.getElementById('paso2').style.display = 'block';
+      document.getElementById('paso2').classList.remove('d-none');
     }
   } else {
     div.innerHTML = '<div class="alert alert-warning py-2">' +
@@ -81,14 +81,14 @@ async function buscarSolicitante() {
 }
 
 function mostrarFormNuevoSolicitante() {
-  document.getElementById('formNuevoSolicitante').style.display = 'block';
+  document.getElementById('formNuevoSolicitante').classList.remove('d-none');
 }
 
 function reiniciarSolicitante() {
   solicitanteSeleccionado = null;
-  document.getElementById('resultadoSolicitante').style.display = 'none';
-  document.getElementById('formNuevoSolicitante').style.display = 'none';
-  document.getElementById('paso2').style.display = 'none';
+  document.getElementById('resultadoSolicitante').classList.add('d-none');
+  document.getElementById('formNuevoSolicitante').classList.add('d-none');
+  document.getElementById('paso2').classList.add('d-none');
   document.getElementById('resultadoEjemplares').innerHTML = '';
   document.getElementById('inputCedula').value = '';
   document.getElementById('inputCedula').focus();
@@ -114,14 +114,14 @@ async function registrarSolicitante() {
   const data = await res.json();
 
   if (data.success) {
-    document.getElementById('formNuevoSolicitante').style.display = 'none';
+    document.getElementById('formNuevoSolicitante').classList.add('d-none');
     solicitanteSeleccionado = data.solicitante;
     document.getElementById('hiddenSolicitanteCedula').value = data.solicitante.cedula;
     document.getElementById('resultadoSolicitante').innerHTML = '<div class="alert alert-success py-2">' +
       '<i class="bi bi-check-circle me-2"></i>' +
       'Solicitante <strong>' + escHtml(nombre) + ' ' + escHtml(apellido) + '</strong> registrado correctamente.' +
       '</div>';
-    document.getElementById('paso2').style.display = 'block';
+    document.getElementById('paso2').classList.remove('d-none');
   } else {
     alert('Error al registrar: ' + (data.error || 'Error desconocido'));
   }
