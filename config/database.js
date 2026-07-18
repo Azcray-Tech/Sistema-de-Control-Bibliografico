@@ -6,6 +6,10 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+const sslConfig = process.env.DB_SSL === 'true'
+  ? { ssl: { rejectUnauthorized: true } }
+  : {};
+
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -14,6 +18,7 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
+    ...sslConfig,
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     define: {
       freezeTableName: true,

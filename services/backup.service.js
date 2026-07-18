@@ -156,13 +156,15 @@ class BackupService {
   }
 
   async _getConnection() {
+    const ssl = process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: true } } : {};
     return mysql.createConnection({
       host: process.env.DB_HOST || '127.0.0.1',
       port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASS || '',
       database: process.env.DB_NAME || 'ceela_biblioteca',
-      multipleStatements: true
+      multipleStatements: true,
+      ...ssl
     });
   }
 

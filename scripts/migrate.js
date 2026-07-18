@@ -9,12 +9,14 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 
 async function migrar() {
+  const ssl = process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: true } } : {};
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || '127.0.0.1',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASS || '',
-    multipleStatements: true
+    multipleStatements: true,
+    ...ssl
   });
 
   console.log('Conectado a MySQL. Ejecutando schema.sql...');
@@ -38,7 +40,7 @@ async function migrar() {
     ['backup_auto_habilitado', '0']
   ];
 
-  await connection.query('USE ceela_biblioteca');
+  await connection.query(`USE \`${process.env.DB_NAME || 'ceela_biblioteca'}\``);
 
   for (const [clave, valor] of valoresParametros) {
     await connection.query(
