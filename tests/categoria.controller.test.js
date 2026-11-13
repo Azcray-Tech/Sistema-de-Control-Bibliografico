@@ -16,7 +16,8 @@ describe('CategoriaController', () => {
     mockCategoriaService = {
       listarPaginado: jest.fn(),
       guardar: jest.fn(),
-      desactivar: jest.fn()
+      desactivar: jest.fn(),
+      activar: jest.fn()
     };
     controller = new CategoriaController(mockCategoriaService);
 
@@ -106,6 +107,32 @@ describe('CategoriaController', () => {
 
       expect(res.render).toHaveBeenCalledWith('admin/categorias', expect.objectContaining({
         error: 'Categoría no encontrada'
+      }));
+    });
+  });
+
+  describe('activar', () => {
+    it('debe reactivar y redirigir', async () => {
+      req.params.id = '3';
+      mockCategoriaService.activar.mockResolvedValue(undefined);
+
+      await controller.activar(req, res, next);
+
+      expect(mockCategoriaService.activar).toHaveBeenCalledWith('3', 1);
+      expect(res.redirect).toHaveBeenCalledWith('/admin/categorias?success=reactivado');
+    });
+
+    it('debe renderizar con error si activar falla', async () => {
+      req.params.id = '99';
+      mockCategoriaService.activar.mockRejectedValue(new Error('La categoría ya está activa'));
+      mockCategoriaService.listarPaginado.mockResolvedValue({
+        categorias: [], total: 0, pagina: 1, totalPaginas: 1
+      });
+
+      await controller.activar(req, res, next);
+
+      expect(res.render).toHaveBeenCalledWith('admin/categorias', expect.objectContaining({
+        error: 'La categoría ya está activa'
       }));
     });
   });

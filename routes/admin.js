@@ -81,6 +81,7 @@ router.get('/categorias', requiereAuth, categoriaController.listar);
 router.post('/categorias', requiereAuth, categoriaController.guardar);
 router.post('/categorias/:id', requiereAuth, categoriaController.guardar);
 router.post('/categorias/:id/desactivar', requiereAuth, categoriaController.desactivar);
+router.post('/categorias/:id/activar', requiereAuth, requiereRol('Administrador'), categoriaController.activar);
 
 router.get('/prestamos', requiereAuth, prestamoController.listar);
 router.post('/prestamos', requiereAuth, prestamoController.registrar);

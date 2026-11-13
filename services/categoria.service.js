@@ -116,6 +116,23 @@ class CategoriaService {
     }
     return categoria;
   }
+
+  /**
+   * @requirement RF-38 (Reactivar categoría desactivada)
+   * @use_case CU-38 (Reactivar categoría desactivada)
+   * @description Reactiva una categoría previamente desactivada (alta lógica).
+   */
+  async activar(id, usuarioId) {
+    const categoria = await this.Categoria.findByPk(id);
+    if (!categoria) {throw new Error('Categoría no encontrada');}
+    if (categoria.activa) {throw new Error('La categoría ya está activa');}
+
+    await categoria.update({ activa: true });
+    if (this.auditoria) {
+      await this.auditoria({ usuarioId, accion: 'ACTIVAR_CATEGORIA', tablaAfectada: 'categoria', registroId: id });
+    }
+    return categoria;
+  }
 }
 
 module.exports = CategoriaService;

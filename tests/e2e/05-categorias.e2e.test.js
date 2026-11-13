@@ -66,4 +66,17 @@ describe('Categorías E2E', () => {
       expect(res.status).toBe(302);
     });
   });
+
+  describe('POST /admin/categorias/:id/activar', () => {
+    it('reactiva una categoría previamente desactivada', async () => {
+      const cat = await crearCategoria({ nombre: 'CatAReactivar_' + Date.now(), activa: true });
+      await agent.post('/admin/categorias/' + cat.idCategoria + '/desactivar');
+
+      const res = await agent.post('/admin/categorias/' + cat.idCategoria + '/activar');
+
+      expect(res.status).toBe(302);
+      const actualizada = await db.Categoria.findByPk(cat.idCategoria);
+      expect(actualizada.activa).toBe(true);
+    });
+  });
 });

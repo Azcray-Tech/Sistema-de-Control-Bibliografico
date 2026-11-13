@@ -23,6 +23,23 @@ function eliminarCategoria(nombre, formId) {
     });
 }
 
+function reactivarCategoria(nombre, formId) {
+    Swal.fire({
+        title: '¿Reactivar categoría?',
+        text: 'La categoría "' + nombre + '" volverá a estar disponible para catalogar materiales.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, reactivar',
+        cancelButtonText: 'Cancelar'
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            document.getElementById(formId).submit();
+        }
+    });
+}
+
 function abrirReasignar(id, nombre, total, nombreOrigen) {
     document.getElementById('categoriaOrigenId').value = id;
     document.getElementById('categoriaOrigenNombre').value = nombreOrigen;

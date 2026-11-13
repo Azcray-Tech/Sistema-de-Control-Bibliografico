@@ -76,6 +76,26 @@ class CategoriaController {
       });
     }
   };
+
+  /**
+   * @requirement RF-38 (Reactivar categoría desactivada)
+   * @use_case CU-38 (Reactivar categoría desactivada)
+   * @description Reactiva (alta lógica) una categoría de material.
+   */
+  activar = async (req, res, _next) => {
+    try {
+      const usuarioId = req.session.usuarioId;
+      await this.categoriaService.activar(req.params.id, usuarioId);
+      res.redirect('/admin/categorias?success=reactivado');
+    } catch (err) {
+      const { q } = req.query;
+      const { categorias, total, pagina, totalPaginas } = await this.categoriaService.listarPaginado(1, q || '');
+      res.render('admin/categorias', {
+        page: 'categorias', categorias, total, pagina, totalPaginas,
+        q: q || '', error: err.message, success: null
+      });
+    }
+  };
 }
 
 module.exports = CategoriaController;

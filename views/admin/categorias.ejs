@@ -61,6 +61,15 @@
 
                                         <% if (!c.activa) { %>
                                         <span class="badge bg-secondary">Inactiva</span>
+                                        <% if (typeof usuarioSession !== 'undefined' && usuarioSession.rol === 'Administrador') { %>
+                                        <form method="POST" action="/admin/categorias/<%= c.idCategoria %>/activar"
+                                            class="d-inline" id="formActivar_<%= c.idCategoria %>">
+                                            <button type="button" class="btn btn-sm btn-outline-success" title="Reactivar"
+                                                onclick="reactivarCategoria(<%= JSON.stringify(c.nombre) %>, 'formActivar_<%= c.idCategoria %>')">
+                                                <i class="bi bi-arrow-clockwise"></i>
+                                            </button>
+                                        </form>
+                                        <% } %>
                                         <% } else if (totalMateriales === 0) { %>
                                         <form method="POST" action="/admin/categorias/<%= c.idCategoria %>/desactivar"
                                             class="d-inline" id="formDesactivar_<%= c.idCategoria %>">
@@ -183,6 +192,8 @@
             Swal.fire({ icon: 'success', title: 'Categoría actualizada', text: 'La categoría se ha actualizado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
         <% } else if (success === 'desactivado') { %>
             Swal.fire({ icon: 'success', title: 'Categoría desactivada', text: 'La categoría se ha desactivado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
+        <% } else if (success === 'reactivado') { %>
+            Swal.fire({ icon: 'success', title: 'Categoría reactivada', text: 'La categoría se ha reactivado correctamente.', showConfirmButton: true, confirmButtonText: 'Aceptar', confirmButtonColor: '#2c5f4f' });
         <% } %>
         });
 

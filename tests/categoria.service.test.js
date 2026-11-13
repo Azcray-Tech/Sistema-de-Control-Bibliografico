@@ -132,4 +132,28 @@ describe('CategoriaService', () => {
       await expect(categoriaService.desactivar(999, 1)).rejects.toThrow('Categoría no encontrada');
     });
   });
+
+  describe('activar', () => {
+    it('debe reactivar una categoría inactiva', async () => {
+      const mockCat = { idCategoria: 1, activa: false, update: jest.fn() };
+      mocks.Categoria.findByPk.mockResolvedValue(mockCat);
+
+      await categoriaService.activar(1, 1);
+
+      expect(mockCat.update).toHaveBeenCalledWith({ activa: true });
+      expect(mockAuditoria).toHaveBeenCalledWith(expect.objectContaining({ accion: 'ACTIVAR_CATEGORIA' }));
+    });
+
+    it('debe lanzar error si la categoría ya está activa', async () => {
+      mocks.Categoria.findByPk.mockResolvedValue({ idCategoria: 1, activa: true });
+
+      await expect(categoriaService.activar(1, 1)).rejects.toThrow('La categoría ya está activa');
+    });
+
+    it('debe lanzar error si la categoría no existe', async () => {
+      mocks.Categoria.findByPk.mockResolvedValue(null);
+
+      await expect(categoriaService.activar(999, 1)).rejects.toThrow('Categoría no encontrada');
+    });
+  });
 });
