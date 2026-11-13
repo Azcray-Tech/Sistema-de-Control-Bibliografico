@@ -13,6 +13,9 @@ app_output.txt
 *.txt    
 reports/
 .opencode/
+# Skills de agentes (instalados localmente con npx skills)
+.agents/
+skills-lock.json
 tests/stress/report-*.json
 .vscode
 backups
