@@ -19,6 +19,9 @@ describe('AuthController - integración con servicios reales', () => {
     res.render = jest.fn().mockReturnValue(res);
     res.redirect = jest.fn().mockReturnValue(res);
     res.status = jest.fn().mockReturnValue(res);
+    res.cookie = jest.fn().mockReturnValue(res);
+    res.clearCookie = jest.fn().mockReturnValue(res);
+    res.end = jest.fn().mockReturnValue(res);
     return res;
   }
 
@@ -26,7 +29,7 @@ describe('AuthController - integración con servicios reales', () => {
     const req = { query: {} };
     const res = mockRes();
     controller.mostrarLogin(req, res);
-    expect(res.render).toHaveBeenCalledWith('login', { error: null });
+    expect(res.render).toHaveBeenCalledWith('login', { error: null, expirada: false });
   });
 
   test('iniciarSesion debe regenerar sesión y redirigir al dashboard', async () => {
@@ -41,6 +44,7 @@ describe('AuthController - integración con servicios reales', () => {
 
     await controller.iniciarSesion(req, res, next);
     expect(req.session.regenerate).toHaveBeenCalled();
+    expect(res.cookie).toHaveBeenCalledWith('ceela_auth', '1', expect.objectContaining({ httpOnly: true }));
     expect(res.redirect).toHaveBeenCalledWith('/admin/dashboard');
     expect(req.session.usuarioId).toBeDefined();
     expect(req.session.rol).toBe('Administrador');
@@ -70,6 +74,7 @@ describe('AuthController - integración con servicios reales', () => {
 
     req.session.destroy = jest.fn(cb => cb());
     await controller.cerrarSesion(req, res, next);
+    expect(res.clearCookie).toHaveBeenCalledWith('ceela_auth');
     expect(res.redirect).toHaveBeenCalledWith('/admin/login');
   });
 });
