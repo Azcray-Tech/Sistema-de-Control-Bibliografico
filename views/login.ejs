@@ -44,5 +44,20 @@
             </div>
         </div>
     </div>
+    <% if (typeof expirada !== 'undefined' && expirada) { %>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión expirada',
+                text: 'Su sesión ha expirado por inactividad. Vuelva a iniciar sesión.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2c5f4f',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            });
+        });
+    </script>
+    <% } %>
 </body>
 </html>

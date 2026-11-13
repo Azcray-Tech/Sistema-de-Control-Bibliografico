@@ -4,6 +4,7 @@
  * @description Pruebas unitarias del controlador de autenticación con mocks.
  */
 const AuthController = require('../controllers/authController');
+const { obtenerMaxEdadCookieTestigo } = require('../config/session');
 
 describe('AuthController', () => {
   let controller;
@@ -28,20 +29,30 @@ describe('AuthController', () => {
     };
     res = {
       render: jest.fn(),
-      redirect: jest.fn()
+      redirect: jest.fn(),
+      cookie: jest.fn(),
+      clearCookie: jest.fn(),
+      status: jest.fn().mockReturnThis(),
+      end: jest.fn()
     };
   });
 
   describe('mostrarLogin', () => {
     it('debe renderizar login sin error', () => {
       controller.mostrarLogin(req, res);
-      expect(res.render).toHaveBeenCalledWith('login', { error: null });
+      expect(res.render).toHaveBeenCalledWith('login', { error: null, expirada: false });
     });
 
     it('debe renderizar login con error si está en query', () => {
       req.query.error = 'Credenciales inválidas';
       controller.mostrarLogin(req, res);
-      expect(res.render).toHaveBeenCalledWith('login', { error: 'Credenciales inválidas' });
+      expect(res.render).toHaveBeenCalledWith('login', { error: 'Credenciales inválidas', expirada: false });
+    });
+
+    it('debe marcar expirada cuando llega ?expirada=1', () => {
+      req.query.expirada = '1';
+      controller.mostrarLogin(req, res);
+      expect(res.render).toHaveBeenCalledWith('login', { error: null, expirada: true });
     });
   });
 
@@ -57,6 +68,10 @@ describe('AuthController', () => {
       expect(req.session.regenerate).toHaveBeenCalled();
       expect(req.session.usuarioId).toBe(1);
       expect(req.session.rol).toBe('Administrador');
+      expect(res.cookie).toHaveBeenCalledWith('ceela_auth', '1', expect.objectContaining({
+        httpOnly: true,
+        maxAge: obtenerMaxEdadCookieTestigo()
+      }));
       expect(res.redirect).toHaveBeenCalledWith('/admin/dashboard');
     });
 
@@ -66,7 +81,7 @@ describe('AuthController', () => {
 
       await controller.iniciarSesion(req, res);
 
-      expect(res.render).toHaveBeenCalledWith('login', { error: 'Credenciales inválidas' });
+      expect(res.render).toHaveBeenCalledWith('login', { error: 'Credenciales inválidas', expirada: false });
     });
   });
 
@@ -78,6 +93,7 @@ describe('AuthController', () => {
 
       expect(mockAuthService.registrarSalida).toHaveBeenCalledWith(1);
       expect(req.session.destroy).toHaveBeenCalled();
+      expect(res.clearCookie).toHaveBeenCalledWith('ceela_auth');
       expect(res.redirect).toHaveBeenCalledWith('/admin/login');
     });
 
@@ -88,6 +104,18 @@ describe('AuthController', () => {
       await expect(controller.cerrarSesion(req, res)).rejects.toThrow('Error DB');
       expect(req.session.destroy).toHaveBeenCalled();
       expect(res.redirect).toHaveBeenCalledWith('/admin/login');
+    });
+  });
+
+  describe('pingSesion', () => {
+    it('debe renovar la sesión y responder 204', () => {
+      req.session.touch = jest.fn();
+
+      controller.pingSesion(req, res);
+
+      expect(req.session.touch).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(204);
+      expect(res.end).toHaveBeenCalled();
     });
   });
 });

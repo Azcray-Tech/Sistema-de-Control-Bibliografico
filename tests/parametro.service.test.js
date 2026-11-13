@@ -4,6 +4,7 @@
  * @description Pruebas unitarias del servicio de parámetros del sistema.
  */
 const ParametroService = require('../services/parametro.service');
+const { obtenerTtlMs, restablecerTtlMs } = require('../config/session');
 const { crearMocksModelos, mockAuditoria } = require('./mocks/models');
 
 describe('ParametroService', () => {
@@ -14,6 +15,7 @@ describe('ParametroService', () => {
     mocks = crearMocksModelos();
     parametroService = new ParametroService(mocks, mockAuditoria);
     mockAuditoria.mockClear();
+    restablecerTtlMs();
   });
 
   describe('obtener', () => {
@@ -127,6 +129,14 @@ describe('ParametroService', () => {
         backup_auto_habilitado: '1'
       }, 1);
       expect(mocks.Parametro.upsert).toHaveBeenCalledTimes(2);
+    });
+
+    it('debe aplicar el tiempo de inactividad al configurar la sesión', async () => {
+      mocks.Parametro.findByPk.mockResolvedValue({ clave: 'tiempo_inactividad', valor: '20' });
+
+      await parametroService.actualizar({ tiempo_inactividad: '20' }, 1);
+
+      expect(obtenerTtlMs()).toBe(20 * 60 * 1000);
     });
   });
 });

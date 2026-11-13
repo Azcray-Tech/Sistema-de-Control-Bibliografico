@@ -10,11 +10,12 @@ const path = require('path');
 const models = require('./models');
 const { sequelize } = models;
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const { obtenerTtlMs, obtenerAvisoPrevioMs, establecerTtlMs } = require('./config/session');
 const sequelizeSessionStore = new SequelizeStore({
   db: sequelize,
   tableName: 'sesiones',
-  checkExpirationInterval: 15 * 60 * 1000,
-  expiration: 15 * 60 * 1000
+  checkExpirationInterval: obtenerTtlMs(),
+  expiration: obtenerTtlMs()
 });
 const sessionStore = process.env.SESSION_STORE === 'memory'
   ? new session.MemoryStore()
@@ -51,9 +52,18 @@ app.use(session({
     httpOnly: true,
     secure: false,
     sameSite: 'Lax',
-    maxAge: 15 * 60 * 1000 // 15 minutos por defecto
+    maxAge: obtenerTtlMs()
   }
 }));
+
+// El tiempo de inactividad es configurable: se aplica en cada request para que un
+// cambio en los parámetros del sistema tenga efecto sin reiniciar el servidor.
+app.use((req, res, next) => {
+  if (req.session && req.session.cookie) {
+    req.session.cookie.maxAge = obtenerTtlMs();
+  }
+  next();
+});
 
 // Middleware global
 app.use(express.json());
@@ -68,6 +78,8 @@ app.use((req, res, next) => {
   res.locals.mensajeError = req.query.error || null;
   res.locals.successId = req.query.successId || null;
   res.locals.successTitulo = req.query.successTitulo || null;
+  res.locals.sessionTtlMs = obtenerTtlMs();
+  res.locals.avisoPrevioMs = obtenerAvisoPrevioMs();
   next();
 });
 
@@ -102,6 +114,11 @@ async function iniciar() {
     await sequelize.authenticate();
     console.log('Conexión a base de datos establecida correctamente.');
     await sequelize.sync({ alter: false });
+
+    // Tiempo de inactividad configurable desde /admin/parametros (RF-21).
+    const minutosInactividad = await parametroService.obtener('tiempo_inactividad', 15);
+    establecerTtlMs(minutosInactividad * 60 * 1000);
+
     if (process.env.SESSION_STORE !== 'memory') {
       await sequelizeSessionStore.sync();
     }

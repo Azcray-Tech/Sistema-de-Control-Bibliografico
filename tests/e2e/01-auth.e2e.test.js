@@ -6,6 +6,9 @@
 const request = require('supertest');
 const { app, iniciar } = require('../../app');
 const { limpiarDatosTransaccionales } = require('./helpers/clean');
+const { loginComoAdmin } = require('./helpers/login');
+const { establecerTtlMs } = require('../../config/session');
+const db = require('../../models');
 
 beforeAll(async () => {
   await iniciar();
@@ -99,6 +102,61 @@ describe('Autenticación E2E', () => {
         .send({ titulo: 'x' });
       expect(res.status).toBe(302);
       expect(res.headers.location).toBe('/admin/login');
+    });
+  });
+
+  describe('Expiración de sesión por inactividad', () => {
+    it('redirige con ?expirada=1 cuando la sesión ya no existe', async () => {
+      const agent = request.agent(app);
+      await agent
+        .post('/admin/login')
+        .send({ username: 'admin', password: 'admin123' });
+
+      // Simula la expiración por inactividad eliminando la sesión del store.
+      await db.sequelize.query('DELETE FROM sesiones');
+
+      const res = await agent.get('/admin/dashboard');
+
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toBe('/admin/login?expirada=1');
+    });
+
+    it('muestra el diálogo de sesión expirada en el login', async () => {
+      const res = await request(app).get('/admin/login?expirada=1');
+      expect(res.status).toBe(200);
+      expect(res.text).toContain('ha expirado por inactividad');
+    });
+
+    it('no marca expiración tras un logout normal', async () => {
+      const agent = request.agent(app);
+      await agent
+        .post('/admin/login')
+        .send({ username: 'admin', password: 'admin123' });
+      await agent.get('/admin/logout');
+
+      const res = await agent.get('/admin/dashboard');
+
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toBe('/admin/login');
+    });
+  });
+
+  describe('Tiempo de inactividad configurable', () => {
+    afterAll(async () => {
+      establecerTtlMs(15 * 60 * 1000);
+      await db.Parametro.upsert({ clave: 'tiempo_inactividad', valor: '15' });
+    });
+
+    it('aplica el valor guardado en los parámetros del sistema', async () => {
+      const agent = await loginComoAdmin(app);
+
+      await agent.post('/admin/configuracion').send({
+        tiempo_inactividad: '20',
+        backup_auto_habilitado: '1'
+      });
+
+      const res = await agent.get('/admin/dashboard');
+      expect(res.text).toContain('ttlMs: 1200000');
     });
   });
 });

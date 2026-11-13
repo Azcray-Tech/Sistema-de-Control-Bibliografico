@@ -10,11 +10,25 @@ function getDiasPrestamo() {
   return 7;
 }
 
+/**
+ * @requirement RNF-04 (Control de acceso), RF-39 (Aviso de expiración de sesión por inactividad)
+ * @description Envuelve fetch para los endpoints /api. Si la sesión expiró, el servidor
+ * responde 401 y se redirige al login, donde se muestra el diálogo de expiración.
+ */
+async function fetchApi(url, opciones) {
+  const res = await fetch(url, opciones);
+  if (res.status === 401) {
+    window.location.href = '/admin/login?expirada=1';
+    throw new Error('sesion_expirada');
+  }
+  return res;
+}
+
 async function buscarSolicitante() {
   const cedula = document.getElementById('inputCedula').value.trim();
   if (!cedula) return;
 
-  const res = await fetch('/api/solicitantes/prestamo?cedula=' + encodeURIComponent(cedula));
+  const res = await fetchApi('/api/solicitantes/prestamo?cedula=' + encodeURIComponent(cedula));
   const data = await res.json();
 
   const div = document.getElementById('resultadoSolicitante');
@@ -106,7 +120,7 @@ async function registrarSolicitante() {
     return;
   }
 
-  const res = await fetch('/api/solicitantes', {
+  const res = await fetchApi('/api/solicitantes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cedula, nombre, apellido, correoElectronico, telefono })
@@ -131,7 +145,7 @@ async function buscarEjemplares() {
   const titulo = document.getElementById('inputTitulo').value.trim();
   if (!titulo) return;
 
-  const res = await fetch('/api/ejemplares/disponibles?titulo=' + encodeURIComponent(titulo));
+  const res = await fetchApi('/api/ejemplares/disponibles?titulo=' + encodeURIComponent(titulo));
   const data = await res.json();
   const div = document.getElementById('resultadoEjemplares');
 

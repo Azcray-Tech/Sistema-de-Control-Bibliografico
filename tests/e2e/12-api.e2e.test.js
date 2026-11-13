@@ -1,19 +1,23 @@
 /**
- * @requirement RF-06, RF-14
+ * @requirement RF-06, RF-14, RNF-04
  * @use_case CU-06, CU-14
- * @description Pruebas E2E de los endpoints JSON API.
+ * @description Pruebas E2E de los endpoints JSON API. Requieren sesión activa.
  */
 const request = require('supertest');
 const { app, iniciar } = require('../../app');
 const { limpiarDatosTransaccionales } = require('./helpers/clean');
+const { loginComoAdmin } = require('./helpers/login');
 const {
   crearSolicitante,
   crearMaterialCompleto,
   crearEjemplar,
 } = require('./helpers/seed');
 
+let agent;
+
 beforeAll(async () => {
   await iniciar();
+  agent = await loginComoAdmin(app);
 
   // Seed data for API tests
   await crearSolicitante({
@@ -45,9 +49,25 @@ afterAll(async () => {
 });
 
 describe('API E2E', () => {
+  describe('Protección de la API', () => {
+    it('rechaza la lectura sin sesión con 401', async () => {
+      const res = await request(app).get('/api/ejemplares');
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('sesion_expirada');
+    });
+
+    it('rechaza la escritura sin sesión con 401', async () => {
+      const res = await request(app)
+        .post('/api/solicitantes')
+        .send({ cedula: 'SIN-SESION', nombre: 'X', apellido: 'Y' });
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('sesion_expirada');
+    });
+  });
+
   describe('GET /api/solicitantes', () => {
     it('busca solicitante por cédula existente', async () => {
-      const res = await request(app).get('/api/solicitantes?cedula=API-SOL-001');
+      const res = await agent.get('/api/solicitantes?cedula=API-SOL-001');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(body.existe).toBe(true);
@@ -55,7 +75,7 @@ describe('API E2E', () => {
     });
 
     it('retorna existe=false para cédula inexistente', async () => {
-      const res = await request(app).get('/api/solicitantes?cedula=ZZZZNOEXISTE');
+      const res = await agent.get('/api/solicitantes?cedula=ZZZZNOEXISTE');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(body.existe).toBe(false);
@@ -64,14 +84,14 @@ describe('API E2E', () => {
 
   describe('GET /api/solicitantes/prestamo', () => {
     it('busca solicitante con datos de préstamo', async () => {
-      const res = await request(app).get('/api/solicitantes/prestamo?cedula=API-SOL-001');
+      const res = await agent.get('/api/solicitantes/prestamo?cedula=API-SOL-001');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(body.encontrado).toBe(true);
     });
 
     it('retorna encontrado=false para cédula inexistente', async () => {
-      const res = await request(app).get('/api/solicitantes/prestamo');
+      const res = await agent.get('/api/solicitantes/prestamo');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(body.encontrado).toBe(false);
@@ -80,7 +100,7 @@ describe('API E2E', () => {
 
   describe('POST /api/solicitantes', () => {
     it('crea un nuevo solicitante', async () => {
-      const res = await request(app)
+      const res = await agent
         .post('/api/solicitantes')
         .send({
           cedula: 'API-NEW-' + Date.now(),
@@ -93,7 +113,7 @@ describe('API E2E', () => {
     });
 
     it('rechaza cédula duplicada', async () => {
-      const res = await request(app)
+      const res = await agent
         .post('/api/solicitantes')
         .send({
           cedula: 'API-SOL-001',
@@ -108,7 +128,7 @@ describe('API E2E', () => {
 
   describe('GET /api/ejemplares', () => {
     it('busca ejemplares por identificador', async () => {
-      const res = await request(app).get('/api/ejemplares?identificador=API-EJE-001');
+      const res = await agent.get('/api/ejemplares?identificador=API-EJE-001');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(Array.isArray(body.ejemplares)).toBe(true);
@@ -118,7 +138,7 @@ describe('API E2E', () => {
 
   describe('GET /api/ejemplares/disponibles', () => {
     it('busca ejemplares disponibles por título', async () => {
-      const res = await request(app).get('/api/ejemplares/disponibles?titulo=APIMaterial');
+      const res = await agent.get('/api/ejemplares/disponibles?titulo=APIMaterial');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(Array.isArray(body)).toBe(true);
@@ -126,7 +146,7 @@ describe('API E2E', () => {
     });
 
     it('retorna arreglo vacío sin título', async () => {
-      const res = await request(app).get('/api/ejemplares/disponibles');
+      const res = await agent.get('/api/ejemplares/disponibles');
       expect(res.status).toBe(200);
       const body = typeof res.body === 'object' ? res.body : JSON.parse(res.text);
       expect(Array.isArray(body)).toBe(true);

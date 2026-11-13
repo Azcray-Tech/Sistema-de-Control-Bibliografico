@@ -1,7 +1,7 @@
 /**
- * @requirement RF-13 (Iniciar sesión)
- * @use_case CU-13 (Iniciar sesión y manejo de inactividad)
- * @description Rutas de autenticación: login, logout.
+ * @requirement RF-13 (Iniciar sesión), RF-39 (Aviso de expiración de sesión por inactividad)
+ * @use_case CU-13 (Iniciar sesión y manejo de inactividad), CU-39 (Aviso de expiración de sesión)
+ * @description Rutas de autenticación: login, logout y renovación de sesión.
  */
 const router = require('express').Router();
 const rateLimit = require('express-rate-limit');
@@ -28,5 +28,11 @@ const loginLimiter = rateLimit({
 router.get('/login', redirigirSiAutenticado, authController.mostrarLogin);
 router.post('/login', loginLimiter, authController.iniciarSesion);
 router.get('/logout', requiereAuth, authController.cerrarSesion);
+/**
+ * @requirement RF-39 (Aviso de expiración de sesión por inactividad)
+ * @use_case CU-39 (Aviso de expiración de sesión)
+ * @description Renueva la sesión cuando el usuario pulsa "Continuar sesión".
+ */
+router.get('/sesion/ping', requiereAuth, authController.pingSesion);
 
 module.exports = router;

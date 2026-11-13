@@ -3,5 +3,12 @@
     <%= typeof postScripts !== 'undefined' ? postScripts : '' %>
     <%- include('../partials/command_palette') %>
     <script src="/js/sidebar.js"></script>
+    <script>
+        window.CEELA_SESION = {
+            ttlMs: <%= typeof sessionTtlMs !== 'undefined' ? sessionTtlMs : 900000 %>,
+            avisoPrevioMs: <%= typeof avisoPrevioMs !== 'undefined' ? avisoPrevioMs : 60000 %>
+        };
+    </script>
+    <script src="/js/session-timeout.js"></script>
 </body>
 </html>

@@ -1,8 +1,10 @@
 /**
- * @requirement RF-21 (Modificar parámetros globales)
- * @use_case CU-21 (Modificar parámetros globales del sistema)
+ * @requirement RF-21 (Modificar parámetros globales), RF-39 (Aviso de expiración de sesión por inactividad)
+ * @use_case CU-21 (Modificar parámetros globales del sistema), CU-39 (Aviso de expiración de sesión)
  * @description Servicio de parámetros del sistema: lectura/escritura de configuración clave-valor.
  */
+const { establecerTtlMs } = require('../config/session');
+
 class ParametroService {
   constructor({ Parametro }, auditoria) {
     this.Parametro = Parametro;
@@ -52,6 +54,10 @@ class ParametroService {
       const anterior = await this.Parametro.findByPk(clave);
 
       await this.Parametro.upsert({ clave, valor: String(valor) });
+
+      if (clave === 'tiempo_inactividad') {
+        establecerTtlMs(parseInt(valor, 10) * 60 * 1000);
+      }
 
       if (this.auditoria) {
         await this.auditoria({
